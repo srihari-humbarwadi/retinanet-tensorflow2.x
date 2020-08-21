@@ -73,9 +73,8 @@ def retinanet_builder(input_shape, params):
             class_x = tf.nn.relu(class_bns[i + 5 * j](class_x))
             box_x = box_convs[j](box_x)
             box_x = tf.nn.relu(box_bns[i + 5 * j](box_x))
-        class_outputs[i + 3] = class_convs[-1](tf.cast(class_x,
-                                                       dtype=tf.float32))
-        box_outputs[i + 3] = box_convs[-1](tf.cast(box_x, dtype=tf.float32))
+        class_outputs[i + 3] = class_convs[-1](class_x)
+        box_outputs[i + 3] = box_convs[-1](box_x)
 
     outputs = {
         'class-predictions': class_outputs,
