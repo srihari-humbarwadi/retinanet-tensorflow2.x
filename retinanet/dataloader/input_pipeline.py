@@ -46,7 +46,7 @@ class InputPipeline:
                                   num_parallel_calls=autotune)
             dataset = dataset.prefetch(autotune)
             return dataset
-            
+
         dataset = dataset.with_options(options)
         dataset = dataset.shuffle(1024)
         dataset = dataset.map(map_func=lambda x: self.label_encoder.

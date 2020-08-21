@@ -6,6 +6,7 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.losses import RetinaNetLoss
 from retinanet.lr_schedules import PiecewiseConstantDecayWithLinearWarmup
+from retinanet.model.decode_predictions import DecodePredictions
 from retinanet.model.retinanet import retinanet_builder
 from retinanet.model.utils import add_l2_regularization, get_optimizer
 
@@ -76,4 +77,22 @@ def model_builder(params):
 
 
 def make_inference_model(model, params):
-    pass
+    class_predictions = []
+    box_predictions = []
+    for i in range(3, 8):
+        class_predictions += [
+            tf.keras.layers.Reshape([
+                -1, params.architecture.num_classes
+            ])(model.output['class-predictions'][i])
+        ]
+        box_predictions += [
+            tf.keras.layers.Reshape([-1, 4])(model.output['box-predictions'][i])
+        ]
+    class_predictions = tf.concat(class_predictions, axis=1)
+    box_predictions = tf.concat(box_predictions, axis=1)
+    predictions = (box_predictions, class_predictions)
+    detections = DecodePredictions(params)(predictions)
+    inference_model = tf.keras.Model(inputs=model.inputs,
+                                     outputs=detections,
+                                     name='retinanet_inference')
+    return inference_model

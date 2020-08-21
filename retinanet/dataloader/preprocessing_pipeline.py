@@ -10,7 +10,6 @@ class PreprocessingPipeline:
         self.preprocessing_params = params.preprocessing
         self.use_augmentation = params.augmentations.use_augmentation[run_mode]
         self.augmentation_params = params.augmentations
-        
 
     def _prepare_image(self, image, jitter=[0, 0]):
         target_shape = self.input_shape
