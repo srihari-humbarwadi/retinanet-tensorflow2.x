@@ -73,3 +73,7 @@ def model_builder(params):
         return model
 
     return _model_fn
+
+
+def make_inference_model(model, params):
+    pass
