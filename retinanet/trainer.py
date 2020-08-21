@@ -45,6 +45,7 @@ class Trainer:
         self.restore_checkpoint = restore_checkpoint
         self.summary_dir = summary_dir
         self.name = name
+        self.restore_status = None
 
         assert self.run_mode in Trainer._RUN_MODES, \
             'Invalid run mode, aborting!\n Supported run models {}' \
@@ -89,7 +90,7 @@ class Trainer:
         latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
         if latest_checkpoint is not None:
             logging.info(
-                'Found for existing checkpoint {}, restoring model state from checkpoint'  # noqa: E501
+                'Found for existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
                 .format(latest_checkpoint))
             self.restore_status = self._model.load_weights(latest_checkpoint)
             _ = self.optimizer.iterations
@@ -208,6 +209,6 @@ class Trainer:
             os.path.join(self.model_dir,
                          'final_weights_step_{}'.format(current_step)))
 
-        @property
-        def model(self):
-            return self._model
+    @property
+    def model(self):
+        return self._model
