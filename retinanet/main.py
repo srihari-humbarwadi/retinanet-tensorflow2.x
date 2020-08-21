@@ -1,12 +1,12 @@
 import os
 
-from absl import app, flags, logging
 import tensorflow as tf
+from absl import app, flags, logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
-from retinanet.distribute import get_strategy
 from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
+from retinanet.distribute import get_strategy
 from retinanet.model import model_builder
 from retinanet.trainer import Trainer
 

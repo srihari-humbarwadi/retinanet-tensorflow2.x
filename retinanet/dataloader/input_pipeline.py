@@ -1,5 +1,5 @@
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from retinanet.dataloader.label_encoder import LabelEncoder
 from retinanet.dataloader.tfrecord_parser import parse_example

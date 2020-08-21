@@ -1,5 +1,5 @@
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 
 def get_strategy(params):

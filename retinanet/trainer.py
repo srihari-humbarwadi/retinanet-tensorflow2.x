@@ -1,9 +1,9 @@
 import os
 from time import time
 
-from absl import logging
 import numpy as np
 import tensorflow as tf
+from absl import logging
 
 
 class Trainer:

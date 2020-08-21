@@ -1,8 +1,8 @@
 import os
 
-from absl import app, flags, logging
 import numpy as np
 import tensorflow as tf
+from absl import app, flags, logging
 
 from retinanet.dataset_utils.coco_parser import CocoParser
 from retinanet.dataset_utils.tfrecord_writer import TFrecordWriter

@@ -1,11 +1,11 @@
 import os
 
-from absl import logging
 import numpy as np
+from absl import logging
+from pycocotools.coco import COCO
 from tqdm import tqdm
 
 from retinanet.dataset_utils.parser import Parser
-from pycocotools.coco import COCO
 
 
 class CocoParser(Parser):

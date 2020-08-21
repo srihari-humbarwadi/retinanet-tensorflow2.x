@@ -1,7 +1,7 @@
 import re
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.losses import RetinaNetLoss
