@@ -5,20 +5,23 @@ from retinanet.dataloader.utils import (convert_to_xywh, normalize_image,
 
 
 class PreprocessingPipeline:
-    def __init__(self, input_shape, params):
+    def __init__(self, input_shape, run_mode, params):
         self.input_shape = input_shape
         self.preprocessing_params = params.preprocessing
+        self.use_augmentation = params.augmentations.use_augmentation[run_mode]
         self.augmentation_params = params.augmentations
+        
 
-    def _prepare_image(self, image):
+    def _prepare_image(self, image, jitter=[0, 0]):
         target_shape = self.input_shape
         image_shape = tf.cast(tf.shape(image)[:2], dtype=tf.float32)
         scaled_shape = target_shape
 
-        jitter = [
-            self.augmentation_params.scale_jitter.min_scale,
-            self.augmentation_params.scale_jitter.max_scale
-        ]
+        if self.use_augmentation:
+            jitter = [
+                self.augmentation_params.scale_jitter.min_scale,
+                self.augmentation_params.scale_jitter.max_scale
+            ]
 
         if jitter[0]:
             random_scale = tf.random.uniform([], jitter[0], jitter[1])

@@ -6,13 +6,13 @@ from retinanet.dataloader.utils import compute_iou
 
 
 class LabelEncoder:
-    def __init__(self, params):
+    def __init__(self, run_mode, params):
         self.input_shape = params.input.input_shape
         self.encoder_params = params.encoder_params
         self.anchors = AnchorBoxGenerator(*self.input_shape,
                                           params.anchor_params)
         self.preprocessing_pipeline = PreprocessingPipeline(
-            self.input_shape, params.dataloader_params)
+            self.input_shape, run_mode, params.dataloader_params)
 
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
         if tf.shape(gt_boxes)[0] == 0:
