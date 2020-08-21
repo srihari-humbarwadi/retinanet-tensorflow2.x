@@ -131,3 +131,9 @@ dmypy.json
 
 # tfrecords
 *.tfrecord
+
+# tensorboard logs
+tensorboard/
+
+# model_files
+model_files/

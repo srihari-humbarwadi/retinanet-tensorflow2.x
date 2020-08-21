@@ -191,8 +191,7 @@ class Trainer:
 
             logging.info('[global_step {}/{}] [{:.2f}imgs/s] {}'.format(
                 current_step, self.train_steps, images_per_second,
-                {k: np.round(v, 3) for k, v in loss_dict.items()}),
-                end='')
+                {k: np.round(v, 3) for k, v in loss_dict.items()}))
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
         self._model.save_weights(
