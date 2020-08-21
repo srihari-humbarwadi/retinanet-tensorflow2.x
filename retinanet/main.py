@@ -1,3 +1,5 @@
+import os
+
 from absl import app, flags, logging
 import tensorflow as tf
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -14,6 +16,13 @@ tf.config.set_soft_device_placement(True)
 flags.DEFINE_string('config_path',
                     default=None,
                     help='Path to the config file')
+
+flags.DEFINE_boolean('xla', default=False, help='Compile with XLA JIT')
+
+flags.DEFINE_boolean('gpu_memory_allow_growth',
+                     default=False,
+                     help='If enabled, the runtime doesn\'t allocate all of the available memory')  # noqa: E501
+
 
 flags.DEFINE_boolean(
     'is_multi_host',
@@ -37,9 +46,19 @@ def set_precision(precision):
 def main(_):
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
 
-    params = Config(FLAGS.config_path).params
-    set_precision(params.floatx.precision)
+    if FLAGS.xla:
+        xla_flags = '--tf_xla_enable_xla_devices=true --tf_xla_auto_jit=2 --tf_xla_cpu_global_jit'  # noqa: E501
+        os.environ['TF_XLA_FLAGS'] = xla_flags
+        tf.config.optimizer.set_jit(True)
 
+    if FLAGS.gpu_memory_allow_growth:
+        physical_devices = tf.config.list_physical_devices('GPU')
+        [tf.config.experimental.set_memory_growth(x, True)
+         for x in physical_devices]
+
+    params = Config(FLAGS.config_path).params
+
+    set_precision(params.floatx.precision)
     strategy = get_strategy(params.training.strategy)
 
     run_mode = params.experiment.run_mode
@@ -66,7 +85,7 @@ def main(_):
     model_fn = model_builder(params)
     train_batch_size = params.training.batch_size.train
 
-    trainer = Trainer(
+    trainer = Trainer(  # noqa: F841
         strategy=strategy,
         run_mode=run_mode,
         model_fn=model_fn,

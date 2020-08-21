@@ -1,18 +1,19 @@
 from absl import logging
 import tensorflow as tf
 
-STRATEGIES = {
-    'gpu': tf.distribute.OneDeviceStrategy(device='/gpu:0'),
-    'cpu': tf.distribute.OneDeviceStrategy(device='/cpu:0'),
-    'multi_gpu': tf.distribute.MirroredStrategy()
-}
-
 
 def get_strategy(params):
-    if params.type in ['gpu', 'cpu', 'multi_gpu']:
-        logging.info('Creating {} strategy'.format(' '.join(
-            [x.upper() for x in params.type.split('_')])))
-        return STRATEGIES[params.type]
+    if params.type == 'gpu':
+        logging.info('Creating GPU strategy')
+        return tf.distribute.OneDeviceStrategy(device='/gpu:0')
+
+    if params.type == 'cpu':
+        logging.info('Creating CPU strategy')
+        return tf.distribute.OneDeviceStrategy(device='/cpu:0')
+
+    if params.type == 'multi_gpu':
+        logging.info('Creating Multi GPU strategy')
+        return tf.distribute.OneDeviceStrategy(device='/gpu:0')
 
     elif params.type == 'tpu':
         logging.info('Creating TPU strategy')

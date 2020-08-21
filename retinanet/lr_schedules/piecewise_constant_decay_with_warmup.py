@@ -6,7 +6,7 @@ class PiecewiseConstantDecayWithLinearWarmup(
     def __init__(self, warmup_learning_rate, warmup_steps, boundaries, values,
                  **kwargs):
         super(PiecewiseConstantDecayWithLinearWarmup,
-              self).__init__(boundaries=[x -1 for x in boundaries],
+              self).__init__(boundaries=[x - 1 for x in boundaries],
                              values=values, **kwargs)
 
         self.warmup_learning_rate = warmup_learning_rate
