@@ -89,10 +89,12 @@ class Trainer:
         latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
         if latest_checkpoint is not None:
             logging.info(
-                'Found for existing checkpoint {}, \
-                    restoring model state from checkpoint'
+                'Found for existing checkpoint {}, restoring model state from checkpoint'
                 .format(latest_checkpoint))
-            return self._model.load_weights(latest_checkpoint)
+            self.restore_status =  self._model.load_weights(latest_checkpoint)
+            _ = self.optimizer.iterations
+            return
+
         logging.info(
             'No existing checkpoints found in {}, training from scratch!'
             .format(self.model_dir))
@@ -150,11 +152,13 @@ class Trainer:
         return loss_dict
 
     def train(self):
+        if self.restore_checkpoint:
+            self.restore_status.assert_consumed()
+            
         start_step = int(self.optimizer.iterations.numpy())
         dataset_iterator = iter(self._train_dataset)
         logging.info(
-            'Starting training from step {} for {} steps \
-            with {} steps per execution'
+            'Starting training from step {} for {} steps with {} steps per execution'
             .format(start_step, self.train_steps, self.steps_per_execution))
         logging.info('Saving checkpoints every {} steps in {}'.format(
             self.save_every, self.model_dir))
@@ -162,6 +166,7 @@ class Trainer:
         if self.use_float16:
             logging.info('Training with AMP turned on!')
 
+        current_step =  start_step
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
             start = time()
             loss_dict = self.distributed_train_step(
