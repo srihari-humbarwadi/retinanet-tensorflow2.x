@@ -2,9 +2,8 @@ import tensorflow as tf
 from absl import app, flags, logging
 
 from retinanet.cfg import Config
-from retinanet.model import model_builder, make_inference_model
+from retinanet.model import make_inference_model, model_builder
 from retinanet.trainer import Trainer
-
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
