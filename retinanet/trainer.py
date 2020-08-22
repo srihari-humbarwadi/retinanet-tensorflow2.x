@@ -11,7 +11,8 @@ class Trainer:
     _RUN_MODES = [
         'train',
         'val',
-        'train_val'
+        'train_val',
+        'export'
     ]
 
     def __init__(self,
@@ -52,7 +53,8 @@ class Trainer:
             .format(Trainer._RUN_MODES)
 
         self._setup()
-        if self.run_mode == 'train':
+
+        if 'train' in self.run_mode:
             self.train()
 
     def _setup_model(self):
@@ -92,8 +94,8 @@ class Trainer:
             logging.info(
                 'Found for existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
                 .format(latest_checkpoint))
+            self.optimizer._create_all_weights(self._model.trainable_variables)
             self.restore_status = self._model.load_weights(latest_checkpoint)
-            _ = self.optimizer.iterations
             return
 
         logging.info(
@@ -104,7 +106,6 @@ class Trainer:
         with self.distribute_strategy.scope():
             self._setup_model()
             self._setup_dataset()
-            self._setup_summary_writer()
 
             if self.restore_checkpoint:
                 self._restore_checkpoint()
@@ -159,20 +160,22 @@ class Trainer:
         start_step = int(self.optimizer.iterations.numpy())
         current_step = start_step
 
-        if start_step == self.train_steps:
+        if current_step == self.train_steps:
             logging.info('Training completed at step {}'.format(current_step))
             return
 
-        dataset_iterator = iter(self._train_dataset)
         logging.info(
             'Starting training from step {} for {} steps with {} steps per execution'  # noqa: E501
             .format(start_step, self.train_steps, self.steps_per_execution))
         logging.info('Saving checkpoints every {} steps in {}'.format(
             self.save_every, self.model_dir))
 
+        self._setup_summary_writer()
+
         if self.use_float16:
             logging.info('Training with AMP turned on!')
 
+        dataset_iterator = iter(self._train_dataset)
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
             start = time()
             loss_dict = self.distributed_train_step(
@@ -188,8 +191,17 @@ class Trainer:
 
             loss_dict['execution-time'] = np.round(end - start, 2)
             loss_dict['learning-rate'] = learning_rate
-            images_per_second = self.steps_per_execution * \
-                self.batch_size / loss_dict['execution-time']
+
+            per_step_execution_time = \
+                self.steps_per_execution / loss_dict['execution-time']
+            images_per_second = per_step_execution_time * self.batch_size
+
+            secs = (self.train_steps - current_step) / per_step_execution_time
+            eta = []
+            for interval in [3600, 60, 1]:
+                eta += ['{:02}'.format(secs // interval)]
+                secs %= interval
+            eta = ':'.join(eta)
 
             if current_step % self.save_every == 0:
                 logging.info(
@@ -200,9 +212,14 @@ class Trainer:
 
             self._write_summaries(loss_dict, current_step)
 
-            logging.info('[global_step {}/{}] [{:.2f}imgs/s] {}'.format(
-                current_step, self.train_steps, images_per_second,
-                {k: np.round(v, 3) for k, v in loss_dict.items()}))
+            logging.info('[global_step {}/{}] [eta: {}] [{:.2f}imgs/s] {}'
+                         .format(
+                             current_step,
+                             self.train_steps,
+                             eta,
+                             images_per_second,
+                             {k: np.round(v, 3)
+                              for k, v in loss_dict.items()}))
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
         self._model.save_weights(

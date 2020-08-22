@@ -66,6 +66,9 @@ def model_builder(params):
 
         loss_fn = RetinaNetLoss(params.architecture.num_classes, params.loss)
         model.compile(optimizer=optimizer, loss=loss_fn)
+
+        model.summary(print_fn=logging.debug)
+
         logging.info('Total trainable parameters: {:,}'.format(
             sum([
                 tf.keras.backend.count_params(x)
@@ -95,4 +98,6 @@ def make_inference_model(model, params):
     inference_model = tf.keras.Model(inputs=model.inputs,
                                      outputs=detections,
                                      name='retinanet_inference')
+    logging.info('Created inference model with params: {}'
+                 .format(params.inference))
     return inference_model
