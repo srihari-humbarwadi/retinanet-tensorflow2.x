@@ -153,7 +153,7 @@ class Trainer:
         return loss_dict
 
     def train(self):
-        if self.restore_checkpoint:
+        if self.restore_checkpoint and self.restore_status is not None:
             self.restore_status.assert_consumed()
 
         start_step = int(self.optimizer.iterations.numpy())

@@ -49,7 +49,6 @@ def main(_):
     if FLAGS.xla:
         xla_flags = '--tf_xla_enable_xla_devices=true --tf_xla_auto_jit=2 --tf_xla_cpu_global_jit'  # noqa: E501
         os.environ['TF_XLA_FLAGS'] = xla_flags
-        tf.config.optimizer.set_jit(True)
 
     if FLAGS.gpu_memory_allow_growth:
         physical_devices = tf.config.list_physical_devices('GPU')

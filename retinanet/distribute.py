@@ -13,7 +13,7 @@ def get_strategy(params):
 
     if params.type == 'multi_gpu':
         logging.info('Creating Multi GPU strategy')
-        return tf.distribute.OneDeviceStrategy(device='/gpu:0')
+        return tf.distribute.MirroredStrategy()
 
     elif params.type == 'tpu':
         logging.info('Creating TPU strategy')
