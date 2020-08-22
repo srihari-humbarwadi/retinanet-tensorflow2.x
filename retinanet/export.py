@@ -68,6 +68,7 @@ def main(_):
             'num_detections': detections.valid_detections
         }
 
+    logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
     tf.saved_model.save(
         inference_model,
         FLAGS.export_dir,
