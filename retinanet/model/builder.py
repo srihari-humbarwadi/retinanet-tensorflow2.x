@@ -80,6 +80,11 @@ def model_builder(params):
 
 
 def make_inference_model(model, params):
+    model.optimizer = None
+    model.compiled_loss = None
+    model.compiled_metrics = None
+    model._metrics = []
+
     class_predictions = []
     box_predictions = []
     for i in range(3, 8):
