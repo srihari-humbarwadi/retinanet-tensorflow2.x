@@ -18,6 +18,6 @@ def get_strategy(params):
     elif params.type == 'tpu':
         logging.info('Creating TPU strategy')
         resolver = tf.distribute.cluster_resolver.TPUClusterResolver.connect(
-            params.type.name)
+            params.name)
         return tf.distribute.TPUStrategy(resolver)
     raise ValueError('Unsupported strategy requested')

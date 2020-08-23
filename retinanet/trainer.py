@@ -47,6 +47,7 @@ class Trainer:
         self.summary_dir = summary_dir
         self.name = name
         self.restore_status = None
+        self.use_float16 = False
 
         assert self.run_mode in Trainer._RUN_MODES, \
             'Invalid run mode, aborting!\n Supported run models {}' \
