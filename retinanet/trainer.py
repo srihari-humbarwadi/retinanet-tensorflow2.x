@@ -199,7 +199,7 @@ class Trainer:
             secs = (self.train_steps - current_step) / per_step_execution_time
             eta = []
             for interval in [3600, 60, 1]:
-                eta += ['{:02}'.format(secs // interval)]
+                eta += ['{:02}'.format(int(secs // interval))]
                 secs %= interval
             eta = ':'.join(eta)
 
@@ -212,7 +212,7 @@ class Trainer:
 
             self._write_summaries(loss_dict, current_step)
 
-            logging.info('[global_step {}/{}] [eta: {}] [{:.2f}imgs/s] {}'
+            logging.info('[global_step {}/{}] [ETA: {}] [{:.2f} imgs/s] {}'
                          .format(
                              current_step,
                              self.train_steps,
