@@ -1,14 +1,14 @@
 {
     "experiment": {
-        "name": "retinanet-640-3x-64-tpu",
+        "name": "retinanet-1280-3x-64-tpu",
         "run_mode": "train",
-        "model_dir": "gs://tfrc_datasets/model_files/retinanet-640-3x-64-tpu",
+        "model_dir": "gs://tfrc_datasets/model_files/retinanet-1280-3x-64-tpu",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
     },
     "input": {
         "input_shape": [
-            640,
-            640
+            1280,
+            1280
         ],
         "channels": 3
     },
@@ -49,7 +49,7 @@
         },
         "strategy": {
             "type": "tpu",
-            "name": "v3-8-a"
+            "name": "v3-8-b"
         },
         "restore_checkpoint": true,
         "train_steps": 67500 ,
