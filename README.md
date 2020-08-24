@@ -5,7 +5,7 @@
 | --- | --- | --- | --- |  --- |
 | **ResNet50** | 640x640 | 37.1 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-640-3x-64-tpu.json) | ~3h |
 | **ResNet50** | 1024x1024 | 40.0 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1026-3x-64-tpu.json) | ~7h |
-| **ResNet50** | 1280x1280 | ... | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1280-3x-64-tpu.json) | ~12h |
+| **ResNet50** | 1280x1280 | 40.5 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1280-3x-64-tpu.json) | ~12h |
 
  - *All models use imagenet pretrained backhone*
  - *All models adopt the 3x training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly*
