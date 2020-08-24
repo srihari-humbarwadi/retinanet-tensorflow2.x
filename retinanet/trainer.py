@@ -225,7 +225,9 @@ class Trainer:
                     os.path.join(self.model_dir,
                                  'weights_step_{}'.format(current_step)))
 
-            self._write_summaries(loss_dict, current_step)
+            self._write_summaries(
+                loss_dict,
+                tf.convert_to_tensor(current_step))
 
             logging.info('[global_step {}/{}] [ETA: {}] [{:.2f} imgs/s] {}'
                          .format(
