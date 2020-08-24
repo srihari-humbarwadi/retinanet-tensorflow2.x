@@ -10,6 +10,9 @@
  - *All models use imagenet pretrained backhone*
  - *All models adopt the 3x training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly*
 
+### Tensorboard
+![loss curves](assets/tensorboard.png)
+
 ```
 @misc{1708.02002,
 Author = {Tsung-Yi Lin and Priya Goyal and Ross Girshick and Kaiming He and Piotr Dollár},
