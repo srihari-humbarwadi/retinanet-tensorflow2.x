@@ -49,7 +49,7 @@
         },
         "strategy": {
             "type": "tpu",
-            "name": "v3-8-b"
+            "name": "v3-8-c"
         },
         "restore_checkpoint": true,
         "train_steps": 67500 ,
