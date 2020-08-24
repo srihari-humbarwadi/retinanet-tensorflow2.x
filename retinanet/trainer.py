@@ -227,7 +227,7 @@ class Trainer:
 
             self._write_summaries(
                 loss_dict,
-                tf.convert_to_tensor(current_step))
+                tf.convert_to_tensor(current_step, dtype=tf.int64))
 
             logging.info('[global_step {}/{}] [ETA: {}] [{:.2f} imgs/s] {}'
                          .format(
