@@ -111,8 +111,9 @@ class Trainer:
             if self.restore_checkpoint:
                 self._restore_checkpoint()
 
+    @tf.function
     def _write_summaries(self, loss_dict, step):
-        with self._summary_writer.as_default():
+        with tf.name_scope('metrics'), self._summary_writer.as_default():
             for k, v in loss_dict.items():
                 tf.summary.scalar(k, data=v, step=step)
 
