@@ -113,9 +113,22 @@ class Trainer:
 
     @tf.function
     def _write_summaries(self, loss_dict, step):
-        with tf.name_scope('metrics'), self._summary_writer.as_default():
-            for k, v in loss_dict.items():
-                tf.summary.scalar(k, data=v, step=step)
+        with self._summary_writer.as_default():
+            tf.name_scope('retinanet/losses'): 
+                for k in ['box-loss',
+                          'class-loss',
+                          'weighted-loss',
+                          'total-loss',
+                          'l2-regularization']:
+                    v = loss_dict[k]
+                    tf.summary.scalar(k, data=v, step=step)
+
+            tf.name_scope('retinanet/metrics'): 
+                for k in ['learning-rate',
+                          'gradient-norm',
+                          'execution-time']:
+                    v = loss_dict[k]
+                    tf.summary.scalar(k, data=v, step=step)
 
     def _train_step(self, data):
         images, targets = data
