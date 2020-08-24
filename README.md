@@ -13,6 +13,15 @@
 ### Tensorboard
 ![loss curves](assets/tensorboard.png)
 
+
+
+#### To-Do
+ - [ ] Add MobileNetV3 Backbone
+ - [ ] Train on ResNet18, 34, 101
+ - [ ] Add models trained with 30x schedule, without imagenet pretrained weights
+ - [ ] Support Input Sharding for TPU Pod
+ - [ ] COCO mAP evaluation callback
+
 ```
 @misc{1708.02002,
 Author = {Tsung-Yi Lin and Priya Goyal and Ross Girshick and Kaiming He and Piotr Dollár},
