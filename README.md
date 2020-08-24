@@ -21,6 +21,7 @@
  - [ ] Add models trained with 30x schedule, without imagenet pretrained weights
  - [ ] Support Input Sharding for TPU Pod
  - [ ] COCO mAP evaluation callback
+ - [ ] Add fine-tuning example
 
 ```
 @misc{1708.02002,
