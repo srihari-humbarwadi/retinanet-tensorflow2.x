@@ -46,7 +46,7 @@ def main(_):
         batch_size=None,
         model_dir=params.experiment.model_dir,
         save_every=params.training.save_every,
-        restore_checkpoint=params.training.restore_checkpoint,
+        restore_checkpoint=True,
         summary_dir=params.experiment.tensorboard_dir,
         name=params.experiment.name
     )
