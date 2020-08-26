@@ -17,7 +17,7 @@ class InputPipeline:
         self.num_replicas = num_replicas
         self.batch_size = params.training.batch_size[run_mode]
         self.tfrecord_files = params.dataloader_params.tfrecords[run_mode]
-        self.label_encoder = LabelEncoder(run_mode, params)
+        self.label_encoder = LabelEncoder(params)
 
     def __call__(self, input_context=None):
         options = tf.data.Options()
@@ -37,13 +37,23 @@ class InputPipeline:
                                     input_context.input_pipeline_id)
 
         dataset = dataset.cache()
-        dataset = dataset.repeat()
+
+        if not self.run_mode == 'val':
+            dataset = dataset.repeat()
+
         dataset = dataset.interleave(map_func=tf.data.TFRecordDataset,
                                      cycle_length=32,
                                      num_parallel_calls=autotune)
         if self.run_mode == 'val':
-            dataset = dataset.map(map_func=parse_example,
-                                  num_parallel_calls=autotune)
+            preprocess_fn = \
+                self.label_encoder.preprocessing_pipeline.preprocess_val_sample
+            dataset = dataset.map(
+                map_func=lambda x: preprocess_fn(
+                    parse_example(x)),
+                num_parallel_calls=autotune)
+            dataset = dataset.batch(
+                batch_size=batch_size,
+                drop_remainder=False)
             dataset = dataset.prefetch(autotune)
             return dataset
 
