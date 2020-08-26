@@ -55,6 +55,7 @@ class CocoParser(Parser):
                 }
 
             self._classes = sorted(self._class_name_to_class_id.keys())
+            self._annotation[split_name] = coco
 
             if self._only_mappings:
                 return
@@ -87,7 +88,6 @@ class CocoParser(Parser):
                     }
                 }
                 self._data[split_name].append(sample)
-            self._annotation[split_name] = coco
 
         if not self._only_val:
             _build(self._train_annotations_path, 'train')
@@ -105,3 +105,7 @@ class CocoParser(Parser):
                 logging.info(
                     'Skipped {} crowd instances from {} samples'.format(
                         self._crowd_instances[split_name], split_name))
+
+    @property
+    def annotation(self):
+        return self._annotation

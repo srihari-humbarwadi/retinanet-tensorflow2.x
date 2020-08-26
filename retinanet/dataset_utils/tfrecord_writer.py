@@ -14,10 +14,12 @@ class TFrecordWriter:
         self._buffer = []
         self._file_count = 1
 
-    def _make_example(self, image, boxes, classes):
+    def _make_example(self, image, boxes, classes, image_id):
         feature = {
             'image':
             tf.train.Feature(bytes_list=tf.train.BytesList(value=[image])),
+            'image_id':
+            tf.train.Feature(int64_list=tf.train.Int64List(value=[image_id])),
             'xmins':
             tf.train.Feature(float_list=tf.train.FloatList(value=boxes[:, 0])),
             'ymins':
@@ -35,12 +37,12 @@ class TFrecordWriter:
         logging.info('writing {} samples in {}'.format(len(self._buffer),
                                                        tfrecord_path))
         with tf.io.TFRecordWriter(tfrecord_path) as writer:
-            for (image, boxes, classes) in self._buffer:
-                example = self._make_example(image, boxes, classes)
+            for (image, boxes, classes, image_id) in self._buffer:
+                example = self._make_example(image, boxes, classes, image_id)
                 writer.write(example.SerializeToString())
 
-    def push(self, image, boxes, classes):
-        self._buffer.append([image, boxes, classes])
+    def push(self, image, boxes, classes, image_id):
+        self._buffer.append([image, boxes, classes, image_id])
         if len(self._buffer) == self._step_size:
             fname = self.prefix + '-{:04.0f}'.format(
                 self._file_count) + '.tfrecord'

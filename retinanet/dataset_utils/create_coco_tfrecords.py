@@ -41,7 +41,8 @@ def write_tfrecords(data, num_shards, output_dir, split_name):
             image,
             np.array(sample['label']['boxes'], dtype=np.float32) /
             np.array([w, h, w, h]),
-            np.array(sample['label']['classes'], dtype=np.int32))
+            np.array(sample['label']['classes'], dtype=np.int32),
+            sample['image_id'])
     tfrecord_writer.flush_last()
     logging.warning('Skipped {} corrupted samples from {} data'.format(
         bad_samples, split_name))
