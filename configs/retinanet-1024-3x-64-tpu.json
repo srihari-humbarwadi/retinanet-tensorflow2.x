@@ -118,10 +118,8 @@
             "val": "gs://tfrc_datasets/coco_tfrecords/val*"
         },
         "augmentations": {
-            "use_augmentation": {
-                "train": true,
-                "val": false
-            },
+            "use_augmentation": true,
+            "horizontal_flip": true,
             "scale_jitter": {
                 "min_scale": 0.5,
                 "max_scale": 2.0
