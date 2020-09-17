@@ -52,7 +52,7 @@ class TFrecordWriter:
             self._file_count += 1
 
     def flush_last(self):
-        if len(self._buffer):
+        if self._buffer:
             fname = self.prefix + '-{:04.0f}'.format(
                 self._file_count) + '.tfrecord'
             tfrecord_path = os.path.join(self.output_dir, fname)
