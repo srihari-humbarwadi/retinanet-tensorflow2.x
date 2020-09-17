@@ -4,7 +4,7 @@ import tensorflow as tf
 def get_optimizer(name):
     if name == 'sgd':
         return tf.optimizers.SGD
-    elif name == 'adam':
+    if name == 'adam':
         return tf.optimizers.Adam
     raise ValueError('Unsupported optimizer requested')
 
