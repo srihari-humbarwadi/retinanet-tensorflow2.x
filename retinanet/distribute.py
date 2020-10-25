@@ -15,7 +15,7 @@ def get_strategy(params):
         logging.info('Creating Multi GPU strategy')
         return tf.distribute.MirroredStrategy()
 
-    elif params.type == 'tpu':
+    if params.type == 'tpu':
         logging.info('Creating TPU strategy')
         resolver = tf.distribute.cluster_resolver.TPUClusterResolver.connect(
             params.name)
