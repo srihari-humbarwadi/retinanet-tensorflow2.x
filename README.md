@@ -15,7 +15,7 @@
 | Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
 | --- | --- | --- |  --- |
 | **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-640-30x-64-tpu.json) | ~38h |
-| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-1024-30x-64-tpu.json) | ~_h |
+| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-1024-30x-64-tpu.json) | ~96h |
  
  - *Above models use randomly initialized backbones.*
  - *The models are trained with the **30x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
