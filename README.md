@@ -4,8 +4,8 @@
 ## ResNet50
 | Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
 | --- | --- | --- |  --- |
-| **640x640** | 37.1 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-640-3x-64-tpu.json) | ~3h |
-| **1024x1024** | 40.0 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1026-3x-64-tpu.json) | ~6.5h |
+| **640x640** | 36.8 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-640-3x-64-tpu.json) | ~3h |
+| **1024x1024** | 40.2 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1026-3x-64-tpu.json) | ~6.5h |
 | **1280x1280** | **40.5** | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1280-3x-64-tpu.json) | ~10.5h |
 
  - *Above models use imagenet pretrained backbone.*
