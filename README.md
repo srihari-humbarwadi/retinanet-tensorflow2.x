@@ -11,6 +11,12 @@
  - *Above models use imagenet pretrained backbone.*
  - *The models are trained with the 3x training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 
+## ResNet34
+| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
+| --- | --- | --- |  --- |
+| **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-34-640-30x-64-tpu.json) | ~28h |
+| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-34-1024-30x-64-tpu.json) | ~68h |
+
 ## ResNet101
 | Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
 | --- | --- | --- |  --- |
