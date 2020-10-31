@@ -26,7 +26,13 @@
  - *Above models use randomly initialized backbones.*
  - *The models are trained with the **30x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 
-
+## ResNet152
+| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
+| --- | --- | --- |  --- |
+| **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-151-640-50x-64-tpu.json) | ~80h |
+ 
+ - *Above model uses randomly initialized backbone.*
+ - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 ### Tensorboard
 ![loss curves](assets/tensorboard.png)
 
