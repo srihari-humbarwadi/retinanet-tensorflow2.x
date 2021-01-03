@@ -16,7 +16,7 @@ def retinanet_builder(input_shape, params):
     conv_2d_op = tf.keras.layers.Conv2D
     bn_op = functools.partial(tf.keras.layers.BatchNormalization,
                               momentum=0.997,
-                              epsilon=1e-4)
+                              epsilon=1e-3)
 
     conv_3x3 = functools.partial(
         conv_2d_op,

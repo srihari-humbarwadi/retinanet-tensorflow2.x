@@ -13,7 +13,7 @@ def fpn_builder(input_shape, params):
     bn_op = functools.partial(
         tf.keras.layers.BatchNormalization,
         momentum=0.997,
-        epsilon=1e-4)
+        epsilon=1e-3)
     upsample_op = functools.partial(
         tf.keras.layers.UpSampling2D,
         size=2,
