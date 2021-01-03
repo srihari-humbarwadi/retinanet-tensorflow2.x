@@ -60,7 +60,7 @@ class NormActivation:
             epsilon=1e-3 if use_sync else 1e-4,
             center=True,
             scale=True,
-            fused=fused,
+            fused=fused and (not use_sync),
             gamma_initializer=gamma_initializer,
             name=name)
         self._use_activation = use_activation
