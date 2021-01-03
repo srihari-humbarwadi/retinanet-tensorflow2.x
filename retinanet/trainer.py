@@ -41,7 +41,7 @@ class Trainer:
         self.val_freq = val_freq
         self.steps_per_execution = steps_per_execution
         self.batch_size = batch_size
-        self.model_dir = model_dir
+        self.model_dir = os.path.join(model_dir, name)
         self.save_every = save_every
         self.restore_checkpoint = restore_checkpoint
         self.summary_dir = summary_dir
