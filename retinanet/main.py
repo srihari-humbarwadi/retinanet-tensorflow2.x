@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 from absl import app, flags, logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -44,6 +46,13 @@ def set_precision(precision):
 def main(_):
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
 
+    params = Config(FLAGS.config_path).params
+
+    if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
+        os.mkdir(FLAGS.log_dir)
+
+    logging.get_absl_handler().use_absl_log_file(params.experiment.name)
+
     if FLAGS.xla:
         tf.config.optimizer.set_jit(True)
 
@@ -51,8 +60,6 @@ def main(_):
         physical_devices = tf.config.list_physical_devices('GPU')
         [tf.config.experimental.set_memory_growth(x, True)
          for x in physical_devices]
-
-    params = Config(FLAGS.config_path).params
 
     set_precision(params.floatx.precision)
     strategy = get_strategy(params.training.strategy)
