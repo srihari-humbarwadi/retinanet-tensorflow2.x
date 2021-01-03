@@ -5,15 +5,18 @@ import tensorflow as tf
 from retinanet.model.backbone import backbone_builder
 
 
-def fpn_builder(input_shape, params):
+def fpn_builder(input_shape, params, use_sync=True):
     backbone = backbone_builder(input_shape, params.backbone)
     c3, c4, c5 = backbone.outputs
 
     conv_2d_op = tf.keras.layers.Conv2D
+
+    normalization_op = tf.keras.layers.experimental.SyncBatchNormalization if use_sync else tf.keras.layers.BatchNormalization
     bn_op = functools.partial(
-        tf.keras.layers.BatchNormalization,
+        normalization_op,
         momentum=0.997,
-        epsilon=1e-3)
+        epsilon=1e-3 if use_sync else 1e-4)
+
     upsample_op = functools.partial(
         tf.keras.layers.UpSampling2D,
         size=2,

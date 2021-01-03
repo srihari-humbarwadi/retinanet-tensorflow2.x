@@ -6,7 +6,7 @@ import tensorflow as tf
 from retinanet.model.fpn import fpn_builder
 
 
-def retinanet_builder(input_shape, params):
+def retinanet_builder(input_shape, params, use_sync=True):
     fpn = fpn_builder(input_shape, params)
 
     k_init = tf.keras.initializers.RandomNormal(stddev=0.01)
@@ -14,9 +14,12 @@ def retinanet_builder(input_shape, params):
     prior_prob = tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
 
     conv_2d_op = tf.keras.layers.Conv2D
-    bn_op = functools.partial(tf.keras.layers.BatchNormalization,
-                              momentum=0.997,
-                              epsilon=1e-3)
+
+    normalization_op = tf.keras.layers.experimental.SyncBatchNormalization if use_sync else tf.keras.layers.BatchNormalization
+    bn_op = functools.partial(
+        normalization_op,
+        momentum=0.997,
+        epsilon=1e-3 if use_sync else 1e-4)
 
     conv_3x3 = functools.partial(
         conv_2d_op,
