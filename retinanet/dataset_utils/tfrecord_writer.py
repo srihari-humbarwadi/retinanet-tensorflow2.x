@@ -8,11 +8,20 @@ class TFrecordWriter:
     def __init__(self, n_samples, n_shards, output_dir='', prefix=''):
         self.n_samples = n_samples
         self.n_shards = n_shards
-        self._step_size = self.n_samples // self.n_shards + 1
+        self._step_size = self.n_samples // self.n_shards
         self.prefix = prefix
         self.output_dir = output_dir
         self._buffer = []
         self._file_count = 1
+
+        logging.info(
+            'writing {} samples in each tfrecord'.format(self._step_size))
+
+        if self.n_samples % self.n_shards:
+            remainder = self.n_samples - (self._step_size * self.n_shards)
+            logging.warn(
+                'writing {} remaining samples in last tfrecord'.format(
+                    remainder))
 
     def _make_example(self, image, boxes, classes, image_id):
         feature = {
