@@ -80,12 +80,10 @@ class NormActivation:
 
 
 def norm_activation_builder(momentum=0.997,
-                            epsilon=1e-4,
                             activation='relu',
                             **kwargs):
     return functools.partial(NormActivation,
                              momentum=momentum,
-                             epsilon=epsilon,
                              activation=activation,
                              **kwargs)
 
