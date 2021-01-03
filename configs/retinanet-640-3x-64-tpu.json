@@ -2,7 +2,7 @@
     "experiment": {
         "name": "retinanet-640-3x-64-tpu",
         "run_mode": "train",
-        "model_dir": "gs://tfrc_datasets/model_files/retinanet-640-3x-64-tpu",
+        "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
     },
     "input": {
@@ -63,15 +63,15 @@
             "nesterov": true,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
-                "warmup_steps": 2000,
+                "warmup_steps": 500,
                 "values": [
                     0.08,
                     0.008,
                     0.0008
                 ],
                 "boundaries": [
-                    45000,
-                    60000
+                    53440,
+                    62820
                 ]
             }
         }

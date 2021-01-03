@@ -2,7 +2,7 @@
     "experiment": {
         "name": "retinanet-101-1024-30x-64-tpu",
         "run_mode": "train",
-        "model_dir": "gs://tfrc_datasets/model_files/retinanet-101-1024-30x-64-tpu",
+        "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
     },
     "input": {
