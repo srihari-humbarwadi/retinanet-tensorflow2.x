@@ -138,3 +138,4 @@ tensorboard/
 
 # model_files
 model_files/
+saved_model/
