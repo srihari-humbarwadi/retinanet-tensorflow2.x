@@ -22,7 +22,7 @@
 | --- | --- | --- |  --- |
 | **640x640** | 40.2 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-640-30x-64-tpu.json) | ~38h |
 | **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-1024-30x-64-tpu.json) | ~96h |
- 
+
  - *Above models use randomly initialized backbones.*
  - *The models are trained with the **30x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 
@@ -30,7 +30,7 @@
 | Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
 | --- | --- | --- |  --- |
 | **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-151-640-50x-64-tpu.json) | ~80h |
- 
+
  - *Above model uses randomly initialized backbone.*
  - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 ### Tensorboard
@@ -41,7 +41,7 @@
 ## Getting Started
  - Use `prepare_coco_dataset.sh` to download the COCO2017 dataset and create the tfrecords.
  - If you plan to train on **Google Cloud TPU**, upload the `coco_tfrecords` folder to your **Google Cloud Storage** bucket.
- - `python3 -m retinanet.main --config_path configs/<config name>.json --debug` to train, you should now be able to see logs similar to this 
+ - `python3 -m retinanet.main --config_path configs/<config name>.json --debug` to train, you should now be able to see logs similar to this
 ```
 I1026 09:23:09.476862 140424579548992 trainer.py:77] Setting up train dataset
 I1026 09:23:09.533261 140424579548992 input_pipeline.py:30] Found 256 train tfrecords matching gs://tfrc_datasets/coco_tfrecords/train*

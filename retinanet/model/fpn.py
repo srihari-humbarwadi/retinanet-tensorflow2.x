@@ -11,7 +11,9 @@ def fpn_builder(input_shape, params, use_sync=True):
 
     conv_2d_op = tf.keras.layers.Conv2D
 
-    normalization_op = tf.keras.layers.experimental.SyncBatchNormalization if use_sync else tf.keras.layers.BatchNormalization
+    normalization_op = tf.keras.layers.experimental.SyncBatchNormalization \
+        if use_sync else tf.keras.layers.BatchNormalization
+
     bn_op = functools.partial(
         normalization_op,
         momentum=0.997,

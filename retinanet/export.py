@@ -1,3 +1,5 @@
+import os
+
 import tensorflow as tf
 from absl import app, flags, logging
 
@@ -71,7 +73,7 @@ def main(_):
     logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
     tf.saved_model.save(
         inference_model,
-        FLAGS.export_dir,
+        os.path.join(FLAGS.export_dir, params.experiment.name),
         signatures={'serving_default': serving_fn.get_concrete_function()})
 
 
