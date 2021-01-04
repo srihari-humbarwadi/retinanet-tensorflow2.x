@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "retinanet-640-3x-64-tpu-no-freeze",
+        "name": "retinanet-18-640-30x-64-tpu",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -18,8 +18,8 @@
     "architecture": {
         "backbone": {
             "type": "resnet",
-            "depth": 50,
-            "checkpoint": "gs://tfrc_datasets/resnet50"
+            "depth": 18,
+            "checkpoint": ""
         },
         "fpn": {
             "filters": 256
@@ -52,26 +52,26 @@
             "name": "v3-8-a"
         },
         "restore_checkpoint": true,
-        "train_steps": 67500 ,
+        "train_steps": 656250,
         "validation_steps": -1,
         "validation_freq": -1,
         "steps_per_execution": 250,
-        "save_every": 25000,
+        "save_every": 10000,
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": true,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
-                "warmup_steps": 500,
+                "warmup_steps": 2000,
                 "values": [
                     0.08,
                     0.008,
                     0.0008
                 ],
                 "boundaries": [
-                    53440,
-                    62820
+                    519530,
+                    610680
                 ]
             }
         }

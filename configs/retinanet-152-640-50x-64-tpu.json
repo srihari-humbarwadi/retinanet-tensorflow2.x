@@ -52,7 +52,7 @@
             "name": "v3-8-a"
         },
         "restore_checkpoint": true,
-        "train_steps": 656250,
+        "train_steps": 937500,
         "validation_steps": -1,
         "validation_freq": -1,
         "steps_per_execution": 250,
@@ -70,8 +70,8 @@
                     0.0008
                 ],
                 "boundaries": [
-                    519530,
-                    610680
+                    742190,
+                    872395
                 ]
             }
         }
