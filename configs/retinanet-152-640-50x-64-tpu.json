@@ -52,26 +52,26 @@
             "name": "v3-8-a"
         },
         "restore_checkpoint": true,
-        "train_steps": 1125000,
+        "train_steps": 656250,
         "validation_steps": -1,
         "validation_freq": -1,
         "steps_per_execution": 250,
-        "save_every": 50000,
+        "save_every": 10000,
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": true,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
-                "warmup_steps": 10000,
+                "warmup_steps": 2000,
                 "values": [
                     0.08,
                     0.008,
                     0.0008
                 ],
                 "boundaries": [
-                    750000,
-                    1000000
+                    519530,
+                    610680
                 ]
             }
         }
