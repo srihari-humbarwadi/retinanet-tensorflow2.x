@@ -8,7 +8,8 @@ def visualize_detections(image,
                          scores,
                          figsize=(12, 12),
                          linewidth=1,
-                         color=[0, 0, 1]):
+                         color=[0, 0, 1],
+                         score_threshold=0.25):
     """Visualize Detections"""
     image = np.array(image, dtype=np.uint8)
     plt.figure(figsize=figsize)
@@ -16,6 +17,10 @@ def visualize_detections(image,
     plt.imshow(image)
     ax = plt.gca()
     for box, _cls, score in zip(boxes, classes, scores):
+
+        if score < score_threshold:
+            continue
+
         text = "{}: {:.2f}".format(_cls, score)
         x1, y1, x2, y2 = box
         w, h = x2 - x1, y2 - y1
