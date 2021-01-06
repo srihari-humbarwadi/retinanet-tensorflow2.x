@@ -23,7 +23,8 @@ class TFrecordWriter:
                 'writing {} remaining samples in last tfrecord'.format(
                     remainder))
 
-    def _make_example(self, image, boxes, classes, image_id):
+    @staticmethod
+    def _make_example(image, boxes, classes, image_id):
         feature = {
             'image':
             tf.train.Feature(bytes_list=tf.train.BytesList(value=[image])),
@@ -47,7 +48,8 @@ class TFrecordWriter:
                                                        tfrecord_path))
         with tf.io.TFRecordWriter(tfrecord_path) as writer:
             for (image, boxes, classes, image_id) in self._buffer:
-                example = self._make_example(image, boxes, classes, image_id)
+                example = TFrecordWriter._make_example(
+                    image, boxes, classes, image_id)
                 writer.write(example.SerializeToString())
 
     def push(self, image, boxes, classes, image_id):
