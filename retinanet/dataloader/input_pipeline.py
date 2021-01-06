@@ -9,9 +9,9 @@ class InputPipeline:
     _SUPPORTED_RUN_MODES = ['train', 'val']
 
     def __init__(self, run_mode, params, is_multi_host, num_replicas):
-        assert run_mode in InputPipeline._SUPPORTED_RUN_MODES, \
-            'Unsupported run mode requested, available run modes: {}'.format(
-                InputPipeline._SUPPORTED_RUN_MODES)
+        if run_mode not in InputPipeline._SUPPORTED_RUN_MODES:
+            raise AssertionError('Unsupported run mode requested, available run modes: {}'.format(
+                    InputPipeline._SUPPORTED_RUN_MODES))
         self.run_mode = run_mode
         self.is_multi_host = is_multi_host
         self.num_replicas = num_replicas
