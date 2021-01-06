@@ -7,10 +7,7 @@ from retinanet.model.backbone import backbone_builder
 
 def fpn_builder(input_shape, params):
 
-    if tf.distribute.get_strategy().num_replicas_in_sync > 1:
-        use_sync = True
-    else:
-        use_sync = False
+    use_sync = tf.distribute.get_strategy().num_replicas_in_sync > 1
 
     backbone = backbone_builder(input_shape, params.backbone)
     c3, c4, c5 = backbone.outputs
