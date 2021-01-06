@@ -79,11 +79,15 @@ def main(_):
         }
 
     if FLAGS.export_h5:
+        export_dir = os.path.join(FLAGS.export_dir, trainer.name)
+
+        if not os.path.exists(export_dir):
+            os.makedirs(export_dir, exist_ok=True)
+
         latest_checkpoint = os.path.basename(
             tf.train.latest_checkpoint(trainer.model_dir))
 
-        export_filename = os.path.join(
-            FLAGS.export_dir, latest_checkpoint + '.h5')
+        export_filename = os.path.join(export_dir, latest_checkpoint + '.h5')
 
         logging.info(
             'Exporting `weights in h5 format` to {}'.format(export_filename))
