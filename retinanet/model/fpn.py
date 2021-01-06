@@ -5,7 +5,13 @@ import tensorflow as tf
 from retinanet.model.backbone import backbone_builder
 
 
-def fpn_builder(input_shape, params, use_sync=True):
+def fpn_builder(input_shape, params):
+
+    if tf.distribute.get_strategy().num_replicas_in_sync > 1:
+        use_sync = True
+    else:
+        use_sync = False
+
     backbone = backbone_builder(input_shape, params.backbone)
     c3, c4, c5 = backbone.outputs
 

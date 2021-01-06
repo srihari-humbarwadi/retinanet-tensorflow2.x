@@ -6,7 +6,13 @@ import tensorflow as tf
 from retinanet.model.fpn import fpn_builder
 
 
-def retinanet_builder(input_shape, params, use_sync=True):
+def retinanet_builder(input_shape, params):
+
+    if tf.distribute.get_strategy().num_replicas_in_sync > 1:
+        use_sync = True
+    else:
+        use_sync = False
+
     fpn = fpn_builder(input_shape, params)
 
     k_init = tf.keras.initializers.RandomNormal(stddev=0.01)

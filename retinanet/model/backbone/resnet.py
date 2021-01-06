@@ -34,8 +34,7 @@ class NormActivation:
                  use_activation=True,
                  activation='relu',
                  fused=True,
-                 name=None,
-                 use_sync=True):
+                 name=None):
         """A class to construct layers for a batch normalization followed by a ReLU.
     Args:
       momentum: momentum for the moving average.
@@ -53,6 +52,11 @@ class NormActivation:
             gamma_initializer = tf.keras.initializers.Zeros()
         else:
             gamma_initializer = tf.keras.initializers.Ones()
+
+        if tf.distribute.get_strategy().num_replicas_in_sync > 1:
+            use_sync = True
+        else:
+            use_sync = False
 
         normalization_op = tf.keras.layers.experimental.SyncBatchNormalization \
             if use_sync else tf.keras.layers.BatchNormalization
