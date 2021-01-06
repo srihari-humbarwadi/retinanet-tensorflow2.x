@@ -65,7 +65,8 @@ class LabelEncoder:
                 self.encoder_params.box_variance, dtype=tf.float32)
         return box_target
 
-    def _pad_labels(self, gt_boxes, cls_ids):
+    @staticmethod
+    def _pad_labels(gt_boxes, cls_ids):
         gt_boxes = tf.concat([tf.stack([tf.zeros(4), tf.zeros(4)]), gt_boxes],
                              axis=0)
         cls_ids = tf.concat([
@@ -75,10 +76,10 @@ class LabelEncoder:
         return gt_boxes, cls_ids
 
     def encode_sample(self, sample):
-        image, gt_boxes, cls_ids, scale = self.preprocessing_pipeline(sample)
+        image, gt_boxes, cls_ids, _ = self.preprocessing_pipeline(sample)
         matches = self._match_anchor_boxes(self.anchors.boxes, gt_boxes)
         cls_ids = tf.cast(cls_ids, dtype=tf.float32)
-        gt_boxes, cls_ids = self._pad_labels(gt_boxes, cls_ids)
+        gt_boxes, cls_ids = LabelEncoder._pad_labels(gt_boxes, cls_ids)
         gt_boxes = tf.gather(gt_boxes, matches + 2)
         cls_target = tf.gather(cls_ids, matches + 2)
         box_target = self._compute_box_target(gt_boxes, matches)
