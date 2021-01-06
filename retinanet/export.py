@@ -16,11 +16,15 @@ flags.DEFINE_string('config_path',
 
 flags.DEFINE_string('export_dir',
                     default='export',
-                    help='Path to store the `saved_model`')
+                    help='Path to store the model artefacts')
+
+flags.DEFINE_boolean('export_saved_model',
+                     default=False,
+                     help='Export weights as a `saved_model`')
 
 flags.DEFINE_boolean('export_h5',
                      default=False,
-                     help='Export weights as an h5 file, to be used for fine tuning')
+                     help='Export weights as an h5 file (can be used for fine tuning)')  # noqa: E501
 
 flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
@@ -96,12 +100,14 @@ def main(_):
 
         trainer.model.save_weights(export_filename)
 
-    logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
+    if FLAGS.export_saved_model:
 
-    tf.saved_model.save(
-        inference_model,
-        os.path.join(FLAGS.export_dir, params.experiment.name),
-        signatures={'serving_default': serving_fn.get_concrete_function()})
+        logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
+
+        tf.saved_model.save(
+            inference_model,
+            os.path.join(FLAGS.export_dir, params.experiment.name),
+            signatures={'serving_default': serving_fn.get_concrete_function()})
 
 
 if __name__ == '__main__':
