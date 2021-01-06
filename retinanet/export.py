@@ -61,6 +61,8 @@ def main(_):
         name=params.experiment.name
     )
 
+    trainer.restore_status.assert_consumed()
+
     inference_model = make_inference_model(trainer.model, params)
 
     @tf.function(input_signature=[
