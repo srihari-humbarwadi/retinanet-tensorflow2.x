@@ -26,6 +26,10 @@ flags.DEFINE_boolean('export_h5',
                      default=False,
                      help='Export weights as an h5 file (can be used for fine tuning)')  # noqa: E501
 
+flags.DEFINE_string('overide_model_dir',
+                    default='null',
+                    help='Use local filesystem to load checkpoint')
+
 flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
 FLAGS = flags.FLAGS
@@ -41,7 +45,14 @@ def main(_):
 
     logging.get_absl_handler().use_absl_log_file('export_' + params.experiment.name)
 
+    if not FLAGS.overide_model_dir == 'null':
+        model_dir = FLAGS.overide_model_dir
+        logging.warning('Using local path {} as `model_dir`'.format(model_dir))
+
     run_mode = 'export'
+
+    # skip loading pretrained backbone weights
+    params.architecture.backbone.checkpoint = ''
 
     train_input_fn = None
     val_input_fn = None
@@ -58,7 +69,7 @@ def main(_):
         val_freq=params.training.validation_freq,
         steps_per_execution=params.training.steps_per_execution,
         batch_size=None,
-        model_dir=params.experiment.model_dir,
+        model_dir=model_dir,
         save_every=params.training.save_every,
         restore_checkpoint=True,
         summary_dir=params.experiment.tensorboard_dir,
