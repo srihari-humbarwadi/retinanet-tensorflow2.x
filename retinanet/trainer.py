@@ -99,7 +99,10 @@ class Trainer:
             self.restore_status = self._model.load_weights(latest_checkpoint)
             return
 
-        logging.info(
+        assert 'export' not in self.run_mode, \
+            'No checkpoints found in {}, aborting.'.format(self.model_dir)
+
+        logging.warning(
             'No existing checkpoints found in {}, training from scratch!'
             .format(self.model_dir))
 
