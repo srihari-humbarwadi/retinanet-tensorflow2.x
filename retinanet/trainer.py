@@ -49,9 +49,9 @@ class Trainer:
         self.restore_status = None
         self.use_float16 = False
 
-        assert self.run_mode in Trainer._RUN_MODES, \
-            'Invalid run mode, aborting!\n Supported run models {}' \
-            .format(Trainer._RUN_MODES)
+        if self.run_mode not in Trainer._RUN_MODES:
+            raise AssertionError('Invalid run mode, aborting!\n Supported run models {}' \
+            .format(Trainer._RUN_MODES))
 
         self._setup()
 
@@ -99,8 +99,8 @@ class Trainer:
             self.restore_status = self._model.load_weights(latest_checkpoint)
             return
 
-        assert 'export' not in self.run_mode, \
-            'No checkpoints found in {}, aborting.'.format(self.model_dir)
+        if 'export' in self.run_mode:
+            raise AssertionError('No checkpoints found in {}, aborting.'.format(self.model_dir))
 
         logging.warning(
             'No existing checkpoints found in {}, training from scratch!'

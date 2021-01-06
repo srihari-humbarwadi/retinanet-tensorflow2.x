@@ -65,9 +65,9 @@ def main(_):
     strategy = get_strategy(params.training.strategy)
 
     run_mode = params.experiment.run_mode
-    assert run_mode in SUPPORTED_RUN_MODES, \
-        'Unsupported run mode requested, available run modes: {}'.format(
-            SUPPORTED_RUN_MODES)
+    if run_mode not in SUPPORTED_RUN_MODES:
+        raise AssertionError('Unsupported run mode requested, available run modes: {}'.format(
+                SUPPORTED_RUN_MODES))
 
     train_input_fn = None
     val_input_fn = None
