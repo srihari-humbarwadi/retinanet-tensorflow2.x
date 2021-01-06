@@ -74,10 +74,15 @@ def main(_):
         }
 
     if FLAGS.export_h5:
+        latest_checkpoint = os.path.basename(
+            tf.train.latest_checkpoint(trainer.model_dir))
+
         export_filename = os.path.join(
-            FLAGS.export_dir, tf.train.latest_checkpoint(trainer.model_dir))
-        logging.info('Exporting `h5` to {}'.format(FLAGS.export_dir))
-        trainer.model.save_weights(export_filename + '.h5')
+            FLAGS.export_dir, latest_checkpoint + '.h5')
+        logging.info(
+            'Exporting `weights in h5 format` to {}'.format(export_filename))
+
+        trainer.model.save_weights(export_filename)
 
     logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
     tf.saved_model.save(
