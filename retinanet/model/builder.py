@@ -64,6 +64,10 @@ def model_builder(params):
                                skip_mismatch=True,
                                by_name=True)
 
+            logging.info(
+                'l2_regularization loss after loading pretrained weights{}'.format(
+                    tf.math.add_n(model.losses).numpy()))
+
         loss_fn = RetinaNetLoss(params.architecture.num_classes, params.loss)
         model.compile(optimizer=optimizer, loss=loss_fn)
 
@@ -94,7 +98,8 @@ def make_inference_model(model, params):
             ])(model.output['class-predictions'][i])
         ]
         box_predictions += [
-            tf.keras.layers.Reshape([-1, 4])(model.output['box-predictions'][i])
+            tf.keras.layers.Reshape(
+                [-1, 4])(model.output['box-predictions'][i])
         ]
     class_predictions = tf.concat(class_predictions, axis=1)
     box_predictions = tf.concat(box_predictions, axis=1)
