@@ -32,13 +32,18 @@ def main(_):
 
     params = Config(FLAGS.config_path).params
 
+    if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
+        os.mkdir(FLAGS.log_dir)
+
+    logging.get_absl_handler().use_absl_log_file('export_' + params.experiment.name)
+
     run_mode = 'export'
 
     train_input_fn = None
     val_input_fn = None
     model_fn = model_builder(params)
 
-    trainer = Trainer(  # noqa: F841
+    trainer = Trainer(
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,
         model_fn=model_fn,
@@ -79,12 +84,14 @@ def main(_):
 
         export_filename = os.path.join(
             FLAGS.export_dir, latest_checkpoint + '.h5')
+
         logging.info(
             'Exporting `weights in h5 format` to {}'.format(export_filename))
 
         trainer.model.save_weights(export_filename)
 
     logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
+
     tf.saved_model.save(
         inference_model,
         os.path.join(FLAGS.export_dir, params.experiment.name),
