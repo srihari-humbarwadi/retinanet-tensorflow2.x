@@ -18,6 +18,9 @@ flags.DEFINE_string('export_dir',
                     default='export',
                     help='Path to store the `saved_model`')
 
+flags.DEFINE_boolean('export_h5',
+                     default=False,
+                     help='Export weights as an h5 file, to be used for fine tuning')
 
 flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
@@ -69,6 +72,12 @@ def main(_):
             'classes': detections.nmsed_classes,
             'num_detections': detections.valid_detections
         }
+
+    if FLAGS.export_h5:
+        export_filename = os.path.join(
+            FLAGS.export_dir, tf.train.latest_checkpoint(trainer.model_dir))
+        logging.info('Exporting `h5` to {}'.format(FLAGS.export_dir))
+        trainer.model.save_weights(export_filename + '.h5')
 
     logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
     tf.saved_model.save(
