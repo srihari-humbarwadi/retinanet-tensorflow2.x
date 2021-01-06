@@ -45,6 +45,8 @@ def main(_):
 
     logging.get_absl_handler().use_absl_log_file('export_' + params.experiment.name)
 
+    model_dir = params.experiment.model_dir
+
     if not FLAGS.overide_model_dir == 'null':
         model_dir = FLAGS.overide_model_dir
         logging.warning('Using local path {} as `model_dir`'.format(model_dir))
