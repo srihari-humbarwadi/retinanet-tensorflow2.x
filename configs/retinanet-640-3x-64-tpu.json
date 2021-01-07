@@ -52,7 +52,7 @@
             "name": "v3-8-a"
         },
         "restore_checkpoint": true,
-        "train_steps": 67500 ,
+        "train_steps": 67500,
         "validation_steps": -1,
         "validation_freq": -1,
         "steps_per_execution": 250,
@@ -60,7 +60,6 @@
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
-            "nesterov": true,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
                 "warmup_steps": 500,
@@ -148,7 +147,7 @@
         "nms_iou_threshold": 0.5,
         "confidence_threshold": 0.05,
         "pre_nms_top_k": 5000,
-        "max_detections_per_class":100,
+        "max_detections_per_class": 100,
         "max_detections": 100
     }
 }

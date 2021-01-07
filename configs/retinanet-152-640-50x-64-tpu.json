@@ -60,7 +60,6 @@
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
-            "nesterov": true,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
                 "warmup_steps": 4000,
@@ -148,7 +147,7 @@
         "nms_iou_threshold": 0.5,
         "confidence_threshold": 0.05,
         "pre_nms_top_k": 5000,
-        "max_detections_per_class":100,
+        "max_detections_per_class": 100,
         "max_detections": 100
     }
 }
