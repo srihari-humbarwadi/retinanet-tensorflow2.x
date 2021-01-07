@@ -5,7 +5,6 @@ from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.losses import RetinaNetLoss
-from retinanet.lr_schedules import PiecewiseConstantDecayWithLinearWarmup
 from retinanet.model.decode_predictions import DecodePredictions
 from retinanet.model.retinanet import retinanet_builder
 from retinanet.model.utils import add_l2_regularization, get_optimizer
@@ -42,12 +41,8 @@ def model_builder(params):
             logging.info('Initial l2_regularization loss {}'.format(
                 tf.math.add_n(model.losses).numpy()))
 
-        lr_params = params.training.optimizer.lr_params
-        learning_rate_fn = PiecewiseConstantDecayWithLinearWarmup(
-            lr_params.warmup_learning_rate, lr_params.warmup_steps,
-            lr_params.boundaries, lr_params.values)
-        optimizer = get_optimizer(params.training.optimizer.name)(
-            learning_rate=learning_rate_fn, momentum=0.9, nesterov=True)
+        optimizer = get_optimizer(params.training.optimizer)
+        logging.debug(tf.keras.utils.serialize_keras_object(optimizer))
 
         if params.floatx.precision == 'mixed_float16':
             logging.info(
@@ -65,8 +60,8 @@ def model_builder(params):
                                by_name=True)
 
             logging.info(
-                'l2_regularization loss after loading pretrained weights{}'.format(
-                    tf.math.add_n(model.losses).numpy()))
+                'l2_regularization loss after loading pretrained \
+                    weights{}'.format(tf.math.add_n(model.losses).numpy()))
 
         loss_fn = RetinaNetLoss(params.architecture.num_classes, params.loss)
         model.compile(optimizer=optimizer, loss=loss_fn)
