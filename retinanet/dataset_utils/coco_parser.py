@@ -30,10 +30,23 @@ class CocoParser(Parser):
 
         self._crowd_instances = {'train': 0, 'val': 0}
         self._skipped_samples = {'train': 0, 'val': 0}
+        self._skipped_annotations = {'train': 0, 'val': 0}
         self._annotation = {}
         self._build_dataset()
 
     def _build_dataset(self):
+
+        def _is_box_valid(box, image_height, image_width):
+            x, y, width, height = box
+
+            if width <= 0 or height <= 0:
+                return False
+
+            if x + width > image_width or y + height > image_height:
+                return False
+
+            return True
+
         def _convert_box_format(boxes):
             boxes = np.array(boxes)
             return np.concatenate([boxes[:, :2], boxes[:, :2] + boxes[:, 2:]],
@@ -68,10 +81,21 @@ class CocoParser(Parser):
                 boxes = []
                 classes = []
 
+                image_height = coco.imgs[image_id]['height']
+                image_width = coco.imgs[image_id]['width']
+
                 for obj in annotation:
+
                     if self._skip_crowd and obj['iscrowd']:
                         self._crowd_instances[split_name] += 1
                         continue
+
+                    if not _is_box_valid(obj['bbox'],
+                                         image_height,
+                                         image_width):
+                        self._skipped_annotations[split_name] += 1
+                        continue
+
                     boxes.append(obj['bbox'])
                     classes.append(obj['category_id'])
 
@@ -82,6 +106,8 @@ class CocoParser(Parser):
                 sample = {
                     'image': image_path,
                     'image_id': image_id,
+                    'image_height': image_height,
+                    'image_width': image_width,
                     'label': {
                         'boxes': _convert_box_format(boxes),
                         'classes': classes
@@ -101,11 +127,14 @@ class CocoParser(Parser):
             logging.info('Skipped {} {} empty samples'.format(
                 self._skipped_samples[split_name], split_name))
 
+            logging.info('Skipped {} {} bad annotations'.format(
+                self._skipped_annotations[split_name], split_name))
+
             if self._skip_crowd:
                 logging.info(
                     'Skipped {} crowd instances from {} samples'.format(
                         self._crowd_instances[split_name], split_name))
 
-    @property
+    @ property
     def annotation(self):
         return self._annotation
