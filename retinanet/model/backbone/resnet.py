@@ -60,7 +60,7 @@ class NormActivation:
 
         self._normalization_op = normalization_op(
             momentum=momentum,
-            epsilon=1e-3,
+            epsilon=1e-4,
             center=True,
             scale=True,
             fused=fused and (not use_sync),
