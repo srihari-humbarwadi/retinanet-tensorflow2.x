@@ -237,7 +237,7 @@ class Trainer:
         current_step = start_step
 
         if self.val_freq < 1:
-            self.val_freq = self.train_steps // 5
+            self.val_freq = self.train_steps
 
         logging.info('Running evaluation every {} steps'.format(self.val_freq))
 
