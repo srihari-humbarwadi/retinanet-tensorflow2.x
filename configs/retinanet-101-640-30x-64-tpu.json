@@ -55,6 +55,7 @@
         "train_steps": 656250,
         "validation_steps": -1,
         "validation_freq": -1,
+        "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 250,
         "save_every": 10000,
         "optimizer": {
