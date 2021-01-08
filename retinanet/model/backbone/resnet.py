@@ -53,17 +53,14 @@ class NormActivation:
         else:
             gamma_initializer = tf.keras.initializers.Ones()
 
-        use_sync = tf.distribute.get_strategy().num_replicas_in_sync > 1
-
-        normalization_op = tf.keras.layers.experimental.SyncBatchNormalization \
-            if use_sync else tf.keras.layers.BatchNormalization
+        normalization_op = tf.keras.layers.BatchNormalization
 
         self._normalization_op = normalization_op(
             momentum=momentum,
             epsilon=1e-4,
             center=True,
             scale=True,
-            fused=fused and (not use_sync),
+            fused=fused,
             gamma_initializer=gamma_initializer,
             name=name)
         self._use_activation = use_activation

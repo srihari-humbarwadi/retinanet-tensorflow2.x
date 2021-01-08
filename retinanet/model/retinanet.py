@@ -7,9 +7,6 @@ from retinanet.model.fpn import fpn_builder
 
 
 def retinanet_builder(input_shape, params):
-
-    use_sync = tf.distribute.get_strategy().num_replicas_in_sync > 1
-
     fpn = fpn_builder(input_shape, params)
 
     k_init = tf.keras.initializers.RandomNormal(stddev=0.01)
@@ -18,8 +15,7 @@ def retinanet_builder(input_shape, params):
 
     conv_2d_op = tf.keras.layers.Conv2D
 
-    normalization_op = tf.keras.layers.experimental.SyncBatchNormalization \
-        if use_sync else tf.keras.layers.BatchNormalization
+    normalization_op = tf.keras.layers.BatchNormalization
 
     bn_op = functools.partial(
         normalization_op,
