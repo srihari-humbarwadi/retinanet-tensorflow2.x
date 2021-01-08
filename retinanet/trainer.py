@@ -5,6 +5,8 @@ import numpy as np
 import tensorflow as tf
 from absl import logging
 
+from retinanet.model.builder import make_eval_model
+
 
 class Trainer:
 
@@ -16,36 +18,30 @@ class Trainer:
     ]
 
     def __init__(self,
+                 params,
                  strategy,
                  run_mode,
                  model_fn,
                  train_input_fn,
-                 val_input_fn=None,
-                 train_steps=None,
-                 val_steps=None,
-                 val_freq=None,
-                 steps_per_execution=250,
-                 batch_size=None,
-                 model_dir='./model_files',
-                 save_every=1000,
-                 restore_checkpoint=True,
-                 summary_dir='tensorboard',
-                 name=None):
+                 val_input_fn=None):
+        self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
         self.model_fn = model_fn
+        self.restore_checkpoint = params.training.restore_checkpoint
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
-        self.train_steps = train_steps
-        self.val_steps = val_steps
-        self.val_freq = val_freq
-        self.steps_per_execution = steps_per_execution
-        self.batch_size = batch_size
-        self.model_dir = os.path.join(model_dir, name)
-        self.save_every = save_every
-        self.restore_checkpoint = restore_checkpoint
-        self.summary_dir = summary_dir
-        self.name = name
+        self.train_steps = params.training.train_steps
+        self.val_steps = params.training.validation_steps
+        self.val_freq = params.training.validation_freq
+        self.steps_per_execution = params.training.steps_per_execution
+        self.batch_size = params.training.batch_size['train']
+        self.model_dir = os.path.join(
+            params.experiment.model_dir, params.experiment.name)
+        self.save_every = params.training.save_every
+        self.summary_dir = params.experiment.tensorboard_dir
+        self.name = params.experiment.name
+
         self.restore_status = None
         self.use_float16 = False
 
@@ -63,10 +59,14 @@ class Trainer:
         logging.info('Setting up model for {}'.format(self.run_mode))
         self._model = self.model_fn()
         self.optimizer = self._model.optimizer
+
         if isinstance(
             self.optimizer,
                 tf.keras.mixed_precision.experimental.LossScaleOptimizer):
             self.use_float16 = True
+
+        if 'val' in self.run_mode:
+            self._eval_model = make_eval_model(self._model, self.params)
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
