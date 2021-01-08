@@ -241,6 +241,8 @@ class Trainer:
         if self.val_freq < 1:
             self.val_freq = self.train_steps // 5
 
+        logging.info('Running evaluation every {} steps'.format(self.val_freq))
+
         if current_step == self.train_steps:
             logging.info('Training completed at step {}'.format(current_step))
             return
