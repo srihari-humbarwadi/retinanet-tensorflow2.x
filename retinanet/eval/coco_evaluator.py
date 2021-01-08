@@ -76,6 +76,7 @@ class COCOEvaluator:
             'AP-IoU=0.50:0.95': cocoEval.stats[0],
             'AP-IoU=0.50': cocoEval.stats[1],
             'AP-IoU=0.75': cocoEval.stats[2],
-            'AR-IoU=0.50:0.95': cocoEval.stats[-1]
+            'AR-(all)-IoU=0.50:0.95': cocoEval.stats[6],
+            'AR-(L)-IoU=0.50:0.95': cocoEval.stats[-1]
         }
         return scores

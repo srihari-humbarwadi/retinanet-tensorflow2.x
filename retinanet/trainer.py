@@ -147,7 +147,8 @@ class Trainer:
                 for k in ['AP-IoU=0.50:0.95',
                           'AP-IoU=0.50',
                           'AP-IoU=0.75',
-                          'AR-IoU=0.50:0.95']:
+                          'AR-(all)-IoU=0.50:0.95',
+                          'AR-(L)-IoU=0.50:0.95']:
                     v = scores[k]
                     tf.summary.scalar(k, data=v, step=step)
 
