@@ -73,6 +73,10 @@ class DecodePredictions(tf.keras.layers.Layer):
 
     def call(self, predictions):
         box_predictions, class_predictions = predictions
+
+        class_predictions = tf.cast(class_predictions, dtype=tf.float32)
+        box_predictions = tf.cast(box_predictions, dtype=tf.float32)
+
         class_predictions = tf.nn.sigmoid(class_predictions)
         boxes = self._decode_box_predictions(self._anchors.boxes[None, ...],
                                              box_predictions)
