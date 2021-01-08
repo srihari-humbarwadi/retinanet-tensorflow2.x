@@ -78,12 +78,7 @@ def model_builder(params):
     return _model_fn
 
 
-def make_inference_model(model, params):
-    model.optimizer = None
-    model.compiled_loss = None
-    model.compiled_metrics = None
-    model._metrics = []
-
+def _add_post_processing_stage(model, params):
     class_predictions = []
     box_predictions = []
     for i in range(3, 8):
@@ -103,6 +98,28 @@ def make_inference_model(model, params):
     inference_model = tf.keras.Model(inputs=model.inputs,
                                      outputs=detections,
                                      name='retinanet_inference')
+    return inference_model
+
+
+def make_eval_model(model, params):
+    inference_model = _add_post_processing_stage(model, params)
+
+    logging.info('Created inference model with params: {}'
+                 .format(params.inference))
+    return inference_model
+
+
+def make_inference_model(trainer):
+    model = trainer.model
+    params = trainer.params
+
+    model.optimizer = None
+    model.compiled_loss = None
+    model.compiled_metrics = None
+    model._metrics = []
+
+    inference_model = _add_post_processing_stage(model, params)
+
     logging.info('Created inference model with params: {}'
                  .format(params.inference))
     return inference_model
