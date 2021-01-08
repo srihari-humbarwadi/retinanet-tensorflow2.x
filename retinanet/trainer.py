@@ -215,8 +215,8 @@ class Trainer:
         for i, data in enumerate(dataset_iterator):
             start = time()
             results = self.distributed_eval_step(data)
+            evaluator.accumulate_results(results)
             end = time()
-
             execution_time = np.round(end - start, 2)
             images_per_second = \
                 self.distribute_strategy.num_replicas_in_sync / execution_time
@@ -225,8 +225,6 @@ class Trainer:
                          .format(
                              i + 1,
                              images_per_second))
-
-            evaluator.accumulate_results(results)
 
         scores = evaluator.evaluate()
         return scores
@@ -310,7 +308,9 @@ class Trainer:
                 logging.info(
                     'Evaluating at step {}'.format(current_step))
                 scores = self.evaluate()
-                self._write_eval_summaries(scores)
+                self._write_eval_summaries(
+                    scores,
+                    tf.convert_to_tensor(current_step, dtype=tf.int64))
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
         self._model.save_weights(
