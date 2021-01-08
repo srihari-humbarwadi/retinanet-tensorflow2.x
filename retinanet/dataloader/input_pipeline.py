@@ -10,8 +10,9 @@ class InputPipeline:
 
     def __init__(self, run_mode, params, is_multi_host, num_replicas):
         if run_mode not in InputPipeline._SUPPORTED_RUN_MODES:
-            raise AssertionError('Unsupported run mode requested, available run modes: {}'.format(
-                    InputPipeline._SUPPORTED_RUN_MODES))
+            raise AssertionError('Unsupported run mode requested,\
+                 available run modes: {}'.format(
+                InputPipeline._SUPPORTED_RUN_MODES))
         self.run_mode = run_mode
         self.is_multi_host = is_multi_host
         self.num_replicas = num_replicas
@@ -52,7 +53,7 @@ class InputPipeline:
                     parse_example(x)),
                 num_parallel_calls=autotune)
             dataset = dataset.batch(
-                batch_size=batch_size,
+                batch_size=self.num_replicas,
                 drop_remainder=False)
             dataset = dataset.prefetch(autotune)
             return dataset
