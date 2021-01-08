@@ -43,7 +43,8 @@ def main(_):
     if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
         os.mkdir(FLAGS.log_dir)
 
-    logging.get_absl_handler().use_absl_log_file('export_' + params.experiment.name)
+    logging.get_absl_handler().use_absl_log_file(
+        'export_' + params.experiment.name)
 
     model_dir = params.experiment.model_dir
 
@@ -61,26 +62,17 @@ def main(_):
     model_fn = model_builder(params)
 
     trainer = Trainer(
+        params=params,
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,
         model_fn=model_fn,
         train_input_fn=train_input_fn,
-        val_input_fn=val_input_fn,
-        train_steps=params.training.train_steps,
-        val_steps=params.training.validation_steps,
-        val_freq=params.training.validation_freq,
-        steps_per_execution=params.training.steps_per_execution,
-        batch_size=None,
-        model_dir=model_dir,
-        save_every=params.training.save_every,
-        restore_checkpoint=True,
-        summary_dir=params.experiment.tensorboard_dir,
-        name=params.experiment.name
+        val_input_fn=val_input_fn
     )
 
     trainer.restore_status.assert_consumed()
 
-    inference_model = make_inference_model(trainer.model, params)
+    inference_model = make_inference_model(trainer)
 
     @tf.function(input_signature=[
         tf.TensorSpec(shape=[None] + params.input.input_shape +

@@ -66,11 +66,13 @@ def main(_):
 
     run_mode = params.experiment.run_mode
     if run_mode not in SUPPORTED_RUN_MODES:
-        raise AssertionError('Unsupported run mode requested, available run modes: {}'.format(
+        raise AssertionError(
+            'Unsupported run mode requested, available run modes: {}'.format(
                 SUPPORTED_RUN_MODES))
 
     train_input_fn = None
     val_input_fn = None
+
     if 'train' in run_mode:
         train_input_fn = InputPipeline(
             run_mode='train',
@@ -86,25 +88,15 @@ def main(_):
             num_replicas=strategy.num_replicas_in_sync)
 
     model_fn = model_builder(params)
-    train_batch_size = params.training.batch_size.train
 
     trainer = Trainer(  # noqa: F841
+        params=params,
         strategy=strategy,
         run_mode=run_mode,
         model_fn=model_fn,
         train_input_fn=train_input_fn,
-        val_input_fn=val_input_fn,
-        train_steps=params.training.train_steps,
-        val_steps=params.training.validation_steps,
-        val_freq=params.training.validation_freq,
-        steps_per_execution=params.training.steps_per_execution,
-        batch_size=train_batch_size if run_mode == 'train' else None,
-        model_dir=params.experiment.model_dir,
-        save_every=params.training.save_every,
-        restore_checkpoint=params.training.restore_checkpoint,
-        summary_dir=params.experiment.tensorboard_dir,
-        name=params.experiment.name
-    )
+        val_input_fn=val_input_fn
+        )
 
 
 if __name__ == '__main__':
