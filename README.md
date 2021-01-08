@@ -73,7 +73,7 @@ I1026 09:38:39.022006 140424579548992 trainer.py:239] [global_step 2500/675000] 
  - [ ] Train on ResNet18, 34, 101
  - [ ] Add models trained with 30x schedule, without imagenet pretrained weights
  - [ ] Support Input Sharding for TPU Pod
- - [ ] COCO mAP evaluation callback
+ - [x] COCO mAP evaluation callback
  - [ ] Add fine-tuning example
 
 ```
