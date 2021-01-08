@@ -6,6 +6,7 @@ import tensorflow as tf
 from absl import logging
 
 from retinanet.model.builder import make_eval_model
+from retinanet.eval import COCOEvaluator
 
 
 class Trainer:
@@ -54,6 +55,9 @@ class Trainer:
 
         if 'train' in self.run_mode:
             self.train()
+
+        if self.run_mode == 'val':
+            self.evaluate()
 
     def _setup_model(self):
         logging.info('Setting up model for {}'.format(self.run_mode))
@@ -105,8 +109,9 @@ class Trainer:
                 'No checkpoints found in {}, aborting.'.format(self.model_dir))
 
         logging.warning(
-            'No existing checkpoints found in {}, training from scratch!'
-            .format(self.model_dir))
+            'No existing checkpoints found in {}, \
+                running model in {} mode with random weights initialization!'
+            .format(self.model_dir, self.run_mode))
 
     def _setup(self):
         with self.distribute_strategy.scope():
@@ -134,6 +139,33 @@ class Trainer:
                           'execution-time']:
                     v = loss_dict[k]
                     tf.summary.scalar(k, data=v, step=step)
+
+    @tf.function
+    def _write_eval_summaries(self, scores, step):
+        with self._summary_writer.as_default():
+            with tf.name_scope('evaluation'):
+                for k in ['AP-IoU=0.50:0.95',
+                          'AP-IoU=0.50',
+                          'AP-IoU=0.75',
+                          'AR-IoU=0.50:0.95']:
+                    v = scores[k]
+                    tf.summary.scalar(k, data=v, step=step)
+
+    def _eval_step(self, data):
+        detections = self._eval_model(data['image'], training=False)
+        return {
+            'image_id': data['image_id'],
+            'detections': detections,
+            'resize_scale': data['resize_scale']
+        }
+
+    @tf.function
+    def distributed_eval_step(self, data):
+        results = self.distribute_strategy.run(self._eval_step,
+                                               args=(data,))
+        results = tf.nest.map_structure(
+            lambda x: self.distribute_strategy.gather(x, axis=0), results)
+        return results
 
     def _train_step(self, data):
         images, targets = data
@@ -173,12 +205,40 @@ class Trainer:
                 tf.distribute.ReduceOp.MEAN, x, axis=None), loss_dict)
         return loss_dict
 
+    def evaluate(self):
+        dataset_iterator = iter(self._val_dataset)
+
+        evaluator = COCOEvaluator(
+            self.params.training.annotation_file_path, self.name + '.json')
+
+        for i, data in enumerate(dataset_iterator):
+            start = time()
+            results = self.distributed_eval_step(data)
+            end = time()
+
+            execution_time = np.round(end - start, 2)
+            images_per_second = \
+                self.distribute_strategy.num_replicas_in_sync / execution_time
+
+            logging.info('[eval_step {}][{:.2f} imgs/s]'
+                         .format(
+                             i + 1,
+                             images_per_second))
+
+            evaluator.accumulate_results(results)
+
+        scores = evaluator.evaluate()
+        return scores
+
     def train(self):
         if self.restore_checkpoint and self.restore_status is not None:
             self.restore_status.assert_consumed()
 
         start_step = int(self.optimizer.iterations.numpy())
         current_step = start_step
+
+        if self.val_freq < 1:
+            self.val_freq = self.train_steps // 5
 
         if current_step == self.train_steps:
             logging.info('Training completed at step {}'.format(current_step))
@@ -242,6 +302,12 @@ class Trainer:
                              images_per_second,
                              {k: np.round(v, 3)
                               for k, v in loss_dict.items()}))
+
+            if current_step % self.val_freq == 0:
+                logging.info(
+                    'Evaluating at step {}'.format(current_step))
+                scores = self.evaluate()
+                self._write_eval_summaries(scores)
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
         self._model.save_weights(
