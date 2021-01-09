@@ -71,8 +71,8 @@
                     0.0008
                 ],
                 "boundaries": [
-                    17800,
-                    20900
+                    15000,
+                    20000
                 ]
             }
         }
@@ -124,12 +124,6 @@
             "scale_jitter": {
                 "min_scale": 0.5,
                 "max_scale": 2.0
-            },
-            "color_distortion": {
-                "brightness": true,
-                "contrast": true,
-                "hue": true,
-                "saturation": true
             }
         },
         "preprocessing": {
