@@ -1,3 +1,6 @@
+import os
+
+from absl import logging
 import tensorflow as tf
 
 from retinanet.lr_schedules import PiecewiseConstantDecayWithLinearWarmup
@@ -24,3 +27,14 @@ def add_l2_regularization(weight, alpha=0.0001):
         return alpha * tf.nn.l2_loss(weight)
 
     return _add_l2_regularization
+
+
+def get_normalization_op():
+    use_sync_bn = tf.distribute.get_strategy().num_replicas_in_sync > 1
+    use_sync_bn = use_sync_bn and 'USE_SYNC_BN' in os.environ
+
+    if use_sync_bn:
+        logging.warning('Using SyncBatchNormalization')
+        return tf.keras.layers.experimental.SyncBatchNormalization
+
+    return tf.keras.layers.BatchNormalization
