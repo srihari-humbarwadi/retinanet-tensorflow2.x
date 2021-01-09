@@ -46,6 +46,8 @@ class Trainer:
         self.restore_status = None
         self.use_float16 = False
 
+        self._run_evaluation_at_end = params.training.validation_freq < 1
+
         if self.run_mode not in Trainer._RUN_MODES:
             raise AssertionError(
                 'Invalid run mode, aborting!\n Supported run models {}'
@@ -236,9 +238,6 @@ class Trainer:
         start_step = int(self.optimizer.iterations.numpy())
         current_step = start_step
 
-        if self.val_freq < 1:
-            self.val_freq = self.train_steps
-
         logging.info('Running evaluation every {} steps'.format(self.val_freq))
 
         if current_step == self.train_steps:
@@ -311,6 +310,14 @@ class Trainer:
                 self._write_eval_summaries(
                     scores,
                     tf.convert_to_tensor(current_step, dtype=tf.int64))
+
+        if self._run_evaluation_at_end:
+            logging.info(
+                'Evaluating at step {}'.format(current_step))
+            scores = self.evaluate()
+            self._write_eval_summaries(
+                scores,
+                tf.convert_to_tensor(current_step, dtype=tf.int64))
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
         self._model.save_weights(
