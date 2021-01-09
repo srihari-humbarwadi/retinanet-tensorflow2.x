@@ -22,6 +22,9 @@ import functools
 import tensorflow as tf
 from absl import logging
 
+from retinanet.model.utils import get_normalization_op
+
+
 logging.set_verbosity(logging.INFO)
 
 
@@ -53,14 +56,13 @@ class NormActivation:
         else:
             gamma_initializer = tf.keras.initializers.Ones()
 
-        normalization_op = tf.keras.layers.BatchNormalization
+        normalization_op = get_normalization_op()
 
         self._normalization_op = normalization_op(
             momentum=momentum,
             epsilon=1e-4,
             center=True,
             scale=True,
-            fused=fused,
             gamma_initializer=gamma_initializer,
             name=name)
         self._use_activation = use_activation

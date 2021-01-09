@@ -4,6 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 from retinanet.model.fpn import fpn_builder
+from retinanet.model.utils import get_normalization_op
 
 
 def retinanet_builder(input_shape, params):
@@ -15,7 +16,7 @@ def retinanet_builder(input_shape, params):
 
     conv_2d_op = tf.keras.layers.Conv2D
 
-    normalization_op = tf.keras.layers.BatchNormalization
+    normalization_op = get_normalization_op()
 
     bn_op = functools.partial(
         normalization_op,
