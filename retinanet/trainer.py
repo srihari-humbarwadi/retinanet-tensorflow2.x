@@ -303,7 +303,9 @@ class Trainer:
                              {k: np.round(v, 3)
                               for k, v in loss_dict.items()}))
 
-            if current_step % self.val_freq == 0:
+            if (current_step % self.val_freq == 0) and \
+                    (not self._run_evaluation_at_end):
+
                 logging.info(
                     'Evaluating at step {}'.format(current_step))
                 scores = self.evaluate()
