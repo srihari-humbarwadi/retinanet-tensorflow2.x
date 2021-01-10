@@ -254,7 +254,8 @@ class Trainer:
         start_step = int(self.optimizer.iterations.numpy())
         current_step = start_step
 
-        logging.info('Running evaluation every {} steps'.format(self.val_freq))
+        if 'val' in self.run_mode:
+            logging.info('Running evaluation every {} steps'.format(self.val_freq))
 
         if current_step == self.train_steps:
             logging.info('Training completed at step {}'.format(current_step))
@@ -319,8 +320,9 @@ class Trainer:
                              {k: np.round(v, 3)
                               for k, v in loss_dict.items()}))
 
-            if (current_step % self.val_freq == 0) and \
-                    (not self._run_evaluation_at_end):
+            if (current_step % self.val_freq == 0) \
+                    and (not self._run_evaluation_at_end) \
+                    and ('val' in self.run_mode):
 
                 logging.info(
                     'Evaluating at step {}'.format(current_step))
@@ -329,7 +331,7 @@ class Trainer:
                     scores,
                     tf.convert_to_tensor(current_step, dtype=tf.int64))
 
-        if self._run_evaluation_at_end:
+        if self._run_evaluation_at_end and 'val' in self.run_mode:
             logging.info(
                 'Evaluating at step {}'.format(current_step))
             scores = self.evaluate()
