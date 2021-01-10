@@ -44,7 +44,7 @@
     },
     "training": {
         "batch_size": {
-            "train": 64,
+            "train": 256,
             "val": 8
         },
         "strategy": {
