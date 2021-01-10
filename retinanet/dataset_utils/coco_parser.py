@@ -9,24 +9,33 @@ from retinanet.dataset_utils.parser import Parser
 
 
 class CocoParser(Parser):
-    _NAME = 'COCO'
-    _YEAR = '2017'
 
     def __init__(self,
                  download_path,
                  only_mappings=False,
                  only_val=False,
-                 skip_crowd=True):
+                 skip_crowd=True,
+                 train_annotations_path='annotations/instances_train2017.json',
+                 val_annotations_path='annotations/instances_val2017.json',
+                 name='COCO',
+                 year='2017'):
         super(CocoParser, self).__init__(download_path)
+
+        self._name = name
+        self._year = year
+
         self._only_mappings = only_mappings
         self._only_val = only_val
         self._skip_crowd = skip_crowd
 
         if not only_val:
             self._train_annotations_path = os.path.join(
-                download_path, 'annotations/instances_train2017.json')
+                download_path,
+                train_annotations_path)
+
         self._val_annotations_path = os.path.join(
-            download_path, 'annotations/instances_val2017.json')
+            download_path,
+            val_annotations_path)
 
         self._crowd_instances = {'train': 0, 'val': 0}
         self._skipped_samples = {'train': 0, 'val': 0}
@@ -54,7 +63,8 @@ class CocoParser(Parser):
 
         def _build(annotations_path, split_name):
             logging.info('Parsing {} split from {} dataset'.format(
-                split_name, CocoParser._NAME))
+                split_name, self._name))
+
             coco = COCO(annotations_path)
             if self._class_id_to_class_name == {}:
                 self._class_id_to_class_name = {
@@ -122,7 +132,7 @@ class CocoParser(Parser):
         for split_name in ['train', 'val']:
             logging.info(
                 'Successfully parsed {} {} samples from {} dataset'.format(
-                    len(self._data[split_name]), split_name, CocoParser._NAME))
+                    len(self._data[split_name]), split_name, self._name))
 
             logging.info('Skipped {} {} empty samples'.format(
                 self._skipped_samples[split_name], split_name))
