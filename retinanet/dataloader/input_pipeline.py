@@ -36,6 +36,8 @@ class InputPipeline:
                 self.batch_size)
             dataset = dataset.shard(input_context.num_input_pipelines,
                                     input_context.input_pipeline_id)
+            logging.warning(
+                'Running in multi host mode. Using per_replica batch_size of {} for {}'.format(batch_size, self.run_mode))  # noqa: E501
 
         dataset = dataset.cache()
 

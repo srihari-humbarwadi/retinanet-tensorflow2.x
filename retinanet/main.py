@@ -95,7 +95,8 @@ def main(_):
         run_mode=run_mode,
         model_fn=model_fn,
         train_input_fn=train_input_fn,
-        val_input_fn=val_input_fn
+        val_input_fn=val_input_fn,
+        is_multi_host=FLAGS.is_multi_host
         )
 
 

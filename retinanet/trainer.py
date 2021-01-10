@@ -24,7 +24,8 @@ class Trainer:
                  run_mode,
                  model_fn,
                  train_input_fn,
-                 val_input_fn=None):
+                 val_input_fn=None,
+                 is_multi_host=False):
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
@@ -32,6 +33,7 @@ class Trainer:
         self.restore_checkpoint = params.training.restore_checkpoint
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
+        self.is_multi_host = is_multi_host
         self.train_steps = params.training.train_steps
         self.val_steps = params.training.validation_steps
         self.val_freq = params.training.validation_freq
@@ -77,14 +79,28 @@ class Trainer:
     def _setup_dataset(self):
         if 'val' in self.run_mode:
             logging.info('Setting up val dataset')
-            self._val_dataset = \
-                self.distribute_strategy.experimental_distribute_dataset(
-                    self.val_input_fn())
+
+            if self.is_multi_host:
+                self._val_dataset = \
+                    self.distribute_strategy.distribute_datasets_from_function(
+                        self.val_input_fn
+                    )
+            else:
+                self._val_dataset = \
+                    self.distribute_strategy.experimental_distribute_dataset(
+                        self.val_input_fn())
+
         if 'train' in self.run_mode:
             logging.info('Setting up train dataset')
-            self._train_dataset = \
-                self.distribute_strategy.experimental_distribute_dataset(
-                    self.train_input_fn())
+
+            if self.is_multi_host:
+                self._train_dataset = \
+                    self.distribute_strategy.distribute_datasets_from_function(
+                        self.train_input_fn)
+            else:
+                self._train_dataset = \
+                    self.distribute_strategy.experimental_distribute_dataset(
+                        self.train_input_fn())
 
     def _setup_summary_writer(self):
         logging.info('Setting up summary writer')
