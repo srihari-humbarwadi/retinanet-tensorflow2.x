@@ -17,6 +17,14 @@ flags.DEFINE_string('config_path',
                     default=None,
                     help='Path to the config file')
 
+flags.DEFINE_string('model_dir',
+                    default=None,
+                    help='Overides `model_dir` specified in the config')
+
+flags.DEFINE_boolean('run_evaluation',
+                     default=False,
+                     help='Overides `run_mode` specified in the config')
+
 flags.DEFINE_boolean('xla', default=False, help='Compile with XLA JIT')
 
 flags.DEFINE_boolean('gpu_memory_allow_growth',
@@ -65,10 +73,21 @@ def main(_):
     strategy = get_strategy(params.training.strategy)
 
     run_mode = params.experiment.run_mode
+
+    if FLAGS.run_evaluation:
+        logging.warning('Overiding `run_mode` from {} to evaluation only'.format(
+            run_mode))
+        run_mode = 'val'
+
     if run_mode not in SUPPORTED_RUN_MODES:
         raise AssertionError(
             'Unsupported run mode requested, available run modes: {}'.format(
                 SUPPORTED_RUN_MODES))
+
+    if FLAGS.model_dir is not None:
+        logging.warning('Overiding `model_dir` from {} to {}'.format(
+            params.experiment.model_dir, FLAGS.model_dir))
+        params.experiment.model_dir = FLAGS.model_dir
 
     train_input_fn = None
     val_input_fn = None
