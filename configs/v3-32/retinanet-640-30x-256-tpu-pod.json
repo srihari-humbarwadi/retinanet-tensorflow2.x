@@ -1,7 +1,7 @@
 {
     "experiment": {
         "name": "v3-32/retinanet-640-30x-256-tpu-pod",
-        "run_mode": "train_val",
+        "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
     },
