@@ -72,8 +72,9 @@ I1026 09:38:39.022006 140424579548992 trainer.py:239] [global_step 2500/675000] 
  - [ ] Add MobileNetV3 Backbone
  - [ ] Train on ResNet18, 34, 101
  - [ ] Add models trained with 30x schedule, without imagenet pretrained weights
- - [ ] Support Input Sharding for TPU Pod
+ - [x] Support Input Sharding for TPU Pod
  - [x] COCO mAP evaluation callback
+ - [ ] Support fine tuning and training with other datasets
  - [ ] Add fine-tuning example
 
 ```
