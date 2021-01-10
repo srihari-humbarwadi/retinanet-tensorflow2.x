@@ -57,7 +57,7 @@ def main(_):
     params = Config(FLAGS.config_path).params
 
     if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
-        os.mkdir(FLAGS.log_dir)
+        os.makedirs(FLAGS.log_dir, exist_ok=True)
 
     logging.get_absl_handler().use_absl_log_file(params.experiment.name)
 
