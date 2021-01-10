@@ -21,6 +21,10 @@ flags.DEFINE_string('model_dir',
                     default=None,
                     help='Overides `model_dir` specified in the config')
 
+flags.DEFINE_string('resume_from',
+                    default=None,
+                    help='Overides latest_checkpoint')
+
 flags.DEFINE_boolean('run_evaluation',
                      default=False,
                      help='Overides `run_mode` specified in the config')
@@ -115,7 +119,8 @@ def main(_):
         model_fn=model_fn,
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
-        is_multi_host=FLAGS.is_multi_host
+        is_multi_host=FLAGS.is_multi_host,
+        resume_from=FLAGS.resume_from
         )
 
 

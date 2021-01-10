@@ -25,7 +25,8 @@ class Trainer:
                  model_fn,
                  train_input_fn,
                  val_input_fn=None,
-                 is_multi_host=False):
+                 is_multi_host=False,
+                 resume_from=None):
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
@@ -34,6 +35,7 @@ class Trainer:
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
         self.is_multi_host = is_multi_host
+        self.resume_from = resume_from
         self.train_steps = params.training.train_steps
         self.val_steps = params.training.validation_steps
         self.val_freq = params.training.validation_freq
@@ -111,12 +113,24 @@ class Trainer:
             os.path.join(self.summary_dir, self.name)))
 
     def _restore_checkpoint(self):
+
+        if self.resume_from is not None:
+            latest_checkpoint = os.path.join(self.model_dir, self.resume_from)
+            logging.info(
+                'Using existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
+                .format(latest_checkpoint))
+
+            self.optimizer._create_all_weights(self._model.trainable_variables)
+            self.restore_status = self._model.load_weights(latest_checkpoint)
+            return
+
         logging.info('Looking for existing checkpoints in {}'
                      .format(self.model_dir))
+
         latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
         if latest_checkpoint is not None:
             logging.info(
-                'Found for existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
+                'Found existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
                 .format(latest_checkpoint))
             self.optimizer._create_all_weights(self._model.trainable_variables)
             self.restore_status = self._model.load_weights(latest_checkpoint)
