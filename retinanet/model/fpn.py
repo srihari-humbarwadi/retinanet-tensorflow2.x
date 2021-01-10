@@ -16,7 +16,7 @@ def fpn_builder(input_shape, params):
 
     bn_op = functools.partial(
         normalization_op,
-        momentum=0.997,
+        momentum=0.99,
         epsilon=1e-4)
 
     upsample_op = functools.partial(
@@ -35,7 +35,8 @@ def fpn_builder(input_shape, params):
     conv2d_same_pad = functools.partial(
         conv_2d_op,
         filters=params.fpn.filters,
-        padding='same')
+        padding='same',
+        kernel_initializer='VarianceScaling')
 
     for i in range(min_level, max_level + 1):
         if i < min_level + 3:

@@ -20,7 +20,7 @@ def retinanet_builder(input_shape, params):
 
     bn_op = functools.partial(
         normalization_op,
-        momentum=0.997,
+        momentum=0.99,
         epsilon=1e-4)
 
     conv_3x3 = functools.partial(
