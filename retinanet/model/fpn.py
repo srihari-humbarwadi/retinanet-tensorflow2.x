@@ -35,8 +35,7 @@ def fpn_builder(input_shape, params):
     conv2d_same_pad = functools.partial(
         conv_2d_op,
         filters=params.fpn.filters,
-        padding='same',
-        kernel_initializer='he_normal')
+        padding='same')
 
     for i in range(min_level, max_level + 1):
         if i < min_level + 3:
