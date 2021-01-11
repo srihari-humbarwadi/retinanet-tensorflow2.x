@@ -42,7 +42,7 @@ def model_builder(params):
                 tf.math.add_n(model.losses).numpy()))
 
         optimizer = get_optimizer(params.training.optimizer)
-        logging.debug(tf.keras.utils.serialize_keras_object(optimizer))
+        logging.info(tf.keras.utils.serialize_keras_object(optimizer))
 
         if params.floatx.precision == 'mixed_float16':
             logging.info(
