@@ -345,6 +345,11 @@ class Trainer:
                     scores,
                     tf.convert_to_tensor(current_step, dtype=tf.int64))
 
+        logging.info('Saving final checkpoint at step {}'.format(current_step))
+        self._model.save_weights(
+            os.path.join(self.model_dir,
+                         'final_weights_step_{}'.format(current_step)))
+
         if self._run_evaluation_at_end and 'val' in self.run_mode:
             logging.info(
                 'Evaluating at step {}'.format(current_step))
@@ -352,11 +357,6 @@ class Trainer:
             self._write_eval_summaries(
                 scores,
                 tf.convert_to_tensor(current_step, dtype=tf.int64))
-
-        logging.info('Saving final checkpoint at step {}'.format(current_step))
-        self._model.save_weights(
-            os.path.join(self.model_dir,
-                         'final_weights_step_{}'.format(current_step)))
 
     @property
     def model(self):
