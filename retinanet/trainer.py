@@ -222,8 +222,8 @@ class Trainer:
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))
 
-        g_norm = tf.sqrt(tf.reduce_sum([tf.norm(g)**2 for g in gradients]))
-        loss['gradient-norm'] = g_norm
+        loss['gradient-norm'] = tf.linalg.global_norm(
+            gradients) * self.distribute_strategy.num_replicas_in_sync
         return loss
 
     @tf.function
