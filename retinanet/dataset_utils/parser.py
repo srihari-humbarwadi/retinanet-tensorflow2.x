@@ -5,7 +5,7 @@ class Parser(ABC):
     def __init__(self, download_path):
         self._download_path = download_path
         self._data = {'train': [], 'val': []}
-        self._classes = []
+        self._classes = set()
         self._class_name_to_class_id = {}
         self._class_id_to_class_name = {}
 

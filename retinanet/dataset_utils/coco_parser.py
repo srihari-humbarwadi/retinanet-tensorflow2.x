@@ -77,7 +77,7 @@ class CocoParser(Parser):
                     for _, cat_dict in coco.cats.items()
                 }
 
-            self._classes = sorted(self._class_name_to_class_id.keys())
+            self._classes = set(self._class_name_to_class_id.keys())
             self._annotation[split_name] = coco
 
             if self._only_mappings:
