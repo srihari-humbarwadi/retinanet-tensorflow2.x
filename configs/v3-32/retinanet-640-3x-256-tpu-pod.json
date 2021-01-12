@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "v3-32/retinanet-640-3x-256-tpu-pod",
+        "name": "retinanet-640-3x-256-tpu-pod",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -61,7 +61,7 @@
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
-            "nesterov": true,
+            "nesterov": false,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
                 "warmup_steps": 500,
