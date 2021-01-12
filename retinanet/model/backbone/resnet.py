@@ -24,7 +24,6 @@ from absl import logging
 
 from retinanet.model.utils import get_normalization_op
 
-
 logging.set_verbosity(logging.INFO)
 
 

@@ -1,7 +1,7 @@
 import os
 
-from absl import logging
 import tensorflow as tf
+from absl import logging
 
 from retinanet.lr_schedules import PiecewiseConstantDecayWithLinearWarmup
 

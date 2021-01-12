@@ -5,8 +5,8 @@ import numpy as np
 import tensorflow as tf
 from absl import logging
 
-from retinanet.model.builder import make_eval_model
 from retinanet.eval import COCOEvaluator
+from retinanet.model.builder import make_eval_model
 
 
 class Trainer:
