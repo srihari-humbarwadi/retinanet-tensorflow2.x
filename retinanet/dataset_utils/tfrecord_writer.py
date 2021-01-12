@@ -13,15 +13,15 @@ class TFrecordWriter:
         self.output_dir = output_dir
         self._buffer = []
         self._file_count = 1
+        self._remainder = self.n_samples - (self._step_size * self.n_shards)
 
         logging.info(
             'writing {} samples in each tfrecord'.format(self._step_size))
 
-        if self.n_samples % self.n_shards:
-            remainder = self.n_samples - (self._step_size * self.n_shards)
+        if self._remainder:
             logging.warn(
                 'writing {} remaining samples in last tfrecord'.format(
-                    remainder))
+                    self._remainder))
 
     @staticmethod
     def _make_example(image, boxes, classes, image_id):
@@ -44,6 +44,10 @@ class TFrecordWriter:
         return tf.train.Example(features=tf.train.Features(feature=feature))
 
     def _write_tfrecord(self, tfrecord_path):
+        if not self._buffer:
+            logging.warning('no samples to be written')
+            return
+
         logging.info('writing {} samples in {}'.format(len(self._buffer),
                                                        tfrecord_path))
         with tf.io.TFRecordWriter(tfrecord_path) as writer:
@@ -54,7 +58,12 @@ class TFrecordWriter:
 
     def push(self, image, boxes, classes, image_id):
         self._buffer.append([image, boxes, classes, image_id])
-        if len(self._buffer) == self._step_size:
+
+        max_buffer_size = self._step_size
+        if self._file_count == self.n_shards:
+            max_buffer_size += self._remainder
+
+        if len(self._buffer) == max_buffer_size:
             fname = self.prefix + '-{:04.0f}'.format(
                 self._file_count) + '.tfrecord'
             tfrecord_path = os.path.join(self.output_dir, fname)
