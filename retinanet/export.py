@@ -47,11 +47,10 @@ def main(_):
     logging.get_absl_handler().use_absl_log_file(
         'export_' + params.experiment.name)
 
-    model_dir = params.experiment.model_dir
-
     if not FLAGS.overide_model_dir == 'null':
-        model_dir = FLAGS.overide_model_dir
-        logging.warning('Using local path {} as `model_dir`'.format(model_dir))
+        params.experiment.model_dir = FLAGS.overide_model_dir
+        logging.warning('Using local path {} as `model_dir`'.format(
+            params.experiment.model_dir))
 
     run_mode = 'export'
 
@@ -95,13 +94,19 @@ def main(_):
         preprocessing_pipeling = PreprocessingPipeline(
             params.input.input_shape, params.dataloader_params)
 
-        @tf.function(input_signature=[
-            tf.TensorSpec(shape=[None, None, 3],
-                          name='images',
-                          dtype=tf.float32)
+        @tf.function(input_signature=[{
+            'image': tf.TensorSpec(shape=[None, None, 3],
+                                   name='image',
+                                   dtype=tf.float32),
+            'image_id': tf.TensorSpec(shape=[],
+                                      name='image_id',
+                                      dtype=tf.int32)
+        }
+
         ])
-        def serving_fn(image):
-            image_dict = preprocessing_pipeling.preprocess_val_sample(image)
+        def serving_fn(sample):
+            image_dict = preprocessing_pipeling.preprocess_val_sample(sample)
+
             image = tf.expand_dims(image_dict['image'], axis=0)
             resize_scale = tf.tile(tf.expand_dims(
                 image_dict['resize_scale'], axis=0), multiples=[1, 2])
