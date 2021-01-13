@@ -9,17 +9,25 @@ def read_image(path):
     return tf.cast(image, dtype=tf.float32)
 
 
-def visualize_detections(image,
-                         boxes,
-                         classes,
-                         scores,
-                         figsize=(12, 12),
-                         linewidth=1,
-                         color=[0, 0, 1],
-                         score_threshold=0.25):
+def visualize_detections_v2(image,
+                            boxes,
+                            classes,
+                            scores,
+                            figsize=(12, 12),
+                            linewidth=1,
+                            color=[0, 0, 1],
+                            title=None,
+                            score_threshold=0.25,
+                            show_labels=True,
+                            save=False,
+                            filename=None):
     """Visualize Detections"""
     image = np.array(image, dtype=np.uint8)
     plt.figure(figsize=figsize)
+
+    if title:
+        plt.title(title)
+
     plt.axis("off")
     plt.imshow(image)
     ax = plt.gca()
@@ -38,16 +46,20 @@ def visualize_detections(image,
                               edgecolor=color,
                               linewidth=linewidth)
         ax.add_patch(patch)
-        ax.text(
-            x1,
-            y1,
-            text,
-            bbox={
-                "facecolor": color,
-                "alpha": 0.4
-            },
-            clip_box=ax.clipbox,
-            clip_on=True,
-        )
-    plt.show()
-    return ax
+
+        if show_labels:
+            ax.text(
+                x1,
+                y1,
+                text,
+                bbox={
+                    "facecolor": color,
+                    "alpha": 0.4
+                },
+                clip_box=ax.clipbox,
+                clip_on=True,
+            )
+
+    if save:
+        plt.savefig(filename, bbox_inches='tight')
+        plt.close()
