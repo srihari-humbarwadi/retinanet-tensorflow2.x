@@ -138,5 +138,10 @@ dmypy.json
 tensorboard/
 
 # model_files
+export/
 model_files/
 saved_model/
+
+
+# logs
+*logs
