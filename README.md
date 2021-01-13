@@ -1,10 +1,11 @@
 # RetinaNet
 
 #### Supports
+ - [x] Performs better than most of the implemetations
  - [x] Multiple ResNet Depths
  - [x] Train on Single/ Multiple GPUs
- - [x] Stable training with Automatic Mixed Precision
- - [x] Train on TPU/ TPU pods
+ - [x] Stable training with Automatic Mixed Precision (~2.5x quicker)
+ - [x] Train on TPU/ TPU pods (slices)
  - [x] Export `saved_model`
  - [x] COCO mAP evaluation callback
  - [ ] Transfer learning/ Fine-tuning

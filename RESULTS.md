@@ -1,39 +1,34 @@
-## Models trained with backbone initialized with pretrained Imagenet weights
+### Models
+## ResNet50
+| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
+| --- | --- | --- |  --- |
+| **640x640** | 36.8 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-640-3x-64-tpu.json) | ~3h |
+| **1024x1024** | 40.2 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1026-3x-64-tpu.json) | ~6.5h |
+| **1280x1280** | **40.5** | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1280-3x-64-tpu.json) | ~10.5h |
+
+ - *Above models use imagenet pretrained backbone.*
+ - *The models are trained with the 3x training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 ___
-Config: [retinanet-640-3x-64-tpu](configs/retinanet-640-3x-64-tpu.json)
+## ResNet34
+| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
+| --- | --- | --- |  --- |
+| **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-34-640-30x-64-tpu.json) | ~28h |
+| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-34-1024-30x-64-tpu.json) | ~68h |
 
-```
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.371
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.563
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.394
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.174
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.419
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.538
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.312
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.490
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.518
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.274
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.588
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.710
- ```
-___
+## ResNet101
+| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
+| --- | --- | --- |  --- |
+| **640x640** | 40.2 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-640-30x-64-tpu.json) | ~38h |
+| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-1024-30x-64-tpu.json) | ~96h |
 
-## Models trained with randomly initialized backbone
+ - *Above models use randomly initialized backbones.*
+ - *The models are trained with the **30x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 
-Config: [retinanet-640-3x-64-tpu-scratch](configs/retinanet-640-3x-64-tpu-scratch.json)
+## ResNet152
+| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
+| --- | --- | --- |  --- |
+| **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-151-640-50x-64-tpu.json) | ~80h |
 
-```
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.394
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.582
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.422
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.202
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.441
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.557
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.329
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.511
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.537
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.315
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.599
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.715
- ```
+ - *Above model uses randomly initialized backbone.*
+ - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 ___
