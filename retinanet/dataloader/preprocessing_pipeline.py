@@ -105,7 +105,7 @@ class PreprocessingPipeline:
                                                      target_shape[1])
         return resized_image, image_scale
 
-    def preprocess_val_sample(self, sample, return_labels=False):
+    def preprocess_val_sample(self, sample):
         image = normalize_image(
             sample["image"],
             offset=self.preprocessing_params.offset,
