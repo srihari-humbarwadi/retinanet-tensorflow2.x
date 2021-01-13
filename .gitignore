@@ -145,3 +145,6 @@ saved_model/
 
 # logs
 *logs
+
+# outputs
+outputs/
