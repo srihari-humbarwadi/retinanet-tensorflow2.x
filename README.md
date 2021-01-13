@@ -10,7 +10,7 @@
 
  - *Above models use imagenet pretrained backbone.*
  - *The models are trained with the 3x training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
-
+___
 ## ResNet34
 | Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
 | --- | --- | --- |  --- |
@@ -33,11 +33,15 @@
 
  - *Above model uses randomly initialized backbone.*
  - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
-### Tensorboard
-![loss curves](assets/tensorboard.png)
+___
+### Visualizations
+![sample visualization](assets/image_3116.png)
+![sample visualization](assets/image_1618.png)
+![sample visualization](assets/image_4964.png)
+![sample visualization](assets/image_4348.png)
 
 
-
+___
 ## Getting Started
  - Use `prepare_coco_dataset.sh` to download the COCO2017 dataset and create the tfrecords.
  - If you plan to train on **Google Cloud TPU**, upload the `coco_tfrecords` folder to your **Google Cloud Storage** bucket.
@@ -68,6 +72,14 @@ I1026 09:38:39.022006 140424579548992 trainer.py:239] [global_step 2500/675000] 
 
 ```
 
+
+
+___
+### Tensorboard
+![loss curves](assets/tensorboard.png)
+
+
+___
 #### To-Do
  - [ ] Add MobileNetV3 Backbone
  - [ ] Train on ResNet18, 34, 101
