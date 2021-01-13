@@ -148,3 +148,6 @@ saved_model/
 
 # outputs
 outputs/
+
+# dataset files
+/*.json
