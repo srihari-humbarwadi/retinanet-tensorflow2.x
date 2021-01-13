@@ -49,7 +49,7 @@ class Trainer:
 
         self.restore_status = None
         self.use_float16 = False
-
+        self._summary_writer = None
         self._run_evaluation_at_end = params.training.validation_freq < 1
 
         if self.run_mode not in Trainer._RUN_MODES:
@@ -239,6 +239,10 @@ class Trainer:
         return loss_dict
 
     def evaluate(self):
+
+        if self._summary_writer is None:
+            self._setup_summary_writer()
+
         dataset_iterator = iter(self._val_dataset)
 
         evaluator = COCOEvaluator(
