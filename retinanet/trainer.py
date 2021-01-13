@@ -259,6 +259,9 @@ class Trainer:
                              images_per_second))
 
         scores = evaluator.evaluate()
+        self._write_eval_summaries(
+            scores,
+            tf.convert_to_tensor(self.optimizer.iterations, dtype=tf.int64))
         return scores
 
     def train(self):
@@ -340,10 +343,7 @@ class Trainer:
 
                 logging.info(
                     'Evaluating at step {}'.format(current_step))
-                scores = self.evaluate()
-                self._write_eval_summaries(
-                    scores,
-                    tf.convert_to_tensor(current_step, dtype=tf.int64))
+                self.evaluate()
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
         self._model.save_weights(
@@ -353,10 +353,7 @@ class Trainer:
         if self._run_evaluation_at_end and 'val' in self.run_mode:
             logging.info(
                 'Evaluating at step {}'.format(current_step))
-            scores = self.evaluate()
-            self._write_eval_summaries(
-                scores,
-                tf.convert_to_tensor(current_step, dtype=tf.int64))
+            self.evaluate()
 
     @property
     def model(self):
