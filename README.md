@@ -63,13 +63,13 @@ ___
 
 ___
 #### To-Do
- - [ ] Add MobileNetV3 Backbone
- - [ ] Train on ResNet18, 34, 101
- - [ ] Add models trained with 30x schedule, without imagenet pretrained weights
+ - [x] Train on ResNet18, 34, 101
+ - [x] Add models trained with 30x schedule, without imagenet pretrained weights
  - [x] Support Input Sharding for TPU Pod
  - [x] COCO mAP evaluation callback
  - [ ] Support fine tuning and training with other datasets
  - [ ] Add fine-tuning example
+ - [ ] Add MobileNetV3 Backbone
 
 ```
 @misc{1708.02002,
