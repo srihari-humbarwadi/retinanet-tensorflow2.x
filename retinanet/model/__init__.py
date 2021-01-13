@@ -1,3 +1,3 @@
-from retinanet.model.builder import make_inference_model, model_builder
+from retinanet.model.builder import model_builder, prepare_model_for_export
 
-__all__ = ['model_builder', 'make_inference_model']
+__all__ = ['model_builder', 'prepare_model_for_export']
