@@ -102,14 +102,14 @@ def _add_post_processing_stage(model, params):
 
 
 def make_eval_model(model, params):
-    inference_model = _add_post_processing_stage(model, params)
+    eval_model = _add_post_processing_stage(model, params)
 
     logging.info('Created inference model with params: {}'
                  .format(params.inference))
-    return inference_model
+    return eval_model
 
 
-def make_inference_model(trainer):
+def prepare_model_for_export(trainer):
     model = trainer.model
     params = trainer.params
 
