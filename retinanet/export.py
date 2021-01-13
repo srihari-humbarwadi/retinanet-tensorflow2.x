@@ -114,10 +114,11 @@ def main(_):
             detections = inference_model.call(image, training=False)
 
             return {
-                'boxes': detections.nmsed_boxes / resize_scale,
-                'scores': detections.nmsed_scores,
-                'classes': detections.nmsed_classes,
-                'num_detections': detections.valid_detections
+                'image_id': sample['image_id'],
+                'boxes': detections.nmsed_boxes[0] / resize_scale,
+                'scores': detections.nmsed_scores[0],
+                'classes': detections.nmsed_classes[0],
+                'valid_detections': detections.valid_detections[0]
             }
 
         inference_model = prepare_model_for_export(trainer)
