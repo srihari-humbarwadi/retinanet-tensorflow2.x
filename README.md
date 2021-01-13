@@ -15,6 +15,7 @@
 
 
 ## Getting Started
+### Training
  - Use `prepare_coco_dataset.sh` to download the COCO2017 dataset and create the tfrecords.
  - If you plan to train on **Google Cloud TPU**, upload the `coco_tfrecords` folder to your **Google Cloud Storage** bucket.
  - `USE_SYNC_BN="" TF_CPP_MIN_LOG_LEVEL="3" TPU_NAME="v3-8-3" python3 -m retinanet.main --config_path configs/retinanet-34-640-30x-64-tpu.json --log_dir logs --alsologtostderr` to train, you should now be able to see logs similar to this
@@ -42,6 +43,56 @@ I1026 09:36:52.646378 140424579548992 trainer.py:239] [global_step 2000/675000] 
 I1026 09:37:45.771663 140424579548992 trainer.py:239] [global_step 2250/675000] [ETA: 39:35:42] [302.06 imgs/s] {'box-loss': 0.008, 'class-loss': 0.904, 'weighted-loss': 1.306, 'l2-regularization': 2.653, 'total-loss': 3.959, 'gradient-norm': 0.428, 'execution-time': 52.97, 'learning-rate': 0.015}
 I1026 09:38:39.022006 140424579548992 trainer.py:239] [global_step 2500/675000] [ETA: 39:40:39] [301.32 imgs/s] {'box-loss': 0.008, 'class-loss': 0.79, 'weighted-loss': 1.199, 'l2-regularization': 2.633, 'total-loss': 3.832, 'gradient-norm': 0.372, 'execution-time': 53.1, 'learning-rate': 0.016}
 
+```
+___
+### Running Inference
+```python
+import json
+from glob import glob
+from time import time
+
+import tensorflow as tf
+
+from retinanet.image_utils import read_image, visualize_detections
+
+
+image_dir = '~coco2017/val2017'
+images = sorted(glob(image_dir + '/*'))
+print('Found {} images in {}'.format(len(images), image_dir))
+
+#  Load label mapping
+with open('coco_label_map.json', 'r') as f:
+    label_map = json.load(f)
+
+#  Load `saved_model`
+model = tf.saved_model.load('model_files/retinanet-1024-30x-64-tpu')
+serving_fn = model.signatures['serving_default']
+
+idx = 336
+image = read_image(images[idx])
+
+tik = time()
+detections = serving_fn(image=image, image_id=tf.constant(idx))
+toc = time()
+
+valid_detections = detections['valid_detections'].numpy()
+boxes = detections['boxes'][:valid_detections].numpy()
+classes = [
+    label_map[str(idx)]
+    for idx in detections['class_ids'][:valid_detections].numpy()
+]
+scores = detections['scores'][:valid_detections].numpy()
+
+#  Visualize detections
+visualize_detections(image,
+                     boxes,
+                     classes,
+                     scores,
+                     title='Image: {}'.format(idx),
+                     save=False,
+                     filename='outputs/image_{}.png'.format(idx))
+
+print('Inference time: {:.2f} ms'.format((toc - tik) * 1000))
 ```
 ___
 ### Visualizations
