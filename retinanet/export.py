@@ -4,7 +4,8 @@ import tensorflow as tf
 from absl import app, flags, logging
 
 from retinanet.cfg import Config
-from retinanet.model import make_inference_model, model_builder
+from retinanet.dataloader import PreprocessingPipeline
+from retinanet.model import model_builder, prepare_model_for_export
 from retinanet.trainer import Trainer
 
 tf.get_logger().propagate = False
@@ -72,23 +73,6 @@ def main(_):
 
     trainer.restore_status.assert_consumed()
 
-    inference_model = make_inference_model(trainer)
-
-    @tf.function(input_signature=[
-        tf.TensorSpec(shape=[None] + params.input.input_shape +
-                      [params.input.channels],
-                      name='images',
-                      dtype=tf.float32)
-    ])
-    def serving_fn(images):
-        detections = inference_model.call(images, training=False)
-        return {
-            'boxes': detections.nmsed_boxes,
-            'scores': detections.nmsed_scores,
-            'classes': detections.nmsed_classes,
-            'num_detections': detections.valid_detections
-        }
-
     if FLAGS.export_h5:
         export_dir = os.path.join(FLAGS.export_dir, trainer.name)
 
@@ -106,8 +90,32 @@ def main(_):
         trainer.model.save_weights(export_filename)
 
     if FLAGS.export_saved_model:
-
         logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
+
+        preprocessing_pipeling = PreprocessingPipeline(
+            params.input.input_shape, params.dataloader_params)
+
+        @tf.function(input_signature=[
+            tf.TensorSpec(shape=[None, None, 3],
+                          name='images',
+                          dtype=tf.float32)
+        ])
+        def serving_fn(image):
+            image_dict = preprocessing_pipeling.preprocess_val_sample(image)
+            image = tf.expand_dims(image_dict['image'], axis=0)
+            resize_scale = tf.tile(tf.expand_dims(
+                image_dict['resize_scale'], axis=0), multiples=[1, 2])
+
+            detections = inference_model.call(image, training=False)
+
+            return {
+                'boxes': detections.nmsed_boxes / resize_scale,
+                'scores': detections.nmsed_scores,
+                'classes': detections.nmsed_classes,
+                'num_detections': detections.valid_detections
+            }
+
+        inference_model = prepare_model_for_export(trainer)
 
         tf.saved_model.save(
             inference_model,
