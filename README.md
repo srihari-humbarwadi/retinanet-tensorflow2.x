@@ -35,17 +35,15 @@ ___
  - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 ___
 ### Visualizations
-<p float="left">
-  <img src="assets/image_3116.png" width="100" />
-  <img src="assets/image_1618.png" width="100" /> 
-</p>
 
-
-<p float="left">
-  <img src="assets/image_4964.png" width="100" />
-  <img src="assets/image_4348.png" width="100" />
-</p>
-
+<table>
+  <tr>
+    <td valign="top"><img src="assets/image_3116.png"></td>
+    <td valign="top"><img src="assets/image_1618.png"></td>
+    <td valign="top"><img src="assets/image_4964.png"></td>
+    <td valign="top"><img src="assets/image_4348.png"></td>
+  </tr>
+ </table>
 
 ___
 ## Getting Started
