@@ -47,16 +47,7 @@ I1026 09:38:39.022006 140424579548992 trainer.py:239] [global_step 2500/675000] 
 ___
 ### Running Inference
 ```python
-import json
-from glob import glob
-from time import time
-
-import tensorflow as tf
-
-from retinanet.image_utils import read_image, visualize_detections
-
-
-image_dir = '~coco2017/val2017'
+image_dir = '~/coco2017/val2017'
 images = sorted(glob(image_dir + '/*'))
 print('Found {} images in {}'.format(len(images), image_dir))
 
