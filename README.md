@@ -35,17 +35,14 @@ ___
  - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
 ___
 ### Visualizations
-![sample visualization](assets/image_3116.png)
-![sample visualization](assets/image_1618.png)
-![sample visualization](assets/image_4964.png)
-![sample visualization](assets/image_4348.png)
+![sample visualization](assets/image_3116.png) ![sample visualization](assets/image_1618.png) ![sample visualization](assets/image_4964.png) ![sample visualization](assets/image_4348.png)
 
 
 ___
 ## Getting Started
  - Use `prepare_coco_dataset.sh` to download the COCO2017 dataset and create the tfrecords.
  - If you plan to train on **Google Cloud TPU**, upload the `coco_tfrecords` folder to your **Google Cloud Storage** bucket.
- - `python3 -m retinanet.main --config_path configs/<config name>.json --debug` to train, you should now be able to see logs similar to this
+ - `USE_SYNC_BN="" TF_CPP_MIN_LOG_LEVEL="3" TPU_NAME="v3-8-3" python3 -m retinanet.main --config_path configs/retinanet-34-640-30x-64-tpu.json --log_dir logs --alsologtostderr` to train, you should now be able to see logs similar to this
 ```
 I1026 09:23:09.476862 140424579548992 trainer.py:77] Setting up train dataset
 I1026 09:23:09.533261 140424579548992 input_pipeline.py:30] Found 256 train tfrecords matching gs://tfrc_datasets/coco_tfrecords/train*
