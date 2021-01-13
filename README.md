@@ -1,51 +1,18 @@
 # RetinaNet
 
-### Models
-## ResNet50
-| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
-| --- | --- | --- |  --- |
-| **640x640** | 36.8 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-640-3x-64-tpu.json) | ~3h |
-| **1024x1024** | 40.2 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1026-3x-64-tpu.json) | ~6.5h |
-| **1280x1280** | **40.5** | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-1280-3x-64-tpu.json) | ~10.5h |
+#### Supports
+ - [x] Multiple ResNet Depths
+ - [x] Train on Single/ Multiple GPUs
+ - [x] Stable training with Automatic Mixed Precision
+ - [x] Train on TPU/ TPU pods
+ - [x] Export `saved_model`
+ - [x] COCO mAP evaluation callback
+ - [ ] Transfer learning/ Fine-tuning
+ - [ ] Export TensorRT model
+ - [ ] Batched inference
 
- - *Above models use imagenet pretrained backbone.*
- - *The models are trained with the 3x training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
-___
-## ResNet34
-| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
-| --- | --- | --- |  --- |
-| **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-34-640-30x-64-tpu.json) | ~28h |
-| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-34-1024-30x-64-tpu.json) | ~68h |
 
-## ResNet101
-| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
-| --- | --- | --- |  --- |
-| **640x640** | 40.2 | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-640-30x-64-tpu.json) | ~38h |
-| **1024x1024** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-101-1024-30x-64-tpu.json) | ~96h |
 
- - *Above models use randomly initialized backbones.*
- - *The models are trained with the **30x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
-
-## ResNet152
-| Input Shape | COCO val2017 mAP | Link | Training Time on TPU v3-8 |
-| --- | --- | --- |  --- |
-| **640x640** | *under training* | [checkpoint](https://github.com/srihari-humbarwadi/retinanet-tensorflow2.x) / [config](configs/retinanet-151-640-50x-64-tpu.json) | ~80h |
-
- - *Above model uses randomly initialized backbone.*
- - *The models are trained with the **50x** training schedule, where 1x schedule is ~12 epochs. The learning rate schedule is adjusted accordingly.*
-___
-### Visualizations
-
-<table>
-  <tr>
-    <td valign="top"><img src="assets/image_3116.png"></td>
-    <td valign="top"><img src="assets/image_1618.png"></td>
-    <td valign="top"><img src="assets/image_4964.png"></td>
-    <td valign="top"><img src="assets/image_4348.png"></td>
-  </tr>
- </table>
-
-___
 ## Getting Started
  - Use `prepare_coco_dataset.sh` to download the COCO2017 dataset and create the tfrecords.
  - If you plan to train on **Google Cloud TPU**, upload the `coco_tfrecords` folder to your **Google Cloud Storage** bucket.
@@ -75,7 +42,17 @@ I1026 09:37:45.771663 140424579548992 trainer.py:239] [global_step 2250/675000] 
 I1026 09:38:39.022006 140424579548992 trainer.py:239] [global_step 2500/675000] [ETA: 39:40:39] [301.32 imgs/s] {'box-loss': 0.008, 'class-loss': 0.79, 'weighted-loss': 1.199, 'l2-regularization': 2.633, 'total-loss': 3.832, 'gradient-norm': 0.372, 'execution-time': 53.1, 'learning-rate': 0.016}
 
 ```
+___
+### Visualizations
 
+<table>
+  <tr>
+    <td valign="top"><img src="assets/image_3116.png"></td>
+    <td valign="top"><img src="assets/image_1618.png"></td>
+    <td valign="top"><img src="assets/image_4964.png"></td>
+    <td valign="top"><img src="assets/image_4348.png"></td>
+  </tr>
+ </table>
 
 
 ___
