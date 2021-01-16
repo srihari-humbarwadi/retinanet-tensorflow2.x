@@ -29,6 +29,11 @@ class DecodePredictions(tf.keras.layers.Layer):
             params.inference.max_detections_per_class
         self.max_detections = params.inference.max_detections
         self.pre_nms_top_k = params.inference.pre_nms_top_k
+        self._input_shape = tf.tile(
+            tf.expand_dims(tf.constant(
+                params.input.input_shape,
+                dtype=tf.float32), axis=0),
+            multiples=[1, 2])
 
         self._anchors = AnchorBoxGenerator(
             *params.input.input_shape,
@@ -52,6 +57,7 @@ class DecodePredictions(tf.keras.layers.Layer):
             axis=-1,
         )
         boxes_transformed = convert_to_corners(boxes)
+        boxes_transformed = boxes_transformed / self._input_shape
         return boxes_transformed
 
     def _filter_top_k(self, class_predictions, boxes):
@@ -80,8 +86,14 @@ class DecodePredictions(tf.keras.layers.Layer):
         class_predictions = tf.nn.sigmoid(class_predictions)
         boxes = self._decode_box_predictions(self._anchors.boxes[None, ...],
                                              box_predictions)
-        top_k_class_predictions, top_k_boxes = self._filter_top_k(
-            class_predictions, boxes)
+
+        if self.pre_nms_top_k > 0:
+            top_k_class_predictions, top_k_boxes = self._filter_top_k(
+                class_predictions, boxes)
+
+        else:
+            top_k_boxes = tf.expand_dims(boxes, axis=2)
+            top_k_class_predictions = class_predictions
 
         return tf.image.combined_non_max_suppression(
             top_k_boxes,
