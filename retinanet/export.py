@@ -31,6 +31,10 @@ flags.DEFINE_string('overide_model_dir',
                     default='null',
                     help='Use local filesystem to load checkpoint')
 
+flags.DEFINE_boolean('disable_pre_nms_top_k',
+                     default=False,
+                     help='Skip top k filtering before applying nms')
+
 flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
 FLAGS = flags.FLAGS
@@ -51,6 +55,10 @@ def main(_):
         params.experiment.model_dir = FLAGS.overide_model_dir
         logging.warning('Using local path {} as `model_dir`'.format(
             params.experiment.model_dir))
+
+    if FLAGS.disable_pre_nms_top_k:
+        params.inference.pre_nms_top_k = -1
+        logging.warning('Disabled pre nms top k filtering')
 
     run_mode = 'export'
 
@@ -107,11 +115,14 @@ def main(_):
         def serving_fn(sample):
             image_dict = preprocessing_pipeling.preprocess_val_sample(sample)
 
-            image = tf.expand_dims(image_dict['image'], axis=0)
+            input_shape = tf.constant(params.input.input_shape, dtype=tf.float32)
+            resize_scale = image_dict['resize_scale'] / input_shape
             resize_scale = tf.tile(tf.expand_dims(
-                image_dict['resize_scale'], axis=0), multiples=[1, 2])
+                resize_scale, axis=0), multiples=[1, 2])
 
-            detections = inference_model.call(image, training=False)
+            detections = inference_model.call(
+                tf.expand_dims(
+                    image_dict['image'], axis=0), training=False)
 
             return {
                 'image_id': sample['image_id'],
