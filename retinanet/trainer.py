@@ -246,7 +246,9 @@ class Trainer:
         dataset_iterator = iter(self._val_dataset)
 
         evaluator = COCOEvaluator(
-            self.params.training.annotation_file_path, self.name + '.json')
+            input_shape=self.params.input.input_shape,
+            annotation_file_path=self.params.training.annotation_file_path,
+            prediction_file_path=self.name + '.json')
 
         for i, data in enumerate(dataset_iterator):
             start = time()
