@@ -23,9 +23,13 @@ class InputPipeline:
     def __call__(self, input_context=None):
         options = tf.data.Options()
         options.experimental_deterministic = False
+        options.experimental_distribute.auto_shard_policy = \
+            tf.data.experimental.AutoShardPolicy.OFF
+
         autotune = tf.data.experimental.AUTOTUNE
 
         dataset = tf.data.Dataset.list_files(self.tfrecord_files)
+        dataset = dataset.with_options(options)
 
         logging.info('Found {} {} tfrecords matching {}'.format(
             len(dataset), self.run_mode, self.tfrecord_files))
@@ -60,7 +64,6 @@ class InputPipeline:
             dataset = dataset.prefetch(autotune)
             return dataset
 
-        dataset = dataset.with_options(options)
         dataset = dataset.shuffle(1024)
         dataset = dataset.map(map_func=lambda x: self.label_encoder.
                               encode_sample(parse_example(x)),
