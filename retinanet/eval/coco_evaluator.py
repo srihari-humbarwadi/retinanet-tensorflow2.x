@@ -10,9 +10,11 @@ from pycocotools.cocoeval import COCOeval
 class COCOEvaluator:
     def __init__(
             self,
+            input_shape,
             annotation_file_path,
             prediction_file_path):
 
+        self._input_shape = input_shape
         self.annotation_file_path = annotation_file_path
         self.prediction_file_path = prediction_file_path
 
@@ -37,9 +39,10 @@ class COCOEvaluator:
             'score': None
         }
         for i in range(batch_size):
-
+            resize_scale = resize_scales[i] / self._input_shape
             resize_scale = tf.tile(tf.expand_dims(
-                resize_scales[i], axis=0), multiples=[1, 2])
+                resize_scale, axis=0), multiples=[1, 2])
+
             valid_detections = detections.valid_detections[i].numpy()
             boxes = \
                 detections.nmsed_boxes[i][:valid_detections].numpy(
