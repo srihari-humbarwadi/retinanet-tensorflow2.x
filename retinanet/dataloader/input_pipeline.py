@@ -27,7 +27,7 @@ class InputPipeline:
         options.experimental_distribute.auto_shard_policy = \
             tf.data.experimental.AutoShardPolicy.OFF
 
-        dataset = tf.data.Dataset.list_files(self.tfrecord_files)
+        dataset = tf.data.Dataset.list_files(self.tfrecord_files, shuffle=False)
         dataset = dataset.with_options(options)
 
         logging.info('Found {} {} tfrecords matching {}'.format(
