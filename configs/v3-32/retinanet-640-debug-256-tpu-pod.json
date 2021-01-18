@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "retinanet-640-3x-1024-tpu-pod",
+        "name": "retinanet-640-3x-256-tpu-pod",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -52,27 +52,27 @@
             "name": "v3-32"
         },
         "restore_checkpoint": true,
-        "train_steps": 6330,
+        "train_steps": 33750,
         "validation_steps": -1,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
-        "steps_per_execution": 100,
-        "save_every": 1000,
+        "steps_per_execution": 225,
+        "save_every": 5000,
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": false,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
-                "warmup_steps": 1000,
+                "warmup_steps": 500,
                 "values": [
-                    0.64,
-                    0.064,
-                    0.0064
+                    0.32,
+                    0.032,
+                    0.0032
                 ],
                 "boundaries": [
-                    4215,
-                    5625
+                    22500,
+                    30000
                 ]
             }
         }
