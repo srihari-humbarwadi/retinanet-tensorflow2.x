@@ -21,12 +21,11 @@ class InputPipeline:
         self.label_encoder = LabelEncoder(params)
 
     def __call__(self, input_context=None):
+        autotune = tf.data.experimental.AUTOTUNE
         options = tf.data.Options()
         options.experimental_deterministic = False
         options.experimental_distribute.auto_shard_policy = \
             tf.data.experimental.AutoShardPolicy.OFF
-
-        autotune = tf.data.experimental.AUTOTUNE
 
         dataset = tf.data.Dataset.list_files(self.tfrecord_files)
         dataset = dataset.with_options(options)
@@ -41,7 +40,8 @@ class InputPipeline:
             dataset = dataset.shard(input_context.num_input_pipelines,
                                     input_context.input_pipeline_id)
             logging.warning(
-                'Running in multi host mode. Using per_replica batch_size of {} for {}'.format(batch_size, self.run_mode))  # noqa: E501
+                '[Worker ID {}] Using per_replica batch_size of {} for {}'
+                .format(input_context.input_pipeline_id, batch_size, self.run_mode))
 
         dataset = dataset.cache()
 
