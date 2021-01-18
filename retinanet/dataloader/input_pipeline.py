@@ -35,18 +35,19 @@ class InputPipeline:
 
         batch_size = self.batch_size
         if self.is_multi_host and input_context is not None:
+            unsharded_dataset_len = len(dataset)
             batch_size = input_context.get_per_replica_batch_size(
                 self.batch_size)
             dataset = dataset.shard(input_context.num_input_pipelines,
                                     input_context.input_pipeline_id)
 
             logging.warning(
-                '[Worker ID {}] Found {} {} tfrecords matching {}'
+                '[Worker ID {}] Using {}/{} {} tfrecords matching'
                 .format(
                     input_context.input_pipeline_id,
                     len(dataset),
-                    self.run_mode,
-                    self.tfrecord_files))
+                    unsharded_dataset_len,
+                    self.run_mode))
 
             logging.info(
                 '[Worker ID {}] Using per_replica batch_size of {} for {}'
