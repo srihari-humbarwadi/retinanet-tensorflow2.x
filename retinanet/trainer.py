@@ -280,7 +280,7 @@ class Trainer:
         if 'val' in self.run_mode:
             logging.info('Running evaluation every {} steps'.format(self.val_freq))
 
-        if current_step == self.train_steps:
+        if current_step >= self.train_steps:
             logging.info('Training completed at step {}'.format(current_step))
             return
 

@@ -42,7 +42,7 @@ class InputPipeline:
                                     input_context.input_pipeline_id)
 
             logging.warning(
-                '[Worker ID {}] Using {}/{} {} tfrecords matching'
+                '[Worker ID {}] Using {}/{} {} tfrecords'
                 .format(
                     input_context.input_pipeline_id,
                     len(dataset),
