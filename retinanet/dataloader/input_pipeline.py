@@ -39,9 +39,21 @@ class InputPipeline:
                 self.batch_size)
             dataset = dataset.shard(input_context.num_input_pipelines,
                                     input_context.input_pipeline_id)
+
             logging.warning(
+                '[Worker ID {}] Found {} {} tfrecords matching {}'
+                .format(
+                    input_context.input_pipeline_id,
+                    len(dataset),
+                    self.run_mode,
+                    self.tfrecord_files))
+
+            logging.info(
                 '[Worker ID {}] Using per_replica batch_size of {} for {}'
-                .format(input_context.input_pipeline_id, batch_size, self.run_mode))
+                .format(
+                    input_context.input_pipeline_id,
+                    batch_size,
+                    self.run_mode))
 
         dataset = dataset.cache()
 
