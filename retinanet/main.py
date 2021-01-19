@@ -65,6 +65,9 @@ def main(_):
 
     logging.get_absl_handler().use_absl_log_file(params.experiment.name)
 
+    if FLAGS.is_multi_host:
+        logging.warning('Running in multi_host mode')
+
     if FLAGS.xla:
         tf.config.optimizer.set_jit(True)
 
@@ -74,7 +77,9 @@ def main(_):
          for x in physical_devices]
 
     set_precision(params.floatx.precision)
+
     strategy = get_strategy(params.training.strategy)
+    logging.info('Running on {} replicas'.format(strategy.num_replicas_in_sync))
 
     run_mode = params.experiment.run_mode
 
