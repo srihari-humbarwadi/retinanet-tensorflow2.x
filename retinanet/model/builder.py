@@ -1,3 +1,4 @@
+import json
 import re
 
 import tensorflow as tf
@@ -42,7 +43,10 @@ def model_builder(params):
                 tf.math.add_n(model.losses).numpy()))
 
         optimizer = get_optimizer(params.training.optimizer)
-        logging.info(tf.keras.utils.serialize_keras_object(optimizer))
+        logging.info(
+            'Optimizer Config: {}'
+            .format(json.dumps(
+                tf.keras.utils.serialize_keras_object(optimizer), indent=4)))
 
         if params.floatx.precision == 'mixed_float16':
             logging.info(
