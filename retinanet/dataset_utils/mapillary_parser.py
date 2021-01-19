@@ -21,7 +21,7 @@ class MapillaryParser(Parser):
         self._image_ext = '.jpg'
         self._only_val = only_val
         self._skip_ambiguous = skip_ambiguous
-        self.discard_classes = discard_classes
+        self._discard_classes = discard_classes
         self._annotation_dir = os.path.join(download_path, 'annotations')
         self._splits_dir = os.path.join(download_path, 'splits')
         self._images_dir = os.path.join(download_path, 'images')
@@ -61,6 +61,10 @@ class MapillaryParser(Parser):
 
             image_names = self._splits[split_name]
 
+            if self._discard_classes:
+                self._class_name_to_class_id['traffic_sign'] = 1
+                self._classes.add('traffic_sign')
+
             for _idx, image_name in tqdm(
                     enumerate(sorted(image_names)), total=len(image_names)):
                 image_path = os.path.join(
@@ -88,7 +92,7 @@ class MapillaryParser(Parser):
                     ]
                     class_name = obj['label']
 
-                    if class_name not in self._classes:
+                    if class_name not in self._classes and not self._discard_classes:
                         self._class_name_to_class_id[class_name] = \
                             len(self._classes) + 1
                         self._classes.add(class_name)
@@ -105,7 +109,7 @@ class MapillaryParser(Parser):
 
                     boxes.append(box)
                     class_id_encoded = \
-                        1 if self.discard_classes else self.get_class_id(class_name)
+                        1 if self._discard_classes else self.get_class_id(class_name)
                     classes.append(class_id_encoded)
 
                 if len(classes) == 0:
