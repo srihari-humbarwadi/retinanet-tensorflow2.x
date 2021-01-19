@@ -12,7 +12,7 @@ class MapillaryParser(Parser):
     def __init__(self,
                  download_path,
                  image_ext='.jpg',
-                 only_mappings=False,
+                 discard_classes=False,
                  only_val=False,
                  skip_ambiguous=False,
                  name='Mapillary Traffic Sign'):
@@ -20,10 +20,9 @@ class MapillaryParser(Parser):
 
         self._name = name
         self._image_ext = '.jpg'
-        self._only_mappings = only_mappings
         self._only_val = only_val
         self._skip_ambiguous = skip_ambiguous
-
+        self.discard_classes = discard_classes
         self._annotation_dir = os.path.join(download_path, 'annotations')
         self._splits_dir = os.path.join(download_path, 'splits')
         self._images_dir = os.path.join(download_path, 'images')
@@ -91,7 +90,8 @@ class MapillaryParser(Parser):
                     class_name = obj['label']
 
                     if class_name not in self._classes:
-                        self._class_name_to_class_id[class_name] = len(self._classes)
+                        self._class_name_to_class_id[class_name] = \
+                            len(self._classes) + 1
                         self._classes.add(class_name)
 
                     if self._skip_ambiguous and obj['properties']['ambiguous']:
@@ -105,7 +105,9 @@ class MapillaryParser(Parser):
                         continue
 
                     boxes.append(box)
-                    classes.append(self.get_class_id(class_name))
+                    class_id_encoded = \
+                        1 if self.discard_classes else self.get_class_id(class_name)
+                    classes.append(class_id_encoded)
 
                 if len(classes) == 0:
                     self._skipped_samples[split_name] += 1

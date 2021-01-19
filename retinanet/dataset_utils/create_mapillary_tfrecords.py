@@ -1,4 +1,3 @@
-import json
 import os
 
 import numpy as np
@@ -24,6 +23,10 @@ flags.DEFINE_boolean('check_bad_images',
                      default=False,
                      help='Check for corrupt images')
 
+flags.DEFINE_boolean('discard_classes',
+                     default=False,
+                     help='Ignore classes, assign all objects `class_id=1`')
+
 flags.DEFINE_boolean('only_dump_parsed_dataset',
                      default=False,
                      help='Skip creating tfrecords, dump parsed dataset only')
@@ -37,6 +40,7 @@ def write_tfrecords(
         output_dir,
         split_name,
         check_bad_images=False):
+
     tfrecord_writer = TFrecordWriter(n_samples=len(data),
                                      n_shards=num_shards,
                                      output_dir=output_dir,
@@ -76,6 +80,7 @@ def main(_):
     mapillary_parser = MapillaryParser(
         FLAGS.download_path,
         skip_ambiguous=True,
+        discard_classes=FLAGS.discard_classes,
         only_val=False)
 
     mapillary_parser.dump_parsed_dataset()
@@ -96,9 +101,6 @@ def main(_):
         FLAGS.output_dir,
         'val',
         FLAGS.check_bad_images)
-
-    with open('mapillary_parsed.json', 'w') as f:
-        json.dump(mapillary_parser.dataset, f, indent=4)
 
 
 if __name__ == '__main__':
