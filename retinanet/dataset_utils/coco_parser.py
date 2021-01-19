@@ -19,9 +19,8 @@ class CocoParser(Parser):
                  val_annotations_path='annotations/instances_val2017.json',
                  name='COCO',
                  year='2017'):
-        super(CocoParser, self).__init__(download_path)
+        super(CocoParser, self).__init__(download_path, name=name)
 
-        self._name = name
         self._year = year
 
         self._only_mappings = only_mappings
