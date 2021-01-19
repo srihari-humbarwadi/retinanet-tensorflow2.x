@@ -6,7 +6,7 @@ from absl import logging
 
 class Parser(ABC):
     def __init__(self, download_path, name='Parser'):
-        self._name = name
+        self._name = name.lower()
         self._download_path = download_path
         self._data = {'train': [], 'val': []}
         self._classes = set()
@@ -21,13 +21,16 @@ class Parser(ABC):
 
     def dump_label_map(self):
         logging.info('Dumping label map for {} dataset'.format(self._name))
-        with open(self._name + 'label_map.json', 'w') as f:
+
+        with open(self._name + '_label_map.json', 'w') as f:
             json.dump(self._class_id_to_class_name, f, indent=4)
 
     def dump_parsed_json(self):
         logging.info('Dumping parsed json for {} dataset'.format(self._name))
-        with open(self._name + 'parsed_dataset.json', 'w') as f:
-            json.dump(self._data, f, indent=4)
+
+        with open(self._name + '_parsed_dataset.json', 'w') as f:
+            parsed_dataset = {'name': self._name, 'dataset': self._data}
+            json.dump(parsed_dataset, f, indent=4)
 
     def dump_parsed_dataset(self):
         self.dump_label_map()
