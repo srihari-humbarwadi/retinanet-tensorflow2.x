@@ -123,3 +123,25 @@ def prepare_model_for_export(trainer):
     logging.info('Created inference model with params: {}'
                  .format(params.inference))
     return inference_model
+
+
+def _fuse_model_outputs(model, params):
+    class_predictions = []
+    box_predictions = []
+    for i in range(3, 8):
+        class_predictions += [
+            tf.keras.layers.Reshape([
+                -1, params.architecture.num_classes
+            ])(model.output['class-predictions'][i])
+        ]
+        box_predictions += [
+            tf.keras.layers.Reshape(
+                [-1, 4])(model.output['box-predictions'][i])
+        ]
+    class_predictions = tf.concat(class_predictions, axis=1)
+    box_predictions = tf.concat(box_predictions, axis=1)
+    predictions = (box_predictions, class_predictions)
+    inference_model = tf.keras.Model(inputs=model.inputs,
+                                     outputs=predictions,
+                                     name='model_with_fused_outputs')
+    return inference_model

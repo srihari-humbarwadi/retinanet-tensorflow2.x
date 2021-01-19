@@ -29,6 +29,7 @@ class DecodePredictions(tf.keras.layers.Layer):
             params.inference.max_detections_per_class
         self.max_detections = params.inference.max_detections
         self.pre_nms_top_k = params.inference.pre_nms_top_k
+
         self._input_shape = tf.tile(
             tf.expand_dims(tf.constant(
                 params.input.input_shape,
@@ -38,9 +39,11 @@ class DecodePredictions(tf.keras.layers.Layer):
         self._anchors = AnchorBoxGenerator(
             *params.input.input_shape,
             params.anchor_params)
+
         self._box_variance = tf.convert_to_tensor(
             params.encoder_params.box_variance,
             dtype=tf.float32)
+
         self._scale_box_predictions = \
             params.encoder_params.scale_box_targets
 
@@ -104,3 +107,55 @@ class DecodePredictions(tf.keras.layers.Layer):
             self.confidence_threshold,
             clip_boxes=False,
         )
+
+
+class DecodeBoxCoordinates(tf.keras.layers.Layer):
+    """A Keras layer that decodes box coordinates .
+
+    Attributes:
+      box_variance: The scaling factors used to scale the bounding box
+        predictions.
+    """
+
+    def __init__(self, params, **kwargs):
+        super(DecodeBoxCoordinates, self).__init__(**kwargs)
+
+        self._input_shape = tf.tile(
+            tf.expand_dims(tf.constant(
+                params.input.input_shape,
+                dtype=tf.float32), axis=0),
+            multiples=[1, 2])
+
+        self._anchors = AnchorBoxGenerator(
+            *params.input.input_shape,
+            params.anchor_params)
+
+        self._box_variance = tf.convert_to_tensor(
+            params.encoder_params.box_variance,
+            dtype=tf.float32)
+
+        self._scale_box_predictions = \
+            params.encoder_params.scale_box_targets
+
+    def _decode_box_predictions(self, anchor_boxes, box_predictions):
+        boxes = box_predictions
+        if self._scale_box_predictions:
+            boxes = boxes * self._box_variance
+        boxes = tf.concat(
+            [
+                boxes[:, :, :2] * anchor_boxes[:, :, 2:] +
+                anchor_boxes[:, :, :2],
+                tf.math.exp(boxes[:, :, 2:]) * anchor_boxes[:, :, 2:],
+            ],
+            axis=-1,
+        )
+        boxes_transformed = convert_to_corners(boxes)
+        boxes_transformed = boxes_transformed / self._input_shape
+        return boxes_transformed
+
+    def call(self, box_predictions):
+        box_predictions = tf.cast(box_predictions, dtype=tf.float32)
+        boxes = self._decode_box_predictions(self._anchors.boxes[None, ...],
+                                             box_predictions)
+
+        return boxes
