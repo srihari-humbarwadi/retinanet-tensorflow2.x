@@ -18,7 +18,6 @@ class MapillaryParser(Parser):
                  name='Mapillary Traffic Sign'):
         super(MapillaryParser, self).__init__(download_path, name=name)
 
-        self._name = name
         self._image_ext = '.jpg'
         self._only_val = only_val
         self._skip_ambiguous = skip_ambiguous
