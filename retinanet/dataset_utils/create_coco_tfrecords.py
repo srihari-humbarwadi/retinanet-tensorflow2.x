@@ -19,6 +19,11 @@ flags.DEFINE_string('output_dir',
                     default='./coco_tfrecords',
                     help='Path to store the generated tfrecords in.')
 
+flags.DEFINE_boolean('only_dump_parsed_dataset',
+                     default=False,
+                     help='Skip creating tfrecords, dump parsed dataset only')
+
+
 FLAGS = flags.FLAGS
 
 
@@ -53,6 +58,10 @@ def main(_):
         os.mkdir(FLAGS.output_dir)
 
     coco_parser = CocoParser(FLAGS.download_path)
+    coco_parser.dump_parsed_dataset()
+
+    if FLAGS.only_dump_parsed_dataset:
+        return
 
     write_tfrecords(coco_parser.dataset['train'], FLAGS.num_shards,
                     FLAGS.output_dir, 'train')
