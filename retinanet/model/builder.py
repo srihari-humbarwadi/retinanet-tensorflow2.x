@@ -44,7 +44,7 @@ def model_builder(params):
 
         optimizer = get_optimizer(params.training.optimizer)
         logging.info(
-            'Optimizer Config: {}'
+            'Optimizer Config: \n{}'
             .format(json.dumps(
                 tf.keras.utils.serialize_keras_object(optimizer), indent=4)))
 
