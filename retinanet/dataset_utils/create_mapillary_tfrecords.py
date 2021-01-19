@@ -9,19 +9,29 @@ from retinanet.dataset_utils.tfrecord_writer import TFrecordWriter
 
 flags.DEFINE_string('download_path',
                     default=None,
-                    help='Path to the downloaded and unzipped COCO files.')
+                    help='Path to the downloaded and unzipped COCO files')
 
 flags.DEFINE_integer('num_shards',
                      default=256,
-                     help='Number of tfrecord files required.')
+                     help='Number of tfrecord files required')
 
 flags.DEFINE_string('output_dir',
                     default='./mapillary_tfrecords',
-                    help='Path to store the generated tfrecords in.')
+                    help='Path to store the generated tfrecords in')
 
 flags.DEFINE_boolean('check_bad_images',
                      default=False,
                      help='Check for corrupt images')
+
+
+flags.DEFINE_boolean('only_val',
+                     default=False,
+                     help='Only generate tfrecords for validation split')
+
+
+flags.DEFINE_boolean('skip_ambiguous',
+                     default=False,
+                     help='Skip annotations which are marked as ambiguous')
 
 flags.DEFINE_boolean('discard_classes',
                      default=False,
@@ -79,9 +89,9 @@ def main(_):
 
     mapillary_parser = MapillaryParser(
         FLAGS.download_path,
-        skip_ambiguous=True,
+        skip_ambiguous=FLAGS.skip_ambiguous,
         discard_classes=FLAGS.discard_classes,
-        only_val=False)
+        only_val=FLAGS.only_val)
 
     mapillary_parser.dump_parsed_dataset()
 
