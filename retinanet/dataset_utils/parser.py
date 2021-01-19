@@ -38,6 +38,10 @@ class Parser(ABC):
         pass
 
     @property
+    def name(self):
+        return self._name
+
+    @property
     def dataset(self):
         return self._data
 
