@@ -141,8 +141,7 @@ class Trainer:
                 'No checkpoints found in {}, aborting.'.format(self.model_dir))
 
         logging.warning(
-            'No existing checkpoints found in {}, \
-                running model in {} mode with random weights initialization!'
+            'No existing checkpoints found in {}, running model in {} mode with random weights initialization!'  # noqa: E501
             .format(self.model_dir, self.run_mode))
 
     def _setup(self):

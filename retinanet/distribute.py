@@ -25,8 +25,7 @@ def get_strategy(params):
         if tpu_name == '':
             if 'TPU_NAME' not in os.environ:
                 raise AssertionError(
-                    'Failed to fetch TPU name, please set ENV VAR \
-                        `TPU_NAME` or specify TPU name in config ')
+                    'Failed to fetch TPU name, please set ENV VAR `TPU_NAME` or specify TPU name in config ')  # noqa: E501
 
             tpu_name = os.environ['TPU_NAME']
             logging.warning(
@@ -37,9 +36,8 @@ def get_strategy(params):
                 tpu_name = os.environ['TPU_NAME']
 
                 logging.warning(
-                    'Changed TPU name from {} to {} \
-                        (overided with ENV VAR `TPU_NAME`)'.format(
-                        params.name, tpu_name))
+                    'Changed TPU name from {} to {} (overided with ENV VAR `TPU_NAME`)'  # noqa: E501
+                    .format(params.name, tpu_name))
 
         resolver = tf.distribute.cluster_resolver.TPUClusterResolver.connect(
             tpu_name)
