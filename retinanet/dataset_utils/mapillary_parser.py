@@ -127,6 +127,11 @@ class MapillaryParser(Parser):
             _build('train')
         _build('val')
 
+        self._class_id_to_class_name = {
+            v: k
+            for k, v in self._class_name_to_class_id.items()
+        }
+
         for split_name in ['train', 'val']:
             logging.info(
                 'Successfully parsed {} {} samples from {} dataset'.format(
@@ -142,8 +147,3 @@ class MapillaryParser(Parser):
                 logging.info(
                     'Skipped {} ambiguous instances instances from {} samples'
                     .format(self._ambiguous_instances[split_name], split_name))
-
-        self._class_id_to_class_name = {
-            v: k
-            for k, v in self._class_name_to_class_id.items()
-        }
