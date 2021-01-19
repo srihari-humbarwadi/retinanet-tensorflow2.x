@@ -64,8 +64,7 @@ def model_builder(params):
                                by_name=True)
 
             logging.info(
-                'l2_regularization loss after loading pretrained \
-                    weights{}'.format(tf.math.add_n(model.losses).numpy()))
+                'l2_regularization loss after loading pretrained weights{}'.format(tf.math.add_n(model.losses).numpy()))  # noqa:  E501
 
         loss_fn = RetinaNetLoss(params.architecture.num_classes, params.loss)
         model.compile(optimizer=optimizer, loss=loss_fn)
