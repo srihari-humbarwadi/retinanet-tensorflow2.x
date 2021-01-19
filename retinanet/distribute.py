@@ -35,10 +35,11 @@ def get_strategy(params):
         else:
             if 'TPU_NAME' in os.environ:
                 tpu_name = os.environ['TPU_NAME']
-            logging.warning(
-                'Changed TPU name from {} to {} \
-                    (overided with ENV VAR `TPU_NAME`)'.format(
-                    params.name, tpu_name))
+
+                logging.warning(
+                    'Changed TPU name from {} to {} \
+                        (overided with ENV VAR `TPU_NAME`)'.format(
+                        params.name, tpu_name))
 
         resolver = tf.distribute.cluster_resolver.TPUClusterResolver.connect(
             tpu_name)
