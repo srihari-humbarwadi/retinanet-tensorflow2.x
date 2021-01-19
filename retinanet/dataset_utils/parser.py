@@ -6,7 +6,7 @@ from absl import logging
 
 class Parser(ABC):
     def __init__(self, download_path, name='Parser'):
-        self._name = name.lower()
+        self._name = '_'.join(name.lower().split())
         self._download_path = download_path
         self._data = {'train': [], 'val': []}
         self._classes = set()
