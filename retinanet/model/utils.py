@@ -34,7 +34,7 @@ def get_normalization_op():
     use_sync_bn = use_sync_bn and 'USE_SYNC_BN' in os.environ
 
     if use_sync_bn:
-        logging.warning('Using SyncBatchNormalization')
+        logging.debug('Using SyncBatchNormalization')
         return tf.keras.layers.experimental.SyncBatchNormalization
 
     return tf.keras.layers.BatchNormalization
