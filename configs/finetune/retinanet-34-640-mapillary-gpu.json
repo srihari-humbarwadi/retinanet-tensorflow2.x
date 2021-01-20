@@ -1,9 +1,9 @@
 {
     "experiment": {
-        "name": "retinanet-640-30x-64-tpu",
+        "name": "retinanet-34-640-mapillary-gpu",
         "run_mode": "train_val",
-        "model_dir": "gs://tfrc_datasets/model_files",
-        "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
+        "model_dir": "model_files/finetune",
+        "tensorboard_dir": "tensorboard/finetune"
     },
     "input": {
         "input_shape": [
@@ -13,19 +13,19 @@
         "channels": 3
     },
     "floatx": {
-        "precision": "mixed_bfloat16"
+        "precision": "float32"
     },
     "architecture": {
         "backbone": {
             "type": "resnet",
-            "depth": 50,
+            "depth": 34,
             "checkpoint": ""
         },
         "fpn": {
             "filters": 256
         },
         "num_head_convs": 4,
-        "num_classes": 91,
+        "num_classes": 2,
         "num_anchors": 9,
         "use_weight_decay": true,
         "weight_decay_alpha": 0.0001,
@@ -44,42 +44,38 @@
     },
     "training": {
         "batch_size": {
-            "train": 64,
-            "val": 8
+            "train": 1,
+            "val": 1
         },
         "strategy": {
-            "type": "tpu",
-            "name": "v3-8-b"
+            "type": "gpu",
+            "name": ""
         },
         "restore_checkpoint": true,
-        "train_steps": 656250,
+        "train_steps": 100000,
         "validation_steps": -1,
-        "validation_freq": -1,
-        "annotation_file_path": "./instances_val2017.json",
-        "steps_per_execution": 200,
+        "validation_freq": 50000,
+        "annotation_file_path": "./converted_mapillary/instances_val.json",
+        "steps_per_execution": 25,
         "save_every": 10000,
         "optimizer": {
-            "name": "sgd",
-            "momentum": 0.9,
-            "nesterov": true,
+            "name": "adam",
             "lr_params": {
-                "warmup_learning_rate": 0.0067,
-                "warmup_steps": 2000,
+                "warmup_learning_rate": 5e-6,
+                "warmup_steps": 500,
                 "values": [
-                    0.08,
-                    0.008,
-                    0.0008
+                    1e-4,
+                    1e-5
                 ],
                 "boundaries": [
-                    519530,
-                    610680
+                    50000
                 ]
             }
         }
     },
     "fine_tuning": {
-        "fine_tune": false,
-        "pretrained_checkpoint": "",
+        "fine_tune": true,
+        "pretrained_checkpoint": "model_files/retinanet-34-640-30x-64-tpu/final_weights_step_656400.h5",
         "freeze_backbone": false,
         "freeze_batch_normalization": false
     },
@@ -115,8 +111,8 @@
     },
     "dataloader_params": {
         "tfrecords": {
-            "train": "gs://tfrc_datasets/coco_tfrecords/train*",
-            "val": "gs://tfrc_datasets/coco_tfrecords/val*"
+            "train": "../../datasets/mapillary_traffic_sign/tfrecords/train*",
+            "val": "../../datasets/mapillary_traffic_sign/tfrecords/val*"
         },
         "augmentations": {
             "use_augmentation": true,

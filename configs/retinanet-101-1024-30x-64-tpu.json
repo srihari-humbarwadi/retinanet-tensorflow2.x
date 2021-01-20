@@ -137,7 +137,8 @@
                 0.5,
                 0.5
             ]
-        }
+        },
+        "shuffle_buffer_size": 1024
     },
     "inference": {
         "nms_iou_threshold": 0.5,

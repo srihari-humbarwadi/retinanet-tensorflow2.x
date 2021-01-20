@@ -9,14 +9,17 @@ class InputPipeline:
     _SUPPORTED_RUN_MODES = ['train', 'val']
 
     def __init__(self, run_mode, params, is_multi_host, num_replicas):
+
         if run_mode not in InputPipeline._SUPPORTED_RUN_MODES:
             raise AssertionError('Unsupported run mode requested,\
                  available run modes: {}'.format(
                 InputPipeline._SUPPORTED_RUN_MODES))
+
         self.run_mode = run_mode
         self.is_multi_host = is_multi_host
         self.num_replicas = num_replicas
         self.batch_size = params.training.batch_size[run_mode]
+        self.shuffle_buffer_size = params.training.shuffle_buffer_size
         self.tfrecord_files = params.dataloader_params.tfrecords[run_mode]
         self.label_encoder = LabelEncoder(params)
 
@@ -77,7 +80,7 @@ class InputPipeline:
             dataset = dataset.prefetch(autotune)
             return dataset
 
-        dataset = dataset.shuffle(1024)
+        dataset = dataset.shuffle(self.shuffle_buffer_size)
         dataset = dataset.map(map_func=lambda x: self.label_encoder.
                               encode_sample(parse_example(x)),
                               num_parallel_calls=autotune)
