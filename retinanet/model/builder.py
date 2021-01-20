@@ -14,7 +14,7 @@ from retinanet.model.utils import add_l2_regularization, get_optimizer
 def model_builder(params):
     def _model_fn():
         input_shape = params.input.input_shape + [params.input.channels]
-        model = retinanet_builder(input_shape, params.architecture)
+        model = retinanet_builder(input_shape, params)
 
         logging.info('Trainable weights: {}'.format(
             len(model.trainable_weights)))
@@ -23,11 +23,13 @@ def model_builder(params):
             freeze_pattern = \
                 r'(conv2d(|_([1-9]|10))|batch_normalization(|_([1-9]|10)))\/'
             logging.info('Freezing initial weights')
+
             for layer in model.layers:
                 for weight in layer.weights:
                     if re.search(freeze_pattern, weight.name) \
                             is not None and layer.trainable:
                         layer.trainable = False
+
             logging.info('Trainable weights after freezing: {}'.format(
                 len(model.trainable_weights)))
 
@@ -63,8 +65,18 @@ def model_builder(params):
                                skip_mismatch=True,
                                by_name=True)
 
+            if params.fine_tuning.freeze_batch_normalization:
+                logging.warning('Freezing BatchNormalization layers for fine tuning')
+
+                for layer in model.layers:
+                    if isinstance(layer, (
+                            tf.keras.layers.BatchNormalization,
+                            tf.keras.layers.experimental.SyncBatchNormalization)):
+                        layer.trainable = False
+
             logging.info(
-                'l2_regularization loss after loading pretrained weights{}'.format(tf.math.add_n(model.losses).numpy()))  # noqa:  E501
+                'l2_regularization loss after loading pretrained weights {}'
+                .format(tf.math.add_n(model.losses).numpy()))
 
         loss_fn = RetinaNetLoss(params.architecture.num_classes, params.loss)
         model.compile(optimizer=optimizer, loss=loss_fn)
