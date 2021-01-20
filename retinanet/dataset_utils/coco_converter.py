@@ -75,20 +75,20 @@ class COCOConverter:
         return data
 
     def convert(self):
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)
+
         logging.info('Populating category information for {} categories'
                      .format(len(self.label_map)))
 
         categories = []
         for class_id, class_name in self.label_map.items():
             category_dict = deepcopy(COCOConverter._CATEGORY_DICT)
-
             category_dict['supercategory'] = int(class_id)
             category_dict['id'] = int(class_id)
             category_dict['name'] = class_name
-            categories.append(category_dict)
 
-        if not os.path.exists(self.output_dir):
-            os.makedirs(self.output_dir)
+            categories.append(category_dict)
 
         def _convert_annotations(split):
             logging.info('Convert {} split from {} dataset'
@@ -103,7 +103,6 @@ class COCOConverter:
 
             for sample in tqdm(self.parsed_dataset['dataset'][split]):
                 image_dict = deepcopy(COCOConverter._IMAGE_DICT)
-
                 image_dict['id'] = int(sample['image_id'])
                 image_dict['width'] = sample['image_width']
                 image_dict['height'] = sample['image_height']
