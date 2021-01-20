@@ -7,7 +7,7 @@ from retinanet.model.utils import get_normalization_op
 
 
 def fpn_builder(input_shape, params):
-    backbone = backbone_builder(input_shape, params.backbone)
+    backbone = backbone_builder(input_shape, params)
     c3, c4, c5 = backbone.outputs
 
     conv_2d_op = tf.keras.layers.Conv2D
@@ -34,7 +34,7 @@ def fpn_builder(input_shape, params):
 
     conv2d_same_pad = functools.partial(
         conv_2d_op,
-        filters=params.fpn.filters,
+        filters=params.architecture.fpn.filters,
         padding='same')
 
     for i in range(min_level, max_level + 1):

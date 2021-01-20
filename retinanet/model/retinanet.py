@@ -42,18 +42,18 @@ def retinanet_builder(input_shape, params):
     class_convs = []
     box_convs = []
 
-    for i in range(params.num_head_convs):
+    for i in range(params.architecture.num_head_convs):
         class_convs += [conv_3x3(name='class-' + str(i))]
         box_convs += [conv_3x3(name='box-' + str(i))]
 
     box_convs += [
-        conv2d_same_pad(filters=params.num_anchors * 4,
+        conv2d_same_pad(filters=params.architecture.num_anchors * 4,
                         name='box-predictions',
                         bias_initializer=b_init,
                         dtype=tf.float32)
     ]
     class_convs += [
-        conv2d_same_pad(filters=params.num_anchors * params.num_classes,
+        conv2d_same_pad(filters=params.architecture.num_anchors * params.architecture.num_classes,  # noqa: E501
                         name='class-predictions',
                         bias_initializer=prior_prob,
                         dtype=tf.float32)
@@ -61,11 +61,11 @@ def retinanet_builder(input_shape, params):
 
     box_bns = [
         bn_op(name='box-{}-{}'.format(i, j))
-        for i in range(params.num_head_convs) for j in range(3, 8)
+        for i in range(params.architecture.num_head_convs) for j in range(3, 8)
     ]
     class_bns = [
         bn_op(name='class-{}-{}'.format(i, j), )
-        for i in range(params.num_head_convs) for j in range(3, 8)
+        for i in range(params.architecture.num_head_convs) for j in range(3, 8)
     ]
 
     class_outputs = {}
@@ -73,7 +73,7 @@ def retinanet_builder(input_shape, params):
 
     for i, output in enumerate(fpn.outputs):
         class_x = box_x = output
-        for j in range(params.num_head_convs):
+        for j in range(params.architecture.num_head_convs):
             class_x = class_convs[j](class_x)
             class_x = tf.nn.relu(class_bns[i + 5 * j](class_x))
             box_x = box_convs[j](box_x)
