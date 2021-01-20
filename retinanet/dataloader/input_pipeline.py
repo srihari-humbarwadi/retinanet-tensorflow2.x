@@ -19,7 +19,7 @@ class InputPipeline:
         self.is_multi_host = is_multi_host
         self.num_replicas = num_replicas
         self.batch_size = params.training.batch_size[run_mode]
-        self.shuffle_buffer_size = params.training.shuffle_buffer_size
+        self.shuffle_buffer_size = params.dataloader_params.shuffle_buffer_size
         self.tfrecord_files = params.dataloader_params.tfrecords[run_mode]
         self.label_encoder = LabelEncoder(params)
 
