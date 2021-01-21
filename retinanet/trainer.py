@@ -292,6 +292,7 @@ class Trainer:
         if self._summary_writer is None:
             self._setup_summary_writer()
 
+        total_steps = len(self._val_dataset)
         dataset_iterator = iter(self._val_dataset)
         global_step = tf.convert_to_tensor(
             self.optimizer.iterations, dtype=tf.int64)
@@ -301,7 +302,8 @@ class Trainer:
             annotation_file_path=self.params.training.annotation_file_path,
             prediction_file_path=self.name + '.json')
 
-        logging.info('Evaluating at step {}'.format(global_step.numpy()))
+        logging.info('Evaluating at step {} for {} eval steps'
+                     .format(global_step.numpy(), total_steps))
 
         for i, data in enumerate(dataset_iterator):
             start = time()
@@ -312,9 +314,18 @@ class Trainer:
             images_per_second = \
                 self.distribute_strategy.num_replicas_in_sync / execution_time
 
-            logging.info('[eval_step {}][{:.2f} imgs/s]'
+            secs = (total_steps - (i+1)) / execution_time
+            eta = []
+            for interval in [3600, 60, 1]:
+                eta += ['{:02}'.format(int(secs // interval))]
+                secs %= interval
+            eta = ':'.join(eta)
+
+            logging.info('[eval_step {}/{}] [ETA: {}] [{:.2f} imgs/s]'
                          .format(
                              i + 1,
+                             total_steps,
+                             eta,
                              images_per_second))
 
         scores = evaluator.evaluate()
