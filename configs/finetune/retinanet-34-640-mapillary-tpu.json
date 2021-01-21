@@ -48,8 +48,8 @@
             "val": 1
         },
         "strategy": {
-            "type": "gpu",
-            "name": ""
+            "type": "tpu",
+            "name": "v3-8"
         },
         "restore_checkpoint": true,
         "train_steps": 500000,
@@ -63,7 +63,7 @@
             "momentum": 0.9,
             "nesterov": true,
             "lr_params": {
-                "warmup_learning_rate": 0.0067,
+                "warmup_learning_rate": 0.001,
                 "warmup_steps": 1000,
                 "values": [
                     0.008,
