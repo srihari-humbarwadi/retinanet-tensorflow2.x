@@ -282,12 +282,12 @@ class Trainer:
                     'Sleeping for {} secs before checking for new checkpoint'
                     .format(sleep_time))
 
-                sleep(sleep_time // 4)
+                sleep(sleep_time)
 
             else:
                 logging.info('Waiting for new checkpoint to be saved in {}'
                              .format(self.model_dir))
-                sleep(10)
+                sleep(sleep_time // 4)
 
     def evaluate(self):
 
