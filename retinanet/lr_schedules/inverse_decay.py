@@ -2,11 +2,12 @@ import tensorflow as tf
 
 
 class InverseDecay(tf.optimizers.schedules.LearningRateSchedule):
-    def __init__(self, initial_learning_rate, decay_rate):
+    def __init__(self, initial_learning_rate, decay_rate, name='inverse_decay'):
         super(InverseDecay, self).__init__()
 
         self.initial_learning_rate = initial_learning_rate
         self.decay_rate = decay_rate
+        self.name = name
 
     def __call__(self, step):
         learning_rate = tf.math.divide_no_nan(
@@ -16,6 +17,7 @@ class InverseDecay(tf.optimizers.schedules.LearningRateSchedule):
 
     def get_config(self):
         config = {
+            "name": self.name,
             "initial_learning_rate": self.initial_learning_rate,
             "decay_rate": self.decay_rate,
         }
