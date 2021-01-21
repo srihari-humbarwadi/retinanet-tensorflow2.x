@@ -33,7 +33,7 @@ def model_builder(params):
             logging.info('Trainable weights after freezing: {}'.format(
                 len(model.trainable_weights)))
 
-        if params.architecture.use_weight_decay:
+        if params.training.use_weight_decay:
             alpha = params.architecture.weight_decay_alpha
 
             for layer in model.layers:
@@ -47,8 +47,7 @@ def model_builder(params):
         optimizer = get_optimizer(params.training.optimizer)
         logging.info(
             'Optimizer Config: \n{}'
-            .format(json.dumps(
-                tf.keras.utils.serialize_keras_object(optimizer), indent=4)))
+            .format(json.dumps(optimizer.get_config(), indent=4)))
 
         if params.floatx.precision == 'mixed_float16':
             logging.info(
@@ -74,7 +73,8 @@ def model_builder(params):
                             tf.keras.layers.experimental.SyncBatchNormalization)):
                         layer.trainable = False
 
-            logging.info(
+        if params.training.use_weight_decay:
+            logging.debug(
                 'l2_regularization loss after loading pretrained weights {}'
                 .format(tf.math.add_n(model.losses).numpy()))
 
