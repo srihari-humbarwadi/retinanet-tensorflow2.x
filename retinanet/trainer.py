@@ -330,6 +330,9 @@ class Trainer:
                              eta,
                              images_per_second))
 
+            if (i + 1) == total_steps:
+                break
+
         scores = evaluator.evaluate()
         self._write_eval_summaries(
             scores,
