@@ -44,7 +44,7 @@
     "training": {
         "use_weight_decay": true,
         "batch_size": {
-            "train": 1,
+            "train": 64,
             "val": 1
         },
         "strategy": {
