@@ -53,7 +53,7 @@
         },
         "restore_checkpoint": true,
         "train_steps": 500000,
-        "validation_steps": -1,
+        "validation_samples":  5308,
         "validation_freq": 5000,
         "annotation_file_path": "./converted_mapillary/instances_val.json",
         "steps_per_execution": 50,
