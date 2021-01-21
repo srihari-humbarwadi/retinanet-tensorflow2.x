@@ -39,7 +39,7 @@ class Trainer:
         self.is_multi_host = is_multi_host
         self.resume_from = resume_from
         self.train_steps = params.training.train_steps
-        self.val_steps = params.training.validation_steps
+        self.validation_samples = params.training.validation_samples
         self.val_freq = params.training.validation_freq
         self.steps_per_execution = params.training.steps_per_execution
         self.batch_size = params.training.batch_size['train']
@@ -48,6 +48,8 @@ class Trainer:
         self.save_every = params.training.save_every
         self.summary_dir = params.experiment.tensorboard_dir
         self.name = params.experiment.name
+
+        self.val_steps = self.validation_samples // params.training.batch_size['val']
 
         self.restore_status = None
         self.use_float16 = False
@@ -94,12 +96,9 @@ class Trainer:
                         self.val_input_fn
                     )
             else:
-                val_dataset = self.val_input_fn()
-                self.val_steps = len(val_dataset)
-
                 self._val_dataset = \
                     self.distribute_strategy.experimental_distribute_dataset(
-                        val_dataset)
+                        self.val_input_fn())
 
         if 'train' in self.run_mode:
             logging.info('Setting up train dataset')
