@@ -27,7 +27,6 @@
         "num_head_convs": 4,
         "num_classes": 2,
         "num_anchors": 9,
-        "use_weight_decay": true,
         "weight_decay_alpha": 0.0001,
         "freeze_initial_layers": false
     },
@@ -43,6 +42,7 @@
         "box_loss_weight": 50.0
     },
     "training": {
+        "use_weight_decay": true,
         "batch_size": {
             "train": 1,
             "val": 1
@@ -52,23 +52,28 @@
             "name": ""
         },
         "restore_checkpoint": true,
-        "train_steps": 100000,
+        "train_steps": 500000,
         "validation_steps": -1,
-        "validation_freq": 50000,
+        "validation_freq": 5000,
         "annotation_file_path": "./converted_mapillary/instances_val.json",
-        "steps_per_execution": 25,
+        "steps_per_execution": 50,
         "save_every": 10000,
         "optimizer": {
-            "name": "adam",
+            "name": "sgd",
+            "momentum": 0.9,
+            "nesterov": true,
+            "global_clipnorm": 50.0,
             "lr_params": {
-                "warmup_learning_rate": 5e-6,
-                "warmup_steps": 500,
+                "warmup_learning_rate": 0.0002,
+                "warmup_steps": 1000,
                 "values": [
+                    1e-3,
                     1e-4,
                     1e-5
                 ],
                 "boundaries": [
-                    50000
+                    100000,
+                    350000
                 ]
             }
         }
@@ -134,7 +139,7 @@
                 0.5
             ]
         },
-        "shuffle_buffer_size": 1024
+        "shuffle_buffer_size": 256
     },
     "inference": {
         "nms_iou_threshold": 0.5,
