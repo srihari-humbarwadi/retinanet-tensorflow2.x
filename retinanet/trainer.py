@@ -94,9 +94,12 @@ class Trainer:
                         self.val_input_fn
                     )
             else:
+                val_dataset = self.val_input_fn()
+                self.val_steps = len(val_dataset)
+
                 self._val_dataset = \
                     self.distribute_strategy.experimental_distribute_dataset(
-                        self.val_input_fn())
+                        val_dataset)
 
         if 'train' in self.run_mode:
             logging.info('Setting up train dataset')
@@ -292,7 +295,7 @@ class Trainer:
         if self._summary_writer is None:
             self._setup_summary_writer()
 
-        total_steps = len(self._val_dataset)
+        total_steps = self.val_steps
         dataset_iterator = iter(self._val_dataset)
         global_step = tf.convert_to_tensor(
             self.optimizer.iterations, dtype=tf.int64)
