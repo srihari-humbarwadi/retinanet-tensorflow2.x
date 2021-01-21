@@ -1,6 +1,6 @@
 import os
 import json
-from time import time
+from time import time, sleep
 
 import numpy as np
 import tensorflow as tf
@@ -16,6 +16,7 @@ class Trainer:
         'train',
         'val',
         'train_val',
+        'continuous_eval'
         'export'
     ]
 
@@ -63,13 +64,17 @@ class Trainer:
         if 'train' in self.run_mode:
             self.train()
 
-        if self.run_mode == 'val':
+        elif self.run_mode == 'val':
             self.evaluate()
+
+        elif self.run_mode == 'continuous_eval':
+            self.continuous_evaluate()
 
     def _setup_model(self):
         logging.info('Setting up model for {}'.format(self.run_mode))
         self._model = self.model_fn()
         self.optimizer = self._model.optimizer
+        self._created_optimizer_weights = False
 
         if isinstance(
             self.optimizer,
@@ -113,27 +118,29 @@ class Trainer:
         logging.info('Writing summaries to {}'.format(
             os.path.join(self.summary_dir, self.name)))
 
-    def _restore_checkpoint(self):
+    def _restore_checkpoint(self, checkpoint=None):
 
-        if self.resume_from is not None:
+        if checkpoint is not None:
+            latest_checkpoint = checkpoint
+
+        elif self.resume_from is not None:
             latest_checkpoint = os.path.join(self.model_dir, self.resume_from)
-            logging.info(
-                'Using existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
-                .format(latest_checkpoint))
 
-            self.optimizer._create_all_weights(self._model.trainable_variables)
-            self.restore_status = self._model.load_weights(latest_checkpoint)
-            return
+        else:
+            logging.info('Looking for existing checkpoints in {}'
+                         .format(self.model_dir))
+            latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
 
-        logging.info('Looking for existing checkpoints in {}'
-                     .format(self.model_dir))
-
-        latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
         if latest_checkpoint is not None:
             logging.info(
                 'Found existing checkpoint {}, restoring model and optimizer state from checkpoint'  # noqa: E501
                 .format(latest_checkpoint))
-            self.optimizer._create_all_weights(self._model.trainable_variables)
+
+            if not self._created_optimizer_weights:
+                logging.info('Initializing optimizer slots/weights')
+                self.optimizer._create_all_weights(self._model.trainable_variables)
+                self._created_optimizer_weights = True
+
             self.restore_status = self._model.load_weights(latest_checkpoint)
             return
 
@@ -257,17 +264,42 @@ class Trainer:
                 tf.distribute.ReduceOp.MEAN, x, axis=None), loss_dict)
         return loss_dict
 
+    def continuous_evaluate(self, sleep_time=900):
+        current_checkpoint = None
+
+        while True:
+            latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
+
+            if latest_checkpoint and latest_checkpoint != current_checkpoint:
+                self._restore_checkpoint(latest_checkpoint)
+                self.evaluate()
+                current_checkpoint = latest_checkpoint
+
+                logging.info(
+                    'Sleeping for {} secs before checking for new checkpoint'
+                    .format(sleep_time))
+
+                sleep(sleep_time)
+
+            else:
+                logging.info('Waiting for new checkpoint to be saved in {}'
+                             .format(self.model_dir))
+
     def evaluate(self):
 
         if self._summary_writer is None:
             self._setup_summary_writer()
 
         dataset_iterator = iter(self._val_dataset)
+        global_step = tf.convert_to_tensor(
+            self.optimizer.iterations, dtype=tf.int64)
 
         evaluator = COCOEvaluator(
             input_shape=self.params.input.input_shape,
             annotation_file_path=self.params.training.annotation_file_path,
             prediction_file_path=self.name + '.json')
+
+        logging.info('Evaluating at step {}'.format(global_step.numpy()))
 
         for i, data in enumerate(dataset_iterator):
             start = time()
@@ -286,7 +318,13 @@ class Trainer:
         scores = evaluator.evaluate()
         self._write_eval_summaries(
             scores,
-            tf.convert_to_tensor(self.optimizer.iterations, dtype=tf.int64))
+            global_step)
+
+        logging.info(
+            '[global_step {}] evaluation results: {}'
+            .format(
+                global_step,
+                {k: np.round(v, 2) for k, v in scores.items()}))
         return scores
 
     def train(self):
@@ -365,9 +403,6 @@ class Trainer:
             if (current_step % self.val_freq == 0) \
                     and (not self._run_evaluation_at_end) \
                     and ('val' in self.run_mode):
-
-                logging.info(
-                    'Evaluating at step {}'.format(current_step))
                 self.evaluate()
 
         logging.info('Saving final checkpoint at step {}'.format(current_step))
@@ -376,8 +411,6 @@ class Trainer:
                          'final_weights_step_{}'.format(current_step)))
 
         if self._run_evaluation_at_end and 'val' in self.run_mode:
-            logging.info(
-                'Evaluating at step {}'.format(current_step))
             self.evaluate()
 
     @property
