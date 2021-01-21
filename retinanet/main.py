@@ -48,7 +48,7 @@ flags.DEFINE_boolean(
 flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
 FLAGS = flags.FLAGS
-SUPPORTED_RUN_MODES = ['train', 'val', 'train_val']
+SUPPORTED_RUN_MODES = ['train', 'val', 'train_val', 'continuous_eval']
 
 
 def set_precision(precision):
