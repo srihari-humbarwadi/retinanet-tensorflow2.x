@@ -316,7 +316,7 @@ class Trainer:
             images_per_second = \
                 self.distribute_strategy.num_replicas_in_sync / execution_time
 
-            secs = (total_steps - (i+1)) / execution_time
+            secs = (total_steps - (i+1)) * execution_time
             eta = []
             for interval in [3600, 60, 1]:
                 eta += ['{:02}'.format(int(secs // interval))]
@@ -384,11 +384,11 @@ class Trainer:
             loss_dict['execution-time'] = np.round(end - start, 2)
             loss_dict['learning-rate'] = learning_rate
 
-            per_step_execution_time = \
+            steps_per_second = \
                 self.steps_per_execution / loss_dict['execution-time']
-            images_per_second = per_step_execution_time * self.batch_size
+            images_per_second = steps_per_second * self.batch_size
 
-            secs = (self.train_steps - current_step) / per_step_execution_time
+            secs = (self.train_steps - current_step) / steps_per_second
             eta = []
             for interval in [3600, 60, 1]:
                 eta += ['{:02}'.format(int(secs // interval))]
