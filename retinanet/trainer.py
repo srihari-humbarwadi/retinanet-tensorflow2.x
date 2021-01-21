@@ -16,7 +16,7 @@ class Trainer:
         'train',
         'val',
         'train_val',
-        'continuous_eval'
+        'continuous_eval',
         'export'
     ]
 
@@ -264,7 +264,7 @@ class Trainer:
                 tf.distribute.ReduceOp.MEAN, x, axis=None), loss_dict)
         return loss_dict
 
-    def continuous_evaluate(self, sleep_time=900):
+    def continuous_evaluate(self, sleep_time=1000):
         current_checkpoint = None
 
         while True:
@@ -272,6 +272,7 @@ class Trainer:
 
             if latest_checkpoint and latest_checkpoint != current_checkpoint:
                 self._restore_checkpoint(latest_checkpoint)
+                self.restore_status.assert_consumed()
                 self.evaluate()
                 current_checkpoint = latest_checkpoint
 
@@ -284,6 +285,7 @@ class Trainer:
             else:
                 logging.info('Waiting for new checkpoint to be saved in {}'
                              .format(self.model_dir))
+                sleep(10)
 
     def evaluate(self):
 
