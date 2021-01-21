@@ -61,11 +61,13 @@ class COCOConverter:
             parsed_dataset_json,
             label_map,
             output_dir='./dataset',
+            resize_max_side=False,
             only_val=True):
 
         self.parsed_dataset = COCOConverter._read_json(parsed_dataset_json)
         self.label_map = COCOConverter._read_json(label_map)
         self.output_dir = output_dir
+        self.resize_max_side = resize_max_side
         self._only_val = only_val
 
     @staticmethod
@@ -75,6 +77,11 @@ class COCOConverter:
         return data
 
     def convert(self):
+        if self.resize_max_side:
+            logging.warning(
+                '`resize_max_side` is set to {}, labels will be rescaled to match resized image'  # noqa: E501
+                .format(self.resize_max_side))
+
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir)
 
@@ -118,7 +125,27 @@ class COCOConverter:
                     annotation_dict['image_id'] = int(sample['image_id'])
                     annotation_dict['category_id'] = class_id
 
+                    for coordinate in box:
+                        if coordinate < 0 or coordinate > 1:
+                            raise AssertionError('Invalid box {}'.format(box))
+
                     x1, y1, x2, y2 = box
+
+                    h = sample['image_height']
+                    w = sample['image_width']
+
+                    if self.resize_max_side:
+                        if max(h, w) > self.resize_max_side:
+
+                            scale = self.resize_max_side / max(h, w)
+                            h = int(h * scale)
+                            w = int(w * scale)
+
+                    x1 *= w
+                    y1 *= h
+                    x2 *= w
+                    y2 *= h
+
                     _coco_format_box = [x1, y1, x2 - x1, y2 - y1]
 
                     annotation_dict['area'] = float((x2 - x1) * (y2 - y1))
