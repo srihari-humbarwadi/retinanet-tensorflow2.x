@@ -7,22 +7,22 @@ class PiecewiseConstantDecayWithLinearWarmup(
                  **kwargs):
         super(PiecewiseConstantDecayWithLinearWarmup,
               self).__init__(boundaries=[x - 1 for x in boundaries],
-                             values=values, **kwargs)
+                             values=values,
+                             name='piecewise_constant_decay_with_linear_warmup',
+                             **kwargs)
 
         self.warmup_learning_rate = warmup_learning_rate
         self.warmup_steps = warmup_steps
         self._step_size = self.values[0] - self.warmup_learning_rate
 
     def __call__(self, step):
-        with tf.name_scope(self.name
-                           or 'PiecewiseConstantDecayWithLinearWarmup'):
-            learning_rate = tf.cond(
-                pred=tf.less(step, self.warmup_steps),
-                true_fn=lambda:
-                (self.warmup_learning_rate + tf.cast(step, dtype=tf.float32) /
-                 self.warmup_steps * self._step_size),
-                false_fn=lambda: (super(PiecewiseConstantDecayWithLinearWarmup,
-                                        self).__call__(step)))
+        learning_rate = tf.cond(
+            pred=tf.less(step, self.warmup_steps),
+            true_fn=lambda:
+            (self.warmup_learning_rate + tf.cast(step, dtype=tf.float32) /
+                self.warmup_steps * self._step_size),
+            false_fn=lambda: (super(PiecewiseConstantDecayWithLinearWarmup,
+                                    self).__call__(step)))
         return learning_rate
 
     def get_config(self):
