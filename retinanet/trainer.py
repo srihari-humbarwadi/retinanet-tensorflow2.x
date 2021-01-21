@@ -1,4 +1,5 @@
 import os
+import json
 from time import time
 
 import numpy as np
@@ -145,6 +146,16 @@ class Trainer:
             .format(self.model_dir, self.run_mode))
 
     def _setup(self):
+
+        if not tf.io.gfile.exists(self.model_dir):
+            tf.io.gfile.makedirs(self.model_dir)
+
+        config_path = os.path.join(self.model_dir, '{}.json'.format(self.name))
+
+        with tf.io.gfile.GFile(config_path, 'w') as f:
+            logging.info('Dumping config to {}'.format(config_path))
+            f.write(json.dumps(self.params, indent=4))
+
         with self.distribute_strategy.scope():
             self._setup_model()
             self._setup_dataset()
@@ -159,10 +170,15 @@ class Trainer:
                 for k in ['box-loss',
                           'class-loss',
                           'weighted-loss',
-                          'total-loss',
-                          'l2-regularization']:
+                          'total-loss']:
                     v = loss_dict[k]
                     tf.summary.scalar(k, data=v, step=step)
+
+                if self.params.training.use_weight_decay:
+                    tf.summary.scalar(
+                        'l2-regularization',
+                        data=loss_dict['l2-regularization'],
+                        step=step)
 
             with tf.name_scope('metrics'):
                 for k in ['learning-rate',
@@ -205,9 +221,13 @@ class Trainer:
         with tf.GradientTape() as tape:
             predictions = self._model(images, training=True)
             loss = self._model.loss(targets, predictions)
-            loss['l2-regularization'] = tf.math.add_n(self._model.losses)
-            loss['total-loss'] = loss['weighted-loss'] + loss[
-                'l2-regularization']
+            loss['total-loss'] = loss['weighted-loss']
+
+            if self.params.training.use_weight_decay:
+                loss['l2-regularization'] = tf.math.add_n(self._model.losses)
+                loss['total-loss'] = loss['total-loss'] + loss[
+                    'l2-regularization']
+
             per_replica_loss = loss[
                 'total-loss'] / self.distribute_strategy.num_replicas_in_sync
             if self.use_float16:
@@ -339,7 +359,7 @@ class Trainer:
                              self.train_steps,
                              eta,
                              images_per_second,
-                             {k: np.round(v, 3)
+                             {k: np.round(v, 4)
                               for k, v in loss_dict.items()}))
 
             if (current_step % self.val_freq == 0) \
