@@ -45,7 +45,7 @@
         "use_weight_decay": true,
         "batch_size": {
             "train": 64,
-            "val": 1
+            "val": 8
         },
         "strategy": {
             "type": "tpu",
