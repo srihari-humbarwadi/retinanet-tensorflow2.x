@@ -79,7 +79,7 @@
     },
     "fine_tuning": {
         "fine_tune": true,
-        "pretrained_checkpoint": "gs://tfrc_datasets/model_files/retinanet-34-640-30x-64-tpu/final_weights_step_656400.h5",
+        "pretrained_checkpoint": "./final_weights_step_656400.h5",
         "freeze_backbone": false,
         "freeze_batch_normalization": false
     },
