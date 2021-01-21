@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "retinanet-34-640-mapillary-tpu",
+        "name": "retinanet-34-640-mapillary-tpu-resized",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -55,7 +55,7 @@
         "train_steps": 500000,
         "validation_samples":  5308,
         "validation_freq": 5000,
-        "annotation_file_path": "instances_val.json",
+        "annotation_file_path": "./mapillary_evaluator/instances_val.json",
         "steps_per_execution": 200,
         "save_every": 10000,
         "optimizer": {
@@ -115,8 +115,8 @@
     },
     "dataloader_params": {
         "tfrecords": {
-            "train": "gs://tfrc_datasets/mapillary_traffic_sign/train*",
-            "val": "gs://tfrc_datasets/mapillary_traffic_sign/val*"
+            "train": "gs://tfrc_datasets/mapillary_tfrecords/train*",
+            "val": "gs://tfrc_datasets/mapillary_tfrecords/val*"
         },
         "augmentations": {
             "use_augmentation": true,

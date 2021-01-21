@@ -15,6 +15,10 @@ flags.DEFINE_integer('num_shards',
                      default=256,
                      help='Number of tfrecord files required')
 
+flags.DEFINE_integer('resize_max_side',
+                     default=0,
+                     help='Resize max side of the image to this value')
+
 flags.DEFINE_string('output_dir',
                     default='./mapillary_tfrecords',
                     help='Path to store the generated tfrecords in')
@@ -49,7 +53,11 @@ def write_tfrecords(
         num_shards,
         output_dir,
         split_name,
+        resize_max_side=0,
         check_bad_images=False):
+
+    if resize_max_side:
+        logging.warning('Resize max side images to {}'.format(resize_max_side))
 
     tfrecord_writer = TFrecordWriter(n_samples=len(data),
                                      n_shards=num_shards,
@@ -61,12 +69,27 @@ def write_tfrecords(
             with tf.io.gfile.GFile(sample['image'], 'rb') as fp:
                 image = fp.read()
 
-                if check_bad_images:
-                    h, w, _ = tf.image.decode_image(image).shape.as_list()
+            if check_bad_images:
+                _ = tf.image.decode_image(image).shape.as_list()
 
-                else:
-                    h = sample['image_height']
-                    w = sample['image_width']
+            if resize_max_side:
+                h = sample['image_height']
+                w = sample['image_width']
+
+                if max(h, w) > resize_max_side:
+                    scale = resize_max_side / max(h, w)
+
+                    image_decoded = tf.image.decode_image(image)
+
+                    new_h = int(h * scale)
+                    new_w = int(w * scale)
+
+                    image_decoded = tf.image.resize(
+                        image_decoded,
+                        size=[new_h, new_w])
+
+                    image = tf.image.encode_jpeg(
+                        tf.cast(image_decoded, dtype=tf.uint8)).numpy()
 
         except Exception:
             bad_samples += 1
@@ -74,10 +97,10 @@ def write_tfrecords(
 
         tfrecord_writer.push(
             image,
-            np.array(sample['label']['boxes'], dtype=np.float32) /
-            np.array([w, h, w, h]),
+            np.array(sample['label']['boxes'], dtype=np.float32),
             np.array(sample['label']['classes'], dtype=np.int32),
             sample['image_id'])
+
     tfrecord_writer.flush_last()
     logging.warning('Skipped {} corrupted samples from {} data'.format(
         bad_samples, split_name))
@@ -103,6 +126,7 @@ def main(_):
         FLAGS.num_shards,
         FLAGS.output_dir,
         'train',
+        FLAGS.resize_max_side,
         FLAGS.check_bad_images)
 
     write_tfrecords(
@@ -110,6 +134,7 @@ def main(_):
         32,
         FLAGS.output_dir,
         'val',
+        FLAGS.resize_max_side,
         FLAGS.check_bad_images)
 
 

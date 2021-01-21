@@ -42,6 +42,12 @@ class MapillaryParser(Parser):
         return splits
 
     def _build_dataset(self):
+        if self._discard_classes:
+
+            self._class_name_to_class_id['traffic_sign'] = 1
+            self._classes.add('traffic_sign')
+            logging.warning('Mapping all classses to `traffic_sign`')
+
         def _is_box_valid(box, image_height, image_width):
             x1, y1, x2, y2 = box
             width = x2 - x1
@@ -60,10 +66,6 @@ class MapillaryParser(Parser):
                 split_name, self._name))
 
             image_names = self._splits[split_name]
-
-            if self._discard_classes:
-                self._class_name_to_class_id['traffic_sign'] = 1
-                self._classes.add('traffic_sign')
 
             for _idx, image_name in tqdm(
                     enumerate(sorted(image_names)), total=len(image_names)):
@@ -85,10 +87,10 @@ class MapillaryParser(Parser):
 
                 for obj in annotation['objects']:
                     box = [
-                        obj['bbox']['xmin'],
-                        obj['bbox']['ymin'],
-                        obj['bbox']['xmax'],
-                        obj['bbox']['ymax']
+                        obj['bbox']['xmin'] / image_width,
+                        obj['bbox']['ymin'] / image_height,
+                        obj['bbox']['xmax'] / image_width,
+                        obj['bbox']['ymax'] / image_height
                     ]
                     class_name = obj['label']
 
