@@ -29,6 +29,10 @@ flags.DEFINE_boolean('run_evaluation',
                      default=False,
                      help='Overides `run_mode` specified in the config')
 
+flags.DEFINE_boolean('run_continuous_evaluation',
+                     default=False,
+                     help='Overides `run_mode` specified in the config')
+
 flags.DEFINE_boolean('xla', default=False, help='Compile with XLA JIT')
 
 flags.DEFINE_boolean('gpu_memory_allow_growth',
@@ -87,6 +91,11 @@ def main(_):
         logging.warning('Overiding `run_mode` from {} to evaluation only'.format(
             run_mode))
         run_mode = 'val'
+
+    if FLAGS.run_continuous_evaluation:
+        logging.warning('Overiding `run_mode` from {} to continuous evaluation'
+                        .format(run_mode))
+        run_mode = 'continuous_eval'
 
     if run_mode not in SUPPORTED_RUN_MODES:
         raise AssertionError(
