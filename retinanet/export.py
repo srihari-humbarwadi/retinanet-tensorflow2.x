@@ -27,6 +27,11 @@ flags.DEFINE_boolean('export_h5',
                      default=False,
                      help='Export weights as an h5 file (can be used for fine tuning)')  # noqa: E501
 
+flags.DEFINE_string('checkpoint_name',
+                    default='latest',
+                    help='Restores model weights from `checkpoint_name`. Default behaviours uses the latest available checkpoint'  # noqa: E501
+                    )
+
 flags.DEFINE_string('overide_model_dir',
                     default='null',
                     help='Use local filesystem to load checkpoint')
@@ -60,6 +65,12 @@ def main(_):
         params.inference.pre_nms_top_k = -1
         logging.warning('Disabled pre nms top k filtering')
 
+    if FLAGS.checkpoint_name == 'latest':
+        checkpoint_name = None
+
+    else:
+        checkpoint_name = FLAGS.checkpoint_name
+
     run_mode = 'export'
 
     # skip loading pretrained backbone weights
@@ -75,7 +86,8 @@ def main(_):
         run_mode=run_mode,
         model_fn=model_fn,
         train_input_fn=train_input_fn,
-        val_input_fn=val_input_fn
+        val_input_fn=val_input_fn,
+        resume_from=checkpoint_name
     )
 
     trainer.restore_status.assert_consumed()
