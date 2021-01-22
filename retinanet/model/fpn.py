@@ -35,6 +35,7 @@ def fpn_builder(input_shape, params):
     conv2d_same_pad = functools.partial(
         conv_2d_op,
         filters=params.architecture.fpn.filters,
+        kernel_initializer=tf.initializers.VarianceScaling(),
         padding='same')
 
     for i in range(min_level, max_level + 1):
