@@ -51,6 +51,7 @@ class Executor:
 
         self.val_steps = self.validation_samples // params.training.batch_size['val']
 
+        self.num_replicas = self.distribute_strategy.num_replicas_in_sync
         self.restore_status = None
         self.use_float16 = False
         self._summary_writers = {}
@@ -201,6 +202,7 @@ class Executor:
             with tf.name_scope('metrics'):
                 for k in ['learning-rate',
                           'gradient-norm',
+                          'num-anchors-matched'
                           'execution-time']:
                     v = loss_dict[k]
                     tf.summary.scalar(k, data=v, step=step)
@@ -247,11 +249,10 @@ class Executor:
 
             if self.params.training.use_weight_decay:
                 loss['l2-regularization'] = tf.math.add_n(self._model.losses)
-                loss['total-loss'] = loss['total-loss'] + loss[
-                    'l2-regularization']
+                loss['total-loss'] += loss['l2-regularization']
 
-            per_replica_loss = loss[
-                'total-loss'] / self.distribute_strategy.num_replicas_in_sync
+            per_replica_loss = loss['total-loss'] / self.num_replicas
+
             if self.use_float16:
                 per_replica_loss = self.optimizer.get_scaled_loss(
                     per_replica_loss)
@@ -260,11 +261,12 @@ class Executor:
                                   self._model.trainable_variables)
         if self.use_float16:
             gradients = self.optimizer.get_unscaled_gradients(gradients)
+
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))
 
-        loss['gradient-norm'] = tf.linalg.global_norm(
-            gradients) * self.distribute_strategy.num_replicas_in_sync
+        loss['num-anchors-matched'] *= self.num_replicas
+        loss['gradient-norm'] = tf.linalg.global_norm(gradients) * self.num_replicas
         return loss
 
     @tf.function
@@ -320,8 +322,7 @@ class Executor:
             evaluator.accumulate_results(results)
             end = time()
             execution_time = np.round(end - start, 2)
-            images_per_second = \
-                self.distribute_strategy.num_replicas_in_sync / execution_time
+            images_per_second = self.num_replicas / execution_time
 
             secs = (total_steps - (i+1)) * execution_time
             eta = []
