@@ -5,11 +5,14 @@
  - [x] Multiple ResNet Depths
  - [x] Train on Single/ Multiple GPUs
  - [x] Stable training with Automatic Mixed Precision (~2.5x quicker)
- - [x] Train on TPU/ TPU pods (slices)
+ - [x] Train on TPU/ TPU pods
  - [x] Export `saved_model`
  - [x] COCO mAP evaluation callback
+ - [x] Supports fine tuning on custom datasets
+ - [ ] Multiscale inference
  - [ ] Transfer learning/ Fine-tuning
  - [ ] Export TensorRT model
+ - [ ] Export Onnx model
  - [ ] Batched inference
 
 
