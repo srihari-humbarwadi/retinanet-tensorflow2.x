@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from retinanet.dataloader.anchor_generator import AnchorBoxGenerator
-from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
+from retinanet.dataloader import PreprocessingPipeline
 from retinanet.dataloader.utils import compute_iou
 
 
