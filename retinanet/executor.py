@@ -10,7 +10,7 @@ from retinanet.eval import COCOEvaluator
 from retinanet.model.builder import make_eval_model
 
 
-class Trainer:
+class Executor:
 
     _RUN_MODES = [
         'train',
@@ -56,10 +56,10 @@ class Trainer:
         self._summary_writers = {}
         self._run_evaluation_at_end = params.training.validation_freq < 1
 
-        if self.run_mode not in Trainer._RUN_MODES:
+        if self.run_mode not in Executor._RUN_MODES:
             raise AssertionError(
                 'Invalid run mode, aborting!\n Supported run models {}'
-                .format(Trainer._RUN_MODES))
+                .format(Executor._RUN_MODES))
 
         self._setup()
 

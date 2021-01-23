@@ -8,7 +8,7 @@ from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
 from retinanet.distribute import get_strategy
 from retinanet.model import model_builder
-from retinanet.trainer import Trainer
+from retinanet import Executor
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -126,7 +126,7 @@ def main(_):
 
     model_fn = model_builder(params)
 
-    trainer = Trainer(  # noqa: F841
+    trainer = Executor(  # noqa: F841
         params=params,
         strategy=strategy,
         run_mode=run_mode,

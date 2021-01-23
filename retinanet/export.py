@@ -6,7 +6,7 @@ from absl import app, flags, logging
 from retinanet.cfg import Config
 from retinanet.dataloader import PreprocessingPipeline
 from retinanet.model import model_builder, prepare_model_for_export
-from retinanet.trainer import Trainer
+from retinanet import Executor
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -80,7 +80,7 @@ def main(_):
     val_input_fn = None
     model_fn = model_builder(params)
 
-    trainer = Trainer(
+    trainer = Executor(
         params=params,
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,
