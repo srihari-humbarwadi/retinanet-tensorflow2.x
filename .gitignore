@@ -141,6 +141,8 @@ tensorboard/
 export/
 model_files/
 saved_model/
+*.pb
+*.h5
 
 
 # logs
@@ -151,3 +153,14 @@ outputs/
 
 # dataset files
 /*.json
+/converted*
+
+# archives
+*.zip
+
+# image and videos
+*.png
+*.jpeg
+*.jpg
+*.avi
+*.mp4
