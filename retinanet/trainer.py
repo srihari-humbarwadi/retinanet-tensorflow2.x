@@ -205,6 +205,8 @@ class Trainer:
                     v = loss_dict[k]
                     tf.summary.scalar(k, data=v, step=step)
 
+        self._summary_writers['train'].flush()
+
     @tf.function
     def _write_eval_summaries(self, scores, step):
         with self._summary_writers['eval'].as_default():
@@ -216,6 +218,8 @@ class Trainer:
                           'AR-(L)-IoU=0.50:0.95']:
                     v = scores[k]
                     tf.summary.scalar(k, data=v, step=step)
+
+        self._summary_writers['eval'].flush()
 
     def _eval_step(self, data):
         detections = self._eval_model(data['image'], training=False)
