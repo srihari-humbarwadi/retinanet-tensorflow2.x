@@ -53,7 +53,7 @@ class Trainer:
 
         self.restore_status = None
         self.use_float16 = False
-        self._summary_writer = None
+        self._summary_writers = {}
         self._run_evaluation_at_end = params.training.validation_freq < 1
 
         if self.run_mode not in Trainer._RUN_MODES:
@@ -112,13 +112,22 @@ class Trainer:
                     self.distribute_strategy.experimental_distribute_dataset(
                         self.train_input_fn())
 
-    def _setup_summary_writer(self):
-        logging.info('Setting up summary writer')
-        self._summary_writer = tf.summary.create_file_writer(
-            os.path.join(self.summary_dir, self.name))
-        self._summary_writer.set_as_default()
-        logging.info('Writing summaries to {}'.format(
-            os.path.join(self.summary_dir, self.name)))
+    def _setup_summary_writers(self):
+        logging.info('Setting up summary writers')
+
+        if 'train' in self.run_mode:
+            train_summary_dir = os.path.join(self.summary_dir, self.name, 'train')
+            logging.info('Writing train summaries to {}'.format(train_summary_dir))
+
+            self._summary_writers['train'] = \
+                tf.summary.create_file_writer(train_summary_dir)
+
+        if 'val' in self.run_mode:
+            eval_summary_dir = os.path.join(self.summary_dir, self.name, 'eval')
+            logging.info('Writing eval summaries to {}'.format(eval_summary_dir))
+
+            self._summary_writers['eval'] = \
+                tf.summary.create_file_writer(eval_summary_dir)
 
     def _restore_checkpoint(self, checkpoint=None):
 
@@ -173,8 +182,8 @@ class Trainer:
                 self._restore_checkpoint()
 
     @tf.function
-    def _write_summaries(self, loss_dict, step):
-        with self._summary_writer.as_default():
+    def _write_train_summaries(self, loss_dict, step):
+        with self._summary_writers['train'].as_default():
             with tf.name_scope('losses'):
                 for k in ['box-loss',
                           'class-loss',
@@ -198,7 +207,7 @@ class Trainer:
 
     @tf.function
     def _write_eval_summaries(self, scores, step):
-        with self._summary_writer.as_default():
+        with self._summary_writers['eval'].as_default():
             with tf.name_scope('evaluation'):
                 for k in ['AP-IoU=0.50:0.95',
                           'AP-IoU=0.50',
@@ -285,8 +294,8 @@ class Trainer:
 
     def evaluate(self):
 
-        if self._summary_writer is None:
-            self._setup_summary_writer()
+        if 'eval' not in self._summary_writers:
+            self._setup_summary_writers()
 
         total_steps = self.val_steps
         dataset_iterator = iter(self._val_dataset)
@@ -359,7 +368,8 @@ class Trainer:
         logging.info('Saving checkpoints every {} steps in {}'.format(
             self.save_every, self.model_dir))
 
-        self._setup_summary_writer()
+        if 'train' not in self._summary_writers:
+            self._setup_summary_writers()
 
         if self.use_float16:
             logging.info('Training with AMP turned on!')
@@ -399,7 +409,7 @@ class Trainer:
                     os.path.join(self.model_dir,
                                  'weights_step_{}'.format(current_step)))
 
-            self._write_summaries(
+            self._write_train_summaries(
                 loss_dict,
                 tf.convert_to_tensor(current_step, dtype=tf.int64))
 
