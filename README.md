@@ -10,7 +10,6 @@
  - [x] COCO mAP evaluation callback
  - [x] Supports fine tuning on custom datasets
  - [ ] Multiscale inference
- - [ ] Transfer learning/ Fine-tuning
  - [ ] Export TensorRT model
  - [ ] Export Onnx model
  - [ ] Batched inference
