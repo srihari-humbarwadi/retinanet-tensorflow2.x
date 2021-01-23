@@ -20,12 +20,12 @@ class RetinaNetLoss:
         box_loss = self.box_loss(targets['box-targets'],
                                  predictions['box-predictions'], normalizer)
 
-        return {
-            'box-loss':
-            box_loss,
-            'class-loss':
-            class_loss,
-            'weighted-loss':
-            self._box_loss_weight * box_loss +
+        weighted_loss = self._box_loss_weight * box_loss + \
             self._class_loss_weight * class_loss
+
+        return {
+            'box-loss': box_loss,
+            'class-loss': class_loss,
+            'weighted-loss': weighted_loss,
+            'num-anchors-matched': normalizer
         }
