@@ -9,6 +9,15 @@ def read_image(path):
     return tf.cast(image, dtype=tf.float32)
 
 
+def imshow(image, figsize=(16, 9), title=None):
+    plt.figure(figsize=figsize)
+    plt.axis('off')
+    plt.imshow(np.uint8(image))
+
+    if title:
+        plt.title(title)
+
+
 def visualize_detections(image,
                          boxes,
                          classes,
