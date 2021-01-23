@@ -3,6 +3,7 @@ import functools
 import tensorflow as tf
 
 from retinanet.model.backbone import backbone_builder
+from retinanet.model.nearest_upsampling import NearestUpsampling2D
 from retinanet.model.utils import get_normalization_op
 
 
@@ -19,11 +20,7 @@ def fpn_builder(input_shape, params):
         momentum=0.997,
         epsilon=1e-4)
 
-    upsample_op = functools.partial(
-        tf.keras.layers.UpSampling2D,
-        size=2,
-        interpolation='nearest',
-        dtype=tf.float32)
+    upsample_op = functools.partial(NearestUpsampling2D, scale=2)
 
     min_level = 3
     max_level = 7
