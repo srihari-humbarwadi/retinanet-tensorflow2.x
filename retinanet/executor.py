@@ -380,12 +380,28 @@ class Executor:
             logging.info('Training with AMP turned on!')
 
         dataset_iterator = iter(self._train_dataset)
+
+        is_traced = False
+
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
+
+            if not is_traced:
+                logging.warning('Collecting trace for `distributed_train_step`')
+                tf.summary.trace_on(graph=True, profiler=False)
+
             start = time()
+
             loss_dict = self.distributed_train_step(
                 dataset_iterator,
                 tf.convert_to_tensor(self.steps_per_execution))
             current_step = int(self.optimizer.iterations.numpy())
+
+            if not is_traced:
+                with self._summary_writers['train'].as_default():
+                    tf.summary.trace_export(
+                        '{}_graph'.format(self.name), step=current_step)
+                is_traced = True
+
             end = time()
 
             if self.use_float16:
