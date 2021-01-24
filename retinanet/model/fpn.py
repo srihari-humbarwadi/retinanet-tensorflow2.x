@@ -56,7 +56,7 @@ def fpn_builder(input_shape, params):
     p4 = output_convs[1](m4)
     p5 = output_convs[2](l5)
     p6 = output_convs[3](p5)
-    p7 = output_convs[4](tf.nn.relu(p6))
+    p7 = output_convs[4](tf.nn.relu(p6, name='p6-relu'))
 
     outputs = [bn(x) for bn, x in zip(output_bns, (p3, p4, p5, p6, p7))]
     return tf.keras.Model(inputs=backbone.inputs, outputs=outputs, name='fpn')
