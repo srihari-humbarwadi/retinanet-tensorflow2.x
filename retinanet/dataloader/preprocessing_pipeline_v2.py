@@ -133,6 +133,7 @@ class PreprocessingPipelineV2:
                 boxes,
                 class_ids)
 
+        image.set_shape([self.target_size, self.target_size, 3])
         return image, boxes, class_ids
 
     def preprocess_val_sample(self, sample):
