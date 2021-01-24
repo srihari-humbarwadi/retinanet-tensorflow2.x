@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from retinanet.dataloader.anchor_generator import AnchorBoxGenerator
-from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
+from retinanet.dataloader.preprocessing_pipeline_v2 import PreprocessingPipelineV2
 from retinanet.dataloader.utils import compute_iou
 
 
@@ -11,7 +11,7 @@ class LabelEncoder:
         self.encoder_params = params.encoder_params
         self.anchors = AnchorBoxGenerator(*self.input_shape,
                                           params.anchor_params)
-        self.preprocessing_pipeline = PreprocessingPipeline(
+        self.preprocessing_pipeline = PreprocessingPipelineV2(
             self.input_shape, params.dataloader_params)
 
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
