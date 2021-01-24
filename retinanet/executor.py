@@ -202,7 +202,7 @@ class Executor:
             with tf.name_scope('metrics'):
                 for k in ['learning-rate',
                           'gradient-norm',
-                          'num-anchors-matched'
+                          'num-anchors-matched',
                           'execution-time']:
                     v = loss_dict[k]
                     tf.summary.scalar(k, data=v, step=step)
