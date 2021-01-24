@@ -14,13 +14,13 @@ def fpn_builder(input_shape, params):
     conv_2d_op = tf.keras.layers.Conv2D
 
     normalization_op = get_normalization_op()
-
     bn_op = functools.partial(
         normalization_op,
         momentum=0.997,
         epsilon=1e-4)
 
     upsample_op = functools.partial(NearestUpsampling2D, scale=2)
+    relu_op = functools.partial(tf.keras.layers.ReLU)
 
     min_level = 3
     max_level = 7
@@ -56,7 +56,7 @@ def fpn_builder(input_shape, params):
     p4 = output_convs[1](m4)
     p5 = output_convs[2](l5)
     p6 = output_convs[3](p5)
-    p7 = output_convs[4](tf.nn.relu(p6, name='p6-relu'))
+    p7 = output_convs[4](relu_op(name='p6-relu')(p6))
 
     outputs = [bn(x) for bn, x in zip(output_bns, (p3, p4, p5, p6, p7))]
     return tf.keras.Model(inputs=backbone.inputs, outputs=outputs, name='fpn')

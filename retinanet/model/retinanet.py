@@ -17,11 +17,12 @@ def retinanet_builder(input_shape, params):
     conv_2d_op = tf.keras.layers.Conv2D
 
     normalization_op = get_normalization_op()
-
     bn_op = functools.partial(
         normalization_op,
         momentum=0.997,
         epsilon=1e-4)
+
+    relu_op = functools.partial(tf.keras.layers.ReLU)
 
     conv_3x3 = functools.partial(
         conv_2d_op,
@@ -75,11 +76,11 @@ def retinanet_builder(input_shape, params):
         class_x = box_x = output
         for j in range(params.architecture.num_head_convs):
             class_x = class_convs[j](class_x)
-            class_x = tf.nn.relu(
-                class_bns[i + 5 * j](class_x), name='p{}-class-{}-relu'.format(i, j))
+            class_x = class_bns[i + 5 * j](class_x)
+            class_x = relu_op(name='p{}-class-{}-relu'.format(i, j))(class_x)
             box_x = box_convs[j](box_x)
-            box_x = tf.nn.relu(
-                box_bns[i + 5 * j](box_x), name='p{}-box-{}-relu'.format(i, j))
+            box_x = box_bns[i + 5 * j](box_x)
+            box_x = relu_op(name='p{}-box-{}-relu'.format(i, j))(box_x)
         class_outputs[i + 3] = class_convs[-1](class_x)
         box_outputs[i + 3] = box_convs[-1](box_x)
 
