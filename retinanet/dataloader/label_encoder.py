@@ -76,7 +76,7 @@ class LabelEncoder:
         return gt_boxes, cls_ids
 
     def encode_sample(self, sample):
-        image, gt_boxes, cls_ids, _ = self.preprocessing_pipeline(sample)
+        image, gt_boxes, cls_ids = self.preprocessing_pipeline(sample)
         matches = self._match_anchor_boxes(self.anchors.boxes, gt_boxes)
         cls_ids = tf.cast(cls_ids, dtype=tf.float32)
         gt_boxes, cls_ids = LabelEncoder._pad_labels(gt_boxes, cls_ids)
