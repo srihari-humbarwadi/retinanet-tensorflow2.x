@@ -113,9 +113,8 @@ class PreprocessingPipelineV2:
                 and self.augmentation_params.horizontal_flip:
             image, boxes = random_flip_horizontal(image, boxes)
 
-        if tf.random.uniform([]) < 0.5 and \
+        if tf.random.uniform([]) < 0.5 or \
                 not self.augmentation_params.use_augmentation:
-
             image, image_shape, resize_scale = self._resize_with_pad(image)
             boxes, class_ids = self._rescale_labels(
                 boxes=boxes,
@@ -125,7 +124,7 @@ class PreprocessingPipelineV2:
                 offset=[0.0, 0.0],
                 target_size=[self.target_size, self.target_size])
         else:
-            if tf.random.uniform([]) < 0.5\
+            if tf.random.uniform([]) < 0.5 \
                     and self.augmentation_params.use_augmentation:
                 image = self._random_rescale_image(image)
 
