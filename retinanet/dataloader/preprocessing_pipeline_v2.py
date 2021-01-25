@@ -57,12 +57,12 @@ class PreprocessingPipelineV2:
         return boxes, class_ids
 
     def _random_rescale_image(self, image):
-        image_size = tf.cast(tf.shape(image)[:2], dtype=tf.float32)
+        target_size = tf.cast(self.target_size, dtype=tf.float32)
         scale = tf.random.uniform([],
                                   self.augmentation_params.scale_jitter.min_scale,
                                   self.augmentation_params.scale_jitter.max_scale)
 
-        scaled_shape = tf.cast(tf.round(scale * image_size), dtype=tf.int32)
+        scaled_shape = tf.cast(tf.round(scale * target_size), dtype=tf.int32)
         image = tf.image.resize(image, size=scaled_shape)
         return image
 
