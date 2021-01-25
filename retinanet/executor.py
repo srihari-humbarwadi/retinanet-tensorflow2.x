@@ -265,7 +265,7 @@ class Executor:
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))
 
-        loss['num-anchors-matched'] *= self.num_replicas
+        loss['num-anchors-matched'] /= tf.shape(images)[0]
         loss['gradient-norm'] = tf.linalg.global_norm(gradients) * self.num_replicas
         return loss
 
