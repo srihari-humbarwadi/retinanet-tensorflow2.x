@@ -2,8 +2,8 @@
 	"experiment": {
 		"name": "retinanet-640-6x-256-tpu-pod",
 		"run_mode": "train",
-		"model_dir": "gs://tfrc_datasets/model_files",
-		"tensorboard_dir": "gs://tfrc_datasets/tensorboard"
+		"model_dir": "gs://tfrc_datasets/debug",
+		"tensorboard_dir": "gs://tfrc_datasets/debug"
 	},
 	"input": {
 		"input_shape": [
