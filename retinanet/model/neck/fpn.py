@@ -6,12 +6,14 @@ from retinanet.core.layers.nearest_upsampling import NearestUpsampling2D
 from retinanet.core.utils import get_normalization_op
 from retinanet.model.builder import NECK
 
+
 @NECK.register_module('fpn_v1')
 class FPN(tf.keras.Model):
     """ FPN builder class """
 
     def __init__(self, inputs, params):
-        assert isinstance(inputs, (list, tuple)), f"list or tuple expected, passed {type(inputs)}"
+        assert isinstance(inputs, (list, tuple)
+                          ), f"list or tuple expected, passed {type(inputs)}"
         conv_2d_op = tf.keras.layers.Conv2D
         c3, c4, c5 = inputs
 

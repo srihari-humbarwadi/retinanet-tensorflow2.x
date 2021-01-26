@@ -34,6 +34,7 @@ class PiecewiseConstantDecayWithLinearWarmup(
                             self).get_config()
         return dict(list(base_config.items()) + list(config.items()))
 
+
 class InverseDecay(tf.optimizers.schedules.LearningRateSchedule):
     def __init__(self, initial_learning_rate, decay_rate, name='inverse_decay'):
         super(InverseDecay, self).__init__()

@@ -262,6 +262,7 @@ def block_group(inputs, filters, block_fn, blocks, strides, name):
 
     return tf.identity(inputs, name)
 
+
 def resnet_fn(input_layer,
               block_fn,
               layers,
@@ -303,45 +304,47 @@ def resnet_fn(input_layer,
                      name='block_group4')
     return c3, c4, c5
 
+
 @BACKBONE.register_module('resnet')
 class ResNet(tf.keras.Model):
     MODEL_CONFIG = {
-            10: {
-                'block': residual_block,
-                'layers': [1, 1, 1, 1]
-            },
-            18: {
-                'block': residual_block,
-                'layers': [2, 2, 2, 2]
-            },
-            34: {
-                'block': residual_block,
-                'layers': [3, 4, 6, 3]
-            },
-            50: {
-                'block': bottleneck_block,
-                'layers': [3, 4, 6, 3]
-            },
-            101: {
-                'block': bottleneck_block,
-                'layers': [3, 4, 23, 3]
-            },
-            152: {
-                'block': bottleneck_block,
-                'layers': [3, 8, 36, 3]
-            },
-            200: {
-                'block': bottleneck_block,
-                'layers': [3, 24, 36, 3]
-            }
+        10: {
+            'block': residual_block,
+            'layers': [1, 1, 1, 1]
+        },
+        18: {
+            'block': residual_block,
+            'layers': [2, 2, 2, 2]
+        },
+        34: {
+            'block': residual_block,
+            'layers': [3, 4, 6, 3]
+        },
+        50: {
+            'block': bottleneck_block,
+            'layers': [3, 4, 6, 3]
+        },
+        101: {
+            'block': bottleneck_block,
+            'layers': [3, 4, 23, 3]
+        },
+        152: {
+            'block': bottleneck_block,
+            'layers': [3, 8, 36, 3]
+        },
+        200: {
+            'block': bottleneck_block,
+            'layers': [3, 24, 36, 3]
         }
+    }
 
     def __init__(self, input_shape, depth, checkpoint_dir=None):
         input_layer = tf.keras.Input(shape=input_shape, name="resnet_input")
         block = self.MODEL_CONFIG[depth]['block']
         layers = self.MODEL_CONFIG[depth]['layers']
         outputs = resnet_fn(input_layer, block, layers)
-        super().__init__(inputs=[input_layer], outputs=outputs, name='resnet_' + str(depth))
+        super().__init__(inputs=[input_layer],
+                         outputs=outputs, name='resnet_' + str(depth))
 
         if checkpoint_dir:
             latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)

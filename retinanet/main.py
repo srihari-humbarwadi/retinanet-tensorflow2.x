@@ -2,7 +2,6 @@ import os
 
 import tensorflow as tf
 from absl import app, flags, logging
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
@@ -130,7 +129,7 @@ def main(_):
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
         resume_from=FLAGS.resume_from,
-        builder = builder
+        builder=builder
         )
 
 

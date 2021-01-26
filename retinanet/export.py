@@ -5,8 +5,8 @@ from absl import app, flags, logging
 
 from retinanet.cfg import Config
 from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
-from retinanet.model.builder import Builder
-from retinanet.trainer import Trainer 
+from retinanet.model.builder import ModelBuilder
+from retinanet.trainer import Trainer
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -75,15 +75,14 @@ def main(_):
 
     train_input_fn = None
     val_input_fn = None
-    builder = Builder(params)
-    #TODO make builder with call
-    model_fn = builder.model_builder
+
+    model_builder = ModelBuilder(params)
 
     trainer = Trainer(
         params=params,
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,
-        model_fn=model_fn,
+        model_builder=model_builder,
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         resume_from=checkpoint_name
@@ -143,7 +142,7 @@ def main(_):
                 'valid_detections': detections.valid_detections[0]
             }
 
-        inference_model = prepare_model_for_export(trainer)
+        inference_model = model_builder.prepare_model_for_export(trainer.model)
 
         tf.saved_model.save(
             inference_model,
