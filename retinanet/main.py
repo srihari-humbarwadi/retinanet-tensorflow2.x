@@ -6,7 +6,7 @@ from absl import app, flags, logging
 from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
 from retinanet.core.utils import get_strategy, set_precision
-from retinanet.model.builder import Builder
+from retinanet.model.builder import ModelBuilder
 from retinanet.trainer import Trainer
 
 tf.get_logger().propagate = False
@@ -55,8 +55,6 @@ def main(_):
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
 
     params = Config(FLAGS.config_path).params
-
-    builder = Builder(params)
 
     if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
         os.makedirs(FLAGS.log_dir, exist_ok=True)
@@ -118,13 +116,13 @@ def main(_):
             is_multi_host=FLAGS.is_multi_host,
             num_replicas=strategy.num_replicas_in_sync)
 
-    model_fn = builder.model_builder()
+    model_builder = ModelBuilder(params)
 
     trainer = Trainer(  # noqa: F841
         params=params,
         strategy=strategy,
         run_mode=run_mode,
-        model_fn=model_fn,
+        model_builder=model_builder,
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,

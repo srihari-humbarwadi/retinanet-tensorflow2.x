@@ -27,8 +27,7 @@ class Trainer:
                  train_input_fn,
                  val_input_fn=None,
                  is_multi_host=False,
-                 resume_from=None,
-                 builder=None):
+                 resume_from=None):
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
@@ -48,7 +47,6 @@ class Trainer:
         self.save_every = params.training.save_every
         self.summary_dir = params.experiment.tensorboard_dir
         self.name = params.experiment.name
-        self.builder = builder
 
         self.val_steps = self.validation_samples // params.training.batch_size['val']
 
@@ -86,7 +84,7 @@ class Trainer:
             self.use_float16 = True
 
         if 'val' in self.run_mode:
-            self._eval_model = self.builder.make_eval_model(self._model, self.params)
+            self._eval_model = self.model_builder.make_eval_model(self._model)
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -324,7 +322,7 @@ class Trainer:
             execution_time = np.round(end - start, 2)
             images_per_second = self.num_replicas / execution_time
 
-            secs = (total_steps - (i+1)) * execution_time
+            secs = (total_steps - (i + 1)) * execution_time
             eta = []
             for interval in [3600, 60, 1]:
                 eta += ['{:02}'.format(int(secs // interval))]
