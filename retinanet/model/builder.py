@@ -66,11 +66,11 @@ class ModelBuilder:
                     model.add_loss(add_l2_regularization(layer.kernel, alpha))
 
                 elif isinstance(layer, tf.keras.Model):
-                    for layer in layer.layers:
-                        if isinstance(layer, tf.keras.layers.Conv2D) and \
-                                layer.trainable:
+                    for inner_layer in layer.layers:
+                        if isinstance(inner_layer, tf.keras.layers.Conv2D) and \
+                                inner_layer.trainable:
                             model.add_loss(
-                                add_l2_regularization(layer.kernel, alpha))
+                                add_l2_regularization(inner_layer.kernel, alpha))
 
             logging.info('Initial l2_regularization loss {}'.format(
                 tf.math.add_n(model.losses).numpy()))
