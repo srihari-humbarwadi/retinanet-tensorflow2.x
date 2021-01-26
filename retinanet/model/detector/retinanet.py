@@ -95,5 +95,7 @@ class RetinaNet(tf.keras.Model):
             'class-predictions': class_outputs,
             'box-predictions': box_outputs
         }
-        super().__init__(inputs=image_inputs, outputs=outputs,
-                         name=params.architecture.name, **kwargs)
+        super(RetinaNet, self).__init__(
+            inputs=[image_inputs],
+            outputs=outputs,
+            name='retinanet', **kwargs)

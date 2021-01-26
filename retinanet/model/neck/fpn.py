@@ -63,4 +63,6 @@ class FPN(tf.keras.Model):
         p7 = output_convs[4](relu_op(name='p6-relu')(p6))
 
         outputs = [bn(x) for bn, x in zip(output_bns, (p3, p4, p5, p6, p7))]
-        super().__init__(inputs=inputs, outputs=outputs, name='fpn')
+        super(FPN, self).__init__(inputs=inputs, outputs=outputs, name='fpn')
+
+    # TODO implement get_config()

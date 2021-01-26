@@ -343,8 +343,10 @@ class ResNet(tf.keras.Model):
         block = self.MODEL_CONFIG[depth]['block']
         layers = self.MODEL_CONFIG[depth]['layers']
         outputs = resnet_fn(input_layer, block, layers)
-        super().__init__(inputs=[input_layer],
-                         outputs=outputs, name='resnet_' + str(depth))
+        super(ResNet, self).__init__(
+            inputs=[input_layer],
+            outputs=outputs,
+            name='resnet_' + str(depth))
 
         if checkpoint_dir:
             latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
