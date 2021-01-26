@@ -12,8 +12,12 @@ class FPN(tf.keras.Model):
     """ FPN builder class """
 
     def __init__(self, inputs, params):
-        assert isinstance(inputs, (list, tuple)
-                          ), f"list or tuple expected, passed {type(inputs)}"
+
+        if not isinstance(inputs, (list, tuple)):
+            raise AssertionError(
+                'Expected `inputs` to be either list or tuple, got {} of type: {}'
+                .format(inputs, type(inputs)))
+
         conv_2d_op = tf.keras.layers.Conv2D
         c3, c4, c5 = inputs
 
