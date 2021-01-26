@@ -30,13 +30,11 @@ class Config:
         config_dict = json.loads(config)
         return config_dict
 
-    def override(self, config):
-        assert isinstance(config, (str, dict)), "wrong type for hparams"
-        if isinstance(config, str) and len(config):
-            try:
-                config_dict = self._parser(config)
-            except:
-                raise ValueError("wrong extension or format for hparams")
+    def override(self, config: str):
+        assert isinstance(config, str), "wrong type for hparams"
+        try:
+            config_dict = self._parser(config)
+        except:
+            raise ValueError("wrong extension or format for hparams")
         self._params.update(config_dict)
         return self._params
-
