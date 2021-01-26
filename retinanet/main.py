@@ -128,9 +128,7 @@ def main(_):
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
-        resume_from=FLAGS.resume_from,
-        builder=builder
-        )
+        resume_from=FLAGS.resume_from)
 
 
 if __name__ == '__main__':
