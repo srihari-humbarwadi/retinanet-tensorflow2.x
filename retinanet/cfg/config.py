@@ -1,5 +1,6 @@
 """ Hyperparameters for trainer and model. """
 import json
+from typing import Text
 
 from absl import logging
 from easydict import EasyDict
@@ -8,7 +9,7 @@ from easydict import EasyDict
 class Config:
     """ Configuration for hparams class. """
 
-    def __init__(self, path):
+    def __init__(self, path: Text):
         self.path = path
         self._load()
 
@@ -26,11 +27,11 @@ class Config:
         return self.config_dict.keys()
 
     @classmethod
-    def _parser(cls, config):
+    def _parser(cls, config: Text):
         config_dict = json.loads(config)
         return config_dict
 
-    def override(self, config: str):
+    def override(self, config: Text):
         assert isinstance(config, str), "wrong type for hparams"
         try:
             config_dict = self._parser(config)
