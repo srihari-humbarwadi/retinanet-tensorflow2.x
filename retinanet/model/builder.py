@@ -39,6 +39,7 @@ class ModelBuilder:
         logging.info('Trainable weights: {}'.format(
             len(model.trainable_weights)))
 
+        # TODO unify all weight freezing functionality
         if self.params.architecture.freeze_initial_layers:
             freeze_pattern = \
                 r'(conv2d(|_([1-9]|10))|batch_normalization(|_([1-9]|10)))\/'
@@ -53,6 +54,9 @@ class ModelBuilder:
             logging.info('Trainable weights after freezing: {}'.format(
                 len(model.trainable_weights)))
 
+        #  TODO avoid `model.add_loss`; Maintain a list of all variable names
+        #  that need to be included in weight decay loss. Call tf.nn.l2_loss with
+        #  variable namesinside per_replica_train step
         if self.params.training.use_weight_decay:
             alpha = self.params.architecture.weight_decay_alpha
 
@@ -60,6 +64,13 @@ class ModelBuilder:
                 if isinstance(layer,
                               tf.keras.layers.Conv2D) and layer.trainable:
                     model.add_loss(add_l2_regularization(layer.kernel, alpha))
+
+                elif isinstance(layer, tf.keras.Model):
+                    for layer in layer.layers:
+                        if isinstance(layer, tf.keras.layers.Conv2D) and \
+                                layer.trainable:
+                            model.add_loss(
+                                add_l2_regularization(layer.kernel, alpha))
 
             logging.info('Initial l2_regularization loss {}'.format(
                 tf.math.add_n(model.losses).numpy()))
@@ -84,6 +95,7 @@ class ModelBuilder:
                                skip_mismatch=True,
                                by_name=True)
 
+            # TODO freeze batchnorm with unified interface for freezing weights
             if self.params.fine_tuning.freeze_batch_normalization:
                 logging.warning('Freezing BatchNormalization layers for fine tuning')
 
@@ -112,7 +124,7 @@ class ModelBuilder:
         return model
 
     def backbone_builder(self):
-        model = self.backbone_class(
+        backbone = self.backbone_class(
             self.input_shape,
             self.params.architecture.backbone.depth,
             checkpoint_dir=self.params.architecture.backbone.checkpoint)
@@ -121,14 +133,14 @@ class ModelBuilder:
             if self.params.fine_tuning.freeze_backbone:
                 logging.warning('Freezing backbone for fine tuning')
 
-                for layer in model.layers:
+                for layer in backbone.layers:
                     if isinstance(layer, (
                             tf.keras.layers.Conv2D,
                             tf.keras.layers.BatchNormalization,
                             tf.keras.layers.experimental.SyncBatchNormalization)):
                         layer.trainable = False
 
-        return model
+        return backbone
 
     def prepare_model_for_export(self, model):
         model.optimizer = None
@@ -156,7 +168,7 @@ class ModelBuilder:
         class_predictions = tf.concat(class_predictions, axis=1)
         box_predictions = tf.concat(box_predictions, axis=1)
         predictions = (box_predictions, class_predictions)
-        detections = DecodePredictions(self.params.inference)(predictions)
+        detections = DecodePredictions(self.params)(predictions)
         inference_model = tf.keras.Model(inputs=model.inputs,
                                          outputs=detections,
                                          name='retinanet_inference')
@@ -168,7 +180,7 @@ class ModelBuilder:
         eval_model = self._add_post_processing_stage(model)
         return eval_model
 
-    def _fuse_model_outputs(self, model, params):
+    def _fuse_model_outputs(self, model):
         class_predictions = []
         box_predictions = []
         for i in range(3, 8):

@@ -12,5 +12,4 @@ repos:
     rev: '3.8.4'
     hooks:
     -   id: flake8
-        args:
-            - --max-line-length=85
+        args: ['--max-line-length=85', '--ignore=F401,F403 retinanet/model/__init__.py']
