@@ -15,8 +15,10 @@ BACKBONE = Registry("backbone")
 LOSS = Registry("loss")
 DETECTOR = Registry("detector")
 
-class Builder:
+
+class ModelBuilder:
     """ builds detector model using config. """
+
     def __init__(self, params):
         self.params = params
         self.detector_class = DETECTOR.get(params.architecture.detector)
@@ -24,54 +26,20 @@ class Builder:
         self.fpn_class = NECK.get(params.architecture.neck.type)
         # TODO (kartik4949): remove hardcoded loss
         self.loss_fn = LOSS.get("retinanet")
-        self.input_shape = self.params.input.input_shape + [self.params.input.channels]
+        self.input_shape = self.params.input.input_shape + \
+            [self.params.input.channels]
         self.input_layer = tf.keras.Input(shape=self.input_shape, name="image_input")
 
-    def backbone_builder(self):
-        model = self.backbone_class(
-                self.input_shape,
-                self.params.architecture.backbone.depth,
-                checkpoint_dir=self.params.architecture.backbone.checkpoint)
-
-        if self.params.fine_tuning.fine_tune:
-            if self.params.fine_tuning.freeze_backbone:
-                logging.warning('Freezing backbone for fine tuning')
-
-                for layer in model.layers:
-                    if isinstance(layer, (
-                            tf.keras.layers.Conv2D,
-                            tf.keras.layers.BatchNormalization,
-                            tf.keras.layers.experimental.SyncBatchNormalization)):
-                        layer.trainable = False
-
-        return model
-
-    @staticmethod
-    def prepare_model_for_export(trainer):
-        model = trainer.model
-        params = trainer.params
-
-        model.optimizer = None
-        model.compiled_loss = None
-        model.compiled_metrics = None
-        model._metrics = []
-
-        inference_model = _add_post_processing_stage(model, params)
-
-        logging.info('Created inference model with params: {}'
-                     .format(params.inference))
-        return inference_model
-
-    def model_builder(self):
-
+    def __call__(self):
         backbone = self.backbone_builder()
         fpn_inputs = [tf.keras.Input(shape=x.shape[1:]) for x in backbone.outputs]
-        fpn =  self.fpn_class(fpn_inputs, self.params)
+        fpn = self.fpn_class(fpn_inputs, self.params)
         model = self.detector_class(backbone, fpn, self.params)
 
         logging.info('Trainable weights: {}'.format(
             len(model.trainable_weights)))
 
+        # TODO unify all weight freezing functionality
         if self.params.architecture.freeze_initial_layers:
             freeze_pattern = \
                 r'(conv2d(|_([1-9]|10))|batch_normalization(|_([1-9]|10)))\/'
@@ -86,6 +54,9 @@ class Builder:
             logging.info('Trainable weights after freezing: {}'.format(
                 len(model.trainable_weights)))
 
+        #  TODO avoid `model.add_loss`; Maintain a list of all variable names
+        #  that need to be included in weight decay loss. Call tf.nn.l2_loss with
+        #  variable namesinside per_replica_train step
         if self.params.training.use_weight_decay:
             alpha = self.params.architecture.weight_decay_alpha
 
@@ -93,6 +64,13 @@ class Builder:
                 if isinstance(layer,
                               tf.keras.layers.Conv2D) and layer.trainable:
                     model.add_loss(add_l2_regularization(layer.kernel, alpha))
+
+                elif isinstance(layer, tf.keras.Model):
+                    for layer in layer.layers:
+                        if isinstance(layer, tf.keras.layers.Conv2D) and \
+                                layer.trainable:
+                            model.add_loss(
+                                add_l2_regularization(layer.kernel, alpha))
 
             logging.info('Initial l2_regularization loss {}'.format(
                 tf.math.add_n(model.losses).numpy()))
@@ -117,6 +95,7 @@ class Builder:
                                skip_mismatch=True,
                                by_name=True)
 
+            # TODO freeze batchnorm with unified interface for freezing weights
             if self.params.fine_tuning.freeze_batch_normalization:
                 logging.warning('Freezing BatchNormalization layers for fine tuning')
 
@@ -131,7 +110,8 @@ class Builder:
                 'l2_regularization loss after loading pretrained weights {}'
                 .format(tf.math.add_n(model.losses).numpy()))
 
-        _loss_fn = self.loss_fn(self.params.architecture.num_classes, self.params.loss)
+        _loss_fn = self.loss_fn(
+            self.params.architecture.num_classes, self.params.loss)
         model.compile(optimizer=optimizer, loss=_loss_fn)
 
         model.summary(print_fn=logging.debug)
@@ -143,6 +123,33 @@ class Builder:
             ])))
         return model
 
+    def backbone_builder(self):
+        backbone = self.backbone_class(
+            self.input_shape,
+            self.params.architecture.backbone.depth,
+            checkpoint_dir=self.params.architecture.backbone.checkpoint)
+
+        if self.params.fine_tuning.fine_tune:
+            if self.params.fine_tuning.freeze_backbone:
+                logging.warning('Freezing backbone for fine tuning')
+
+                for layer in backbone.layers:
+                    if isinstance(layer, (
+                            tf.keras.layers.Conv2D,
+                            tf.keras.layers.BatchNormalization,
+                            tf.keras.layers.experimental.SyncBatchNormalization)):
+                        layer.trainable = False
+
+        return backbone
+
+    def prepare_model_for_export(self, model):
+        model.optimizer = None
+        model.compiled_loss = None
+        model.compiled_metrics = None
+        model._metrics = []
+
+        inference_model = self._add_post_processing_stage(model)
+        return inference_model
 
     def _add_post_processing_stage(self, model):
         class_predictions = []
@@ -157,6 +164,7 @@ class Builder:
                 tf.keras.layers.Reshape(
                     [-1, 4])(model.output['box-predictions'][i])
             ]
+
         class_predictions = tf.concat(class_predictions, axis=1)
         box_predictions = tf.concat(box_predictions, axis=1)
         predictions = (box_predictions, class_predictions)
@@ -164,17 +172,15 @@ class Builder:
         inference_model = tf.keras.Model(inputs=model.inputs,
                                          outputs=detections,
                                          name='retinanet_inference')
+        logging.info('Created inference model with params: {}'
+                     .format(self.params.inference))
         return inference_model
 
-
     def make_eval_model(self, model):
-        eval_model = _add_post_processing_stage(model, self.params)
-
-        logging.info('Created inference model with self.params: {}'
-                     .format(self.params.inference))
+        eval_model = self._add_post_processing_stage(model)
         return eval_model
 
-    def _fuse_model_outputs(self, model, params):
+    def _fuse_model_outputs(self, model):
         class_predictions = []
         box_predictions = []
         for i in range(3, 8):

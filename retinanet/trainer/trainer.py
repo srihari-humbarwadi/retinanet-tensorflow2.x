@@ -23,7 +23,7 @@ class Trainer:
                  params,
                  strategy,
                  run_mode,
-                 model_fn,
+                 model_builder,
                  train_input_fn,
                  val_input_fn=None,
                  is_multi_host=False,
@@ -32,7 +32,7 @@ class Trainer:
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
-        self.model_fn = model_fn
+        self.model_builder = model_builder
         self.restore_checkpoint = params.training.restore_checkpoint
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
@@ -76,7 +76,7 @@ class Trainer:
 
     def _setup_model(self):
         logging.info('Setting up model for {}'.format(self.run_mode))
-        self._model = self.model_fn()
+        self._model = self.model_builder()
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
 
@@ -166,18 +166,14 @@ class Trainer:
             .format(self.model_dir, self.run_mode))
 
     def _setup(self):
-
-        """
         if not tf.io.gfile.exists(self.model_dir):
             tf.io.gfile.makedirs(self.model_dir)
 
         config_path = os.path.join(self.model_dir, '{}.json'.format(self.name))
 
-
         with tf.io.gfile.GFile(config_path, 'w') as f:
             logging.info('Dumping config to {}'.format(config_path))
             f.write(json.dumps(self.params, indent=4))
-        """
 
         with self.distribute_strategy.scope():
             self._setup_model()

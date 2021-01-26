@@ -1,5 +1,5 @@
 # TODO (kartik4949): find better way to import
-from retinanet.model.builder import Builder
+from retinanet.model.builder import ModelBuilder
 from retinanet.model.backbone import *
 from retinanet.model.neck import *
 from retinanet.model.detector import *

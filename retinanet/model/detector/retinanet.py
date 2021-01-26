@@ -6,10 +6,12 @@ import tensorflow as tf
 from retinanet.core.utils import get_normalization_op
 from retinanet.model.builder import DETECTOR
 
+
 @DETECTOR.register_module('retinanet')
 class RetinaNet(tf.keras.Model):
     """ RetinaNet detector class. """
     # TODO (kartik4949): remove params, pass needed keys.
+
     def __init__(self, backbone, fpn,  params, **kwargs):
         k_init = tf.keras.initializers.RandomNormal(stddev=0.01)
         b_init = tf.zeros_initializer()
@@ -93,4 +95,7 @@ class RetinaNet(tf.keras.Model):
             'class-predictions': class_outputs,
             'box-predictions': box_outputs
         }
-        super().__init__(inputs=image_inputs, outputs=outputs, name=params.architecture.name, **kwargs)
+        super(RetinaNet, self).__init__(
+            inputs=[image_inputs],
+            outputs=outputs,
+            name='retinanet', **kwargs)

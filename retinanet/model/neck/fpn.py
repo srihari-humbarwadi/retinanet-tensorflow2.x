@@ -6,12 +6,18 @@ from retinanet.core.layers.nearest_upsampling import NearestUpsampling2D
 from retinanet.core.utils import get_normalization_op
 from retinanet.model.builder import NECK
 
+
 @NECK.register_module('fpn_v1')
 class FPN(tf.keras.Model):
     """ FPN builder class """
 
     def __init__(self, inputs, params):
-        assert isinstance(inputs, (list, tuple)), f"list or tuple expected, passed {type(inputs)}"
+
+        if not isinstance(inputs, (list, tuple)):
+            raise AssertionError(
+                'Expected `inputs` to be either list or tuple, got {} of type: {}'
+                .format(inputs, type(inputs)))
+
         conv_2d_op = tf.keras.layers.Conv2D
         c3, c4, c5 = inputs
 
@@ -61,4 +67,6 @@ class FPN(tf.keras.Model):
         p7 = output_convs[4](relu_op(name='p6-relu')(p6))
 
         outputs = [bn(x) for bn, x in zip(output_bns, (p3, p4, p5, p6, p7))]
-        super().__init__(inputs=inputs, outputs=outputs, name='fpn')
+        super(FPN, self).__init__(inputs=inputs, outputs=outputs, name='fpn')
+
+    # TODO implement get_config()

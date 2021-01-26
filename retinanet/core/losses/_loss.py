@@ -1,6 +1,7 @@
 import tensorflow as tf
 from retinanet.model.builder import LOSS
 
+
 @LOSS.register_module('retinanet')
 class RetinaNetLoss:
     def __init__(self, num_classes, params):
@@ -28,6 +29,7 @@ class RetinaNetLoss:
             'weighted-loss': weighted_loss,
             'num-anchors-matched': normalizer
         }
+
 
 class SmoothL1Loss:
     def __init__(self, delta):

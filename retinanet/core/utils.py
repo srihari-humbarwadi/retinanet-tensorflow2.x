@@ -39,10 +39,10 @@ def get_normalization_op():
 
     return tf.keras.layers.BatchNormalization
 
+
 def set_precision(precision):
-    policy = mixed_precision.Policy(precision)
-    mixed_precision.set_policy(policy)
+    policy = tf.keras.mixed_precision.Policy(precision)
+    tf.keras.mixed_precision.set_policy(policy)
 
     logging.info('Compute dtype: {}'.format(policy.compute_dtype))
     logging.info('Variable dtype: {}'.format(policy.variable_dtype))
-
