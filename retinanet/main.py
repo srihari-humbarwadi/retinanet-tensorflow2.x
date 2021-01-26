@@ -6,12 +6,13 @@ from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
-from retinanet.distribute import get_strategy
-from retinanet.model import model_builder
-from retinanet import Executor
+from retinanet.core.utils import get_strategy, set_precision
+from retinanet.model.builder import Builder
+from retinanet.trainer import Trainer
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
+
 
 flags.DEFINE_string('config_path',
                     default=None,
@@ -51,18 +52,12 @@ FLAGS = flags.FLAGS
 SUPPORTED_RUN_MODES = ['train', 'val', 'train_val', 'continuous_eval']
 
 
-def set_precision(precision):
-    policy = mixed_precision.Policy(precision)
-    mixed_precision.set_policy(policy)
-
-    logging.info('Compute dtype: {}'.format(policy.compute_dtype))
-    logging.info('Variable dtype: {}'.format(policy.variable_dtype))
-
-
 def main(_):
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
 
     params = Config(FLAGS.config_path).params
+
+    builder = Builder(params)
 
     if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
         os.makedirs(FLAGS.log_dir, exist_ok=True)
@@ -124,9 +119,9 @@ def main(_):
             is_multi_host=FLAGS.is_multi_host,
             num_replicas=strategy.num_replicas_in_sync)
 
-    model_fn = model_builder(params)
+    model_fn = builder.model_builder()
 
-    trainer = Executor(  # noqa: F841
+    trainer = Trainer(  # noqa: F841
         params=params,
         strategy=strategy,
         run_mode=run_mode,
@@ -134,7 +129,8 @@ def main(_):
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
-        resume_from=FLAGS.resume_from
+        resume_from=FLAGS.resume_from,
+        builder = builder
         )
 
 

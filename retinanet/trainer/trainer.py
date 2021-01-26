@@ -7,10 +7,9 @@ import tensorflow as tf
 from absl import logging
 
 from retinanet.eval import COCOEvaluator
-from retinanet.model.builder import make_eval_model
 
 
-class Executor:
+class Trainer:
 
     _RUN_MODES = [
         'train',
@@ -28,7 +27,8 @@ class Executor:
                  train_input_fn,
                  val_input_fn=None,
                  is_multi_host=False,
-                 resume_from=None):
+                 resume_from=None,
+                 builder=None):
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
@@ -48,6 +48,7 @@ class Executor:
         self.save_every = params.training.save_every
         self.summary_dir = params.experiment.tensorboard_dir
         self.name = params.experiment.name
+        self.builder = builder
 
         self.val_steps = self.validation_samples // params.training.batch_size['val']
 
@@ -57,10 +58,10 @@ class Executor:
         self._summary_writers = {}
         self._run_evaluation_at_end = params.training.validation_freq < 1
 
-        if self.run_mode not in Executor._RUN_MODES:
+        if self.run_mode not in self.__class__._RUN_MODES:
             raise AssertionError(
                 'Invalid run mode, aborting!\n Supported run models {}'
-                .format(Executor._RUN_MODES))
+                .format(self.__class__._RUN_MODES))
 
         self._setup()
 
@@ -85,7 +86,7 @@ class Executor:
             self.use_float16 = True
 
         if 'val' in self.run_mode:
-            self._eval_model = make_eval_model(self._model, self.params)
+            self._eval_model = self.builder.make_eval_model(self._model, self.params)
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -166,14 +167,17 @@ class Executor:
 
     def _setup(self):
 
+        """
         if not tf.io.gfile.exists(self.model_dir):
             tf.io.gfile.makedirs(self.model_dir)
 
         config_path = os.path.join(self.model_dir, '{}.json'.format(self.name))
 
+
         with tf.io.gfile.GFile(config_path, 'w') as f:
             logging.info('Dumping config to {}'.format(config_path))
             f.write(json.dumps(self.params, indent=4))
+        """
 
         with self.distribute_strategy.scope():
             self._setup_model()

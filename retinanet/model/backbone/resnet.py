@@ -22,7 +22,8 @@ import functools
 import tensorflow as tf
 from absl import logging
 
-from retinanet.model.utils import get_normalization_op
+from retinanet.core.utils import get_normalization_op
+from retinanet.model.builder import BACKBONE
 
 
 class NormActivation:
@@ -261,12 +262,10 @@ def block_group(inputs, filters, block_fn, blocks, strides, name):
 
     return tf.identity(inputs, name)
 
-
-def resnet_fn(input_shape,
+def resnet_fn(input_layer,
               block_fn,
               layers,
               norm_activation=norm_activation_builder(activation='relu')):
-    input_layer = tf.keras.Input(shape=input_shape, name='image_input')
     inputs = conv2d_fixed_padding(inputs=input_layer,
                                   filters=64,
                                   kernel_size=7,
@@ -302,53 +301,51 @@ def resnet_fn(input_shape,
                      blocks=layers[3],
                      strides=2,
                      name='block_group4')
-    return input_layer, c3, c4, c5
+    return c3, c4, c5
 
-
-def resnet_builder(input_shape, depth, checkpoint_dir=None):
-    model_params = {
-        10: {
-            'block': residual_block,
-            'layers': [1, 1, 1, 1]
-        },
-        18: {
-            'block': residual_block,
-            'layers': [2, 2, 2, 2]
-        },
-        34: {
-            'block': residual_block,
-            'layers': [3, 4, 6, 3]
-        },
-        50: {
-            'block': bottleneck_block,
-            'layers': [3, 4, 6, 3]
-        },
-        101: {
-            'block': bottleneck_block,
-            'layers': [3, 4, 23, 3]
-        },
-        152: {
-            'block': bottleneck_block,
-            'layers': [3, 8, 36, 3]
-        },
-        200: {
-            'block': bottleneck_block,
-            'layers': [3, 24, 36, 3]
+@BACKBONE.register_module('resnet')
+class ResNet(tf.keras.Model):
+    MODEL_CONFIG = {
+            10: {
+                'block': residual_block,
+                'layers': [1, 1, 1, 1]
+            },
+            18: {
+                'block': residual_block,
+                'layers': [2, 2, 2, 2]
+            },
+            34: {
+                'block': residual_block,
+                'layers': [3, 4, 6, 3]
+            },
+            50: {
+                'block': bottleneck_block,
+                'layers': [3, 4, 6, 3]
+            },
+            101: {
+                'block': bottleneck_block,
+                'layers': [3, 4, 23, 3]
+            },
+            152: {
+                'block': bottleneck_block,
+                'layers': [3, 8, 36, 3]
+            },
+            200: {
+                'block': bottleneck_block,
+                'layers': [3, 24, 36, 3]
+            }
         }
-    }
 
-    block = model_params[depth]['block']
-    layers = model_params[depth]['layers']
+    def __init__(self, input_shape, depth, checkpoint_dir=None):
+        input_layer = tf.keras.Input(shape=input_shape, name="resnet_input")
+        block = self.MODEL_CONFIG[depth]['block']
+        layers = self.MODEL_CONFIG[depth]['layers']
+        outputs = resnet_fn(input_layer, block, layers)
+        super().__init__(inputs=[input_layer], outputs=outputs, name='resnet_' + str(depth))
 
-    inputs, *outputs = resnet_fn(input_shape, block, layers)
-    model = tf.keras.Model(inputs=[inputs],
-                           outputs=outputs,
-                           name='resnet_' + str(depth))
-    if checkpoint_dir:
-        latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
-        model.load_weights(latest_checkpoint).assert_consumed()
-        logging.info('Initialized weights from {}'.format(latest_checkpoint))
-    else:
-        logging.warning('Proceeding with random initialization!')
-
-    return model
+        if checkpoint_dir:
+            latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
+            self.load_weights(latest_checkpoint).assert_consumed()
+            logging.info('Initialized weights from {}'.format(latest_checkpoint))
+        else:
+            logging.warning('Proceeding with random initialization!')

@@ -3,7 +3,7 @@ import os
 import tensorflow as tf
 from absl import logging
 
-from retinanet.lr_schedules import PiecewiseConstantDecayWithLinearWarmup
+from retinanet.core.optimizer import PiecewiseConstantDecayWithLinearWarmup
 
 
 def get_optimizer(params):
@@ -38,3 +38,11 @@ def get_normalization_op():
         return tf.keras.layers.experimental.SyncBatchNormalization
 
     return tf.keras.layers.BatchNormalization
+
+def set_precision(precision):
+    policy = mixed_precision.Policy(precision)
+    mixed_precision.set_policy(policy)
+
+    logging.info('Compute dtype: {}'.format(policy.compute_dtype))
+    logging.info('Variable dtype: {}'.format(policy.variable_dtype))
+

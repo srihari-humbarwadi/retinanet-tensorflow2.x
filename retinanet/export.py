@@ -4,9 +4,9 @@ import tensorflow as tf
 from absl import app, flags, logging
 
 from retinanet.cfg import Config
-from retinanet.dataloader import PreprocessingPipeline
-from retinanet.model import model_builder, prepare_model_for_export
-from retinanet import Executor
+from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
+from retinanet.model.builder import Builder
+from retinanet.trainer import Trainer 
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -73,14 +73,13 @@ def main(_):
 
     run_mode = 'export'
 
-    # skip loading pretrained backbone weights
-    params.architecture.backbone.checkpoint = ''
-
     train_input_fn = None
     val_input_fn = None
-    model_fn = model_builder(params)
+    builder = Builder(params)
+    #TODO make builder with call
+    model_fn = builder.model_builder
 
-    trainer = Executor(
+    trainer = Trainer(
         params=params,
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,

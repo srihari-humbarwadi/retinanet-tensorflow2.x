@@ -1,0 +1,47 @@
+1. make plug and architecture using registery
+2. refactor
+3. testing
+4. add new features.
+5. add backbones
+6. reuse base classes. 
+
+
+
+# directory struct
+
+
+retinanet/
+	  loss/
+	  	loss.py
+
+	  core/ pre_ops/ 
+			label_encoder.py
+		post_ops/ 
+			nms_ops.py
+			decoder.py
+		box/anchors.py
+		    utils
+		.
+		.
+		.
+		optimizer/schedules/
+			  optimizer.py
+		loss/classification/
+		    /regression/
+		utils.py
+
+	  models/backbone/
+	  	 neck/
+		 head/
+		 model_factory.py
+	  utils/
+	  	registery.py
+	  executors/
+	  visualize/inspect_tfrecords.py
+	  	   inspect_anchors.py
+	  inference_image.py
+	  inference_video.py
+	  main.py
+	  export.py
+
+
