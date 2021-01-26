@@ -51,7 +51,7 @@
 			"val": 8
 		},
 		"strategy": {
-			"type": "cpu",
+			"type": "tpu",
 			"name": "v3-32"
 		},
 		"restore_checkpoint": true,
