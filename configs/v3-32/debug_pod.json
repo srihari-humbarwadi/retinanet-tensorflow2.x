@@ -20,7 +20,7 @@
 		"backbone": {
 			"type": "resnet",
 			"depth": 50,
-			"checkpoint": "../resnet50_checkpoint"
+			"checkpoint": "gs://tfrc_datasets/resnet50"
 		},
 		"detector": "retinanet",
 		"neck": {
