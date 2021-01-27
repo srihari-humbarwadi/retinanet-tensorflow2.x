@@ -307,7 +307,7 @@ def resnet_fn(input_layer,
 
 @BACKBONE.register_module('resnet')
 class ResNet(tf.keras.Model):
-    MODEL_CONFIG = {
+    _MODEL_CONFIG = {
         10: {
             'block': residual_block,
             'layers': [1, 1, 1, 1]
@@ -340,9 +340,11 @@ class ResNet(tf.keras.Model):
 
     def __init__(self, input_shape, depth, checkpoint_dir=None):
         input_layer = tf.keras.Input(shape=input_shape, name="resnet_input")
-        block = self.MODEL_CONFIG[depth]['block']
-        layers = self.MODEL_CONFIG[depth]['layers']
-        outputs = resnet_fn(input_layer, block, layers)
+        outputs = resnet_fn(
+            input_layer,
+            block_fn=ResNet._MODEL_CONFIG[depth]['block'],
+            layers=ResNet._MODEL_CONFIG[depth]['layers'])
+
         super(ResNet, self).__init__(
             inputs=[input_layer],
             outputs=outputs,
