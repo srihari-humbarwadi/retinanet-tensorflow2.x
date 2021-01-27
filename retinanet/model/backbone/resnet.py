@@ -302,7 +302,12 @@ def resnet_fn(input_layer,
                      blocks=layers[3],
                      strides=2,
                      name='block_group4')
-    return c3, c4, c5
+    return {
+        '2': c2,
+        '3': c3,
+        '4': c4,
+        '5': c5
+    }
 
 
 @BACKBONE.register_module('resnet')
