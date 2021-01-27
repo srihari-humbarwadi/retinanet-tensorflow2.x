@@ -20,13 +20,17 @@
 		"backbone": {
 			"type": "resnet",
 			"depth": 50,
-			"checkpoint": "gs://tfrc_datasets/resnet50"
+			"checkpoint": "../resnet50_checkpoint"
 		},
 		"detector": "retinanet",
 		"neck": {
 			"type": "fpn_v1",
-			"filters": 256
+			"filters": 256,
+			"min_level": 3,
+			"max_level": 7,
+			"backbone_max_level": 5
 		},
+		"num_head_filters": 256,
 		"num_head_convs": 4,
 		"num_classes": 91,
 		"num_anchors": 9,
