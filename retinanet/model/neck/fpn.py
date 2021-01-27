@@ -11,16 +11,17 @@ from retinanet.model.builder import NECK
 class FPN(tf.keras.Model):
     """ FPN builder class """
 
-    def __init__(self, inputs, params):
+    def __init__(self, feature_shapes, filters):
 
-        if not isinstance(inputs, (list, tuple)):
+        if not isinstance(feature_shapes, (list, tuple)):
             raise AssertionError(
                 'Expected `inputs` to be either list or tuple, got {} of type: {}'
-                .format(inputs, type(inputs)))
+                .format(feature_shapes, type(feature_shapes)))
+
+        self.feature_shapes = feature_shapes
+        self.filters = filters
 
         conv_2d_op = tf.keras.layers.Conv2D
-        c3, c4, c5 = inputs
-
         normalization_op = get_normalization_op()
         bn_op = functools.partial(
             normalization_op,
@@ -29,6 +30,9 @@ class FPN(tf.keras.Model):
 
         upsample_op = functools.partial(NearestUpsampling2D, scale=2)
         relu_op = functools.partial(tf.keras.layers.ReLU)
+
+        inputs = [tf.keras.Input(shape=shape[1:]) for shape in feature_shapes]
+        c3, c4, c5 = inputs
 
         min_level = 3
         max_level = 7
@@ -39,7 +43,7 @@ class FPN(tf.keras.Model):
 
         conv2d_same_pad = functools.partial(
             conv_2d_op,
-            filters=params.architecture.neck.filters,
+            filters=self.filters,
             kernel_initializer=tf.initializers.VarianceScaling(),
             padding='same')
 
@@ -49,6 +53,8 @@ class FPN(tf.keras.Model):
                     conv2d_same_pad(kernel_size=1, strides=1, name='l' + str(i))
                 ]
             strides = 1 if i < min_level + 3 else 2
+
+            # TODO consider removing redundant bias from BN(Conv2d + bias)
             output_convs += [
                 conv2d_same_pad(kernel_size=3, strides=strides, name='p' + str(i))
             ]
@@ -69,4 +75,10 @@ class FPN(tf.keras.Model):
         outputs = [bn(x) for bn, x in zip(output_bns, (p3, p4, p5, p6, p7))]
         super(FPN, self).__init__(inputs=inputs, outputs=outputs, name='fpn')
 
-    # TODO implement get_config()
+    def get_config(self):
+        config = {
+            "feature_shapes": self.feature_shapes,
+            "filters": self.filters,
+        }
+        base_config = super(FPN, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))

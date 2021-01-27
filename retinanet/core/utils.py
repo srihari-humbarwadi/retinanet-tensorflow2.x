@@ -29,6 +29,9 @@ def add_l2_regularization(weight, alpha=0.0001):
     return _add_l2_regularization
 
 
+# TODO This function should be removed once we add config parameters
+# for batchnorm layers
+
 def get_normalization_op():
     use_sync_bn = tf.distribute.get_strategy().num_replicas_in_sync > 1
     use_sync_bn = use_sync_bn and 'USE_SYNC_BN' in os.environ

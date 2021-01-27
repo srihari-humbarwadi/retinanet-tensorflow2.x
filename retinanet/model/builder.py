@@ -32,8 +32,11 @@ class ModelBuilder:
 
     def __call__(self):
         backbone = self.backbone_builder()
-        fpn_inputs = [tf.keras.Input(shape=x.shape[1:]) for x in backbone.outputs]
-        fpn = self.fpn_class(fpn_inputs, self.params)
+
+        feature_shapes = [x.shape.as_list() for x in backbone.outputs]
+        fpn = self.fpn_class(feature_shapes=feature_shapes,
+                             filters=self.params.architecture.neck.filters)
+
         model = self.detector_class(backbone, fpn, self.params)
 
         logging.info('Trainable weights: {}'.format(
@@ -80,6 +83,7 @@ class ModelBuilder:
             'Optimizer Config: \n{}'
             .format(json.dumps(optimizer.get_config(), indent=4)))
 
+        # TODO `get_optimizer` should handle this
         if self.params.floatx.precision == 'mixed_float16':
             logging.info(
                 'Wrapping optimizer with `LossScaleOptimizer` for AMP training'
@@ -123,6 +127,7 @@ class ModelBuilder:
             ])))
         return model
 
+    #  TODO just call `self.backbone_class` like we do for FPN
     def backbone_builder(self):
         backbone = self.backbone_class(
             self.input_shape,
