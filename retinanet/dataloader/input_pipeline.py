@@ -30,6 +30,7 @@ class InputPipeline:
         options.experimental_distribute.auto_shard_policy = \
             tf.data.experimental.AutoShardPolicy.OFF
 
+        # TODO  set shuffle=True with a seed shared across all workers
         dataset = tf.data.Dataset.list_files(self.tfrecord_files, shuffle=False)
         dataset = dataset.with_options(options)
 
