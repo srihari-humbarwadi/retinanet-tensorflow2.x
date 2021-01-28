@@ -128,6 +128,8 @@ def main(_):
         is_multi_host=FLAGS.is_multi_host,
         resume_from=FLAGS.resume_from)
 
+    trainer.run()
+
 
 if __name__ == '__main__':
     app.run(main)

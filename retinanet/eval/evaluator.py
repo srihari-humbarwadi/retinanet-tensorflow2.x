@@ -1,3 +1,4 @@
+""" Evaluation utility classes. """
 import json
 
 import numpy as np
@@ -6,26 +7,54 @@ from absl import logging
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
+from retinanet.base.evalmodule import EvalModule
 
-class COCOEvaluator:
+
+class COCOMixin:
+    """ COCOMixin with supporting functions. """
+    def get_coco_evaluater(self):
+        return COCO(self.annotation_file_path)
+
+    def aggregate(self, cocoEval: COCOeval = None):
+        cocoEval.evaluate()
+        cocoEval.accumulate()
+        cocoEval.summarize()
+
+    def setup_summary(self, cocoEval: COCOeval = None)
+       scores = {
+            'AP-IoU=0.50:0.95': cocoEval.stats[0],
+            'AP-IoU=0.50': cocoEval.stats[1],
+            'AP-IoU=0.75': cocoEval.stats[2],
+            'AR-(all)-IoU=0.50:0.95': cocoEval.stats[6],
+            'AR-(L)-IoU=0.50:0.95': cocoEval.stats[-1]
+        }
+        return scores
+
+class COCOEvaluator(EvalModule, COCOMixin):
+    """ COCO evaluation class. """
     def __init__(
             self,
             input_shape,
             annotation_file_path,
             prediction_file_path):
-
+        super().__init__()
         self._input_shape = input_shape
         self.annotation_file_path = annotation_file_path
         self.prediction_file_path = prediction_file_path
 
-        self._coco_eval_obj = COCO(annotation_file_path)
+        self.coco = self.get_coco_evaluater()
 
         self._processed_detections = []
 
         logging.info('Initialized COCOEvaluator with {}'.format(
             self.annotation_file_path))
 
-    def accumulate_results(self, results):
+    @property
+    def score(self):
+        return self._scores
+
+    def accumulate(self, results):
+        assert isinstance(results, dict), 'dict expected in eval accumulate'
         image_ids = results['image_id']
         detections = results['detections']
         resize_scales = results['resize_scale']
@@ -68,18 +97,9 @@ class COCOEvaluator:
         with open(self.prediction_file_path, 'w') as f:
             json.dump(self._processed_detections, f, indent=4)
 
-        predictions = self._coco_eval_obj.loadRes(self.prediction_file_path)
+        predictions = self.coco.loadRes(self.prediction_file_path)
 
-        cocoEval = COCOeval(self._coco_eval_obj, predictions, 'bbox')
-        cocoEval.evaluate()
-        cocoEval.accumulate()
-        cocoEval.summarize()
-
-        scores = {
-            'AP-IoU=0.50:0.95': cocoEval.stats[0],
-            'AP-IoU=0.50': cocoEval.stats[1],
-            'AP-IoU=0.75': cocoEval.stats[2],
-            'AR-(all)-IoU=0.50:0.95': cocoEval.stats[6],
-            'AR-(L)-IoU=0.50:0.95': cocoEval.stats[-1]
-        }
-        return scores
+        cocoEval = COCOeval(self.coco, predictions, 'bbox')
+        self.aggregate(cocoEval)
+        self._scores = self.setup_summary(cocoEval)
+        return self._scores
