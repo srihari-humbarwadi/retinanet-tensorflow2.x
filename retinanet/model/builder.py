@@ -17,8 +17,71 @@ HEAD = Registry("head")
 LOSS = Registry("loss")
 DETECTOR = Registry("detector")
 
+class BuilderMixin:
 
-class ModelBuilder:
+    def prepare_model_for_export(self, model):
+        model.optimizer = None
+        model.compiled_loss = None
+        model.compiled_metrics = None
+        model._metrics = []
+
+        inference_model = self._add_post_processing_stage(model)
+        _ = model(tf.random.uniform(shape=[1, 640, 640, 3]))
+        return inference_model
+
+    def _add_post_processing_stage(self, model):
+        class_predictions = []
+        box_predictions = []
+        for i in range(3, 8):
+            predictions_key = 'p{}-predictions'.format(i)
+
+            class_predictions += [
+                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
+                    model.output['class-predictions'][predictions_key])
+            ]
+            box_predictions += [
+                tf.keras.layers.Reshape([-1, 4])(
+                    model.output['box-predictions'][predictions_key])
+            ]
+
+        class_predictions = tf.concat(class_predictions, axis=1)
+        box_predictions = tf.concat(box_predictions, axis=1)
+        predictions = (box_predictions, class_predictions)
+        detections = DecodePredictions(self.params)(predictions)
+        inference_model = tf.keras.Model(inputs=model.inputs,
+                                         outputs=detections,
+                                         name='retinanet_inference')
+        logging.info('Created inference model with params: {}'
+                     .format(self.params.inference))
+        return inference_model
+
+    def make_eval_model(self, model):
+        eval_model = self._add_post_processing_stage(model)
+        return eval_model
+
+    def _fuse_model_outputs(self, model):
+        class_predictions = []
+        box_predictions = []
+        for i in range(3, 8):
+            predictions_key = 'p{}-predictions'.format(i)
+
+            class_predictions += [
+                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
+                    model.output['class-predictions'][predictions_key])
+            ]
+            box_predictions += [
+                tf.keras.layers.Reshape([-1, 4])(
+                    model.output['box-predictions'][predictions_key])
+            ]
+        class_predictions = tf.concat(class_predictions, axis=1)
+        box_predictions = tf.concat(box_predictions, axis=1)
+        predictions = (box_predictions, class_predictions)
+        inference_model = tf.keras.Model(inputs=model.inputs,
+                                         outputs=predictions,
+                                         name='model_with_fused_outputs')
+        return inference_model
+
+class ModelBuilder(BuilderMixin):
     """ builds detector model using config. """
 
     def __init__(self, params):
@@ -168,65 +231,3 @@ class ModelBuilder:
                 for x in model.trainable_variables
             ])))
         return model
-
-    def prepare_model_for_export(self, model):
-        model.optimizer = None
-        model.compiled_loss = None
-        model.compiled_metrics = None
-        model._metrics = []
-
-        inference_model = self._add_post_processing_stage(model)
-        _ = model(tf.random.uniform(shape=[1, 640, 640, 3]))
-        return inference_model
-
-    def _add_post_processing_stage(self, model):
-        class_predictions = []
-        box_predictions = []
-        for i in range(3, 8):
-            predictions_key = 'p{}-predictions'.format(i)
-
-            class_predictions += [
-                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
-                    model.output['class-predictions'][predictions_key])
-            ]
-            box_predictions += [
-                tf.keras.layers.Reshape([-1, 4])(
-                    model.output['box-predictions'][predictions_key])
-            ]
-
-        class_predictions = tf.concat(class_predictions, axis=1)
-        box_predictions = tf.concat(box_predictions, axis=1)
-        predictions = (box_predictions, class_predictions)
-        detections = DecodePredictions(self.params)(predictions)
-        inference_model = tf.keras.Model(inputs=model.inputs,
-                                         outputs=detections,
-                                         name='retinanet_inference')
-        logging.info('Created inference model with params: {}'
-                     .format(self.params.inference))
-        return inference_model
-
-    def make_eval_model(self, model):
-        eval_model = self._add_post_processing_stage(model)
-        return eval_model
-
-    def _fuse_model_outputs(self, model):
-        class_predictions = []
-        box_predictions = []
-        for i in range(3, 8):
-            predictions_key = 'p{}-predictions'.format(i)
-
-            class_predictions += [
-                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
-                    model.output['class-predictions'][predictions_key])
-            ]
-            box_predictions += [
-                tf.keras.layers.Reshape([-1, 4])(
-                    model.output['box-predictions'][predictions_key])
-            ]
-        class_predictions = tf.concat(class_predictions, axis=1)
-        box_predictions = tf.concat(box_predictions, axis=1)
-        predictions = (box_predictions, class_predictions)
-        inference_model = tf.keras.Model(inputs=model.inputs,
-                                         outputs=predictions,
-                                         name='model_with_fused_outputs')
-        return inference_model
