@@ -1,7 +1,7 @@
-""" Model Builder Utility Classes. """
 import json
 import re
 
+import numpy as np
 import tensorflow as tf
 from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
@@ -13,90 +13,12 @@ from retinanet.utils.registry import Registry
 # registry for internal modules.
 NECK = Registry("neck")
 BACKBONE = Registry("backbone")
+HEAD = Registry("head")
 LOSS = Registry("loss")
 DETECTOR = Registry("detector")
 
-class BuilderMixin:
-    #  TODO just call `self.backbone_class` like we do for FPN
-    def backbone_builder(self):
-        backbone = self.backbone_class(
-            self.input_shape,
-            self.params.architecture.backbone.depth,
-            checkpoint_dir=self.params.architecture.backbone.checkpoint)
 
-        if self.params.fine_tuning.fine_tune:
-            if self.params.fine_tuning.freeze_backbone:
-                logging.warning('Freezing backbone for fine tuning')
-
-                for layer in backbone.layers:
-                    if isinstance(layer, (
-                            tf.keras.layers.Conv2D,
-                            tf.keras.layers.BatchNormalization,
-                            tf.keras.layers.experimental.SyncBatchNormalization)):
-                        layer.trainable = False
-
-        return backbone
-
-    def prepare_model_for_export(self, model):
-        model.optimizer = None
-        model.compiled_loss = None
-        model.compiled_metrics = None
-        model._metrics = []
-
-        inference_model = self._add_post_processing_stage(model)
-        return inference_model
-
-    def _add_post_processing_stage(self, model):
-        class_predictions = []
-        box_predictions = []
-        for i in range(3, 8):
-            class_predictions += [
-                tf.keras.layers.Reshape([
-                    -1, self.params.architecture.num_classes
-                ])(model.output['class-predictions'][i])
-            ]
-            box_predictions += [
-                tf.keras.layers.Reshape(
-                    [-1, 4])(model.output['box-predictions'][i])
-            ]
-
-        class_predictions = tf.concat(class_predictions, axis=1)
-        box_predictions = tf.concat(box_predictions, axis=1)
-        predictions = (box_predictions, class_predictions)
-        detections = DecodePredictions(self.params)(predictions)
-        inference_model = tf.keras.Model(inputs=model.inputs,
-                                         outputs=detections,
-                                         name='retinanet_inference')
-        logging.info('Created inference model with params: {}'
-                     .format(self.params.inference))
-        return inference_model
-
-    def make_eval_model(self, model):
-        eval_model = self._add_post_processing_stage(model)
-        return eval_model
-
-    def _fuse_model_outputs(self, model):
-        class_predictions = []
-        box_predictions = []
-        for i in range(3, 8):
-            class_predictions += [
-                tf.keras.layers.Reshape([
-                    -1, self.params.architecture.num_classes
-                ])(model.output['class-predictions'][i])
-            ]
-            box_predictions += [
-                tf.keras.layers.Reshape(
-                    [-1, 4])(model.output['box-predictions'][i])
-            ]
-        class_predictions = tf.concat(class_predictions, axis=1)
-        box_predictions = tf.concat(box_predictions, axis=1)
-        predictions = (box_predictions, class_predictions)
-        inference_model = tf.keras.Model(inputs=model.inputs,
-                                         outputs=predictions,
-                                         name='model_with_fused_outputs')
-        return inference_model
-
-class ModelBuilder(BuilderMixin):
+class ModelBuilder:
     """ builds detector model using config. """
 
     def __init__(self, params):
@@ -104,6 +26,10 @@ class ModelBuilder(BuilderMixin):
         self.detector_class = DETECTOR.get(params.architecture.detector)
         self.backbone_class = BACKBONE.get(params.architecture.backbone.type)
         self.fpn_class = NECK.get(params.architecture.neck.type)
+
+        # TODO (kartik4949): remove hardcoded head
+        self.head_class = HEAD.get('retinanet_detection_head')
+
         # TODO (kartik4949): remove hardcoded loss
         self.loss_fn = LOSS.get("retinanet")
         self.input_shape = self.params.input.input_shape + \
@@ -111,13 +37,49 @@ class ModelBuilder(BuilderMixin):
         self.input_layer = tf.keras.Input(shape=self.input_shape, name="image_input")
 
     def __call__(self):
-        backbone = self.backbone_builder()
 
-        feature_shapes = [x.shape.as_list() for x in backbone.outputs]
-        fpn = self.fpn_class(feature_shapes=feature_shapes,
-                             filters=self.params.architecture.neck.filters)
+        num_classes = self.params.architecture.num_classes
 
-        model = self.detector_class(backbone, fpn, self.params)
+        num_scales = len(self.params.anchor_params.scales)
+        num_aspect_rations = len(self.params.anchor_params.aspect_ratios)
+
+        num_anchors = num_scales * num_aspect_rations
+
+        prior_prob_init = \
+            tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
+
+        backbone = self.backbone_class(
+            self.input_shape,
+            self.params.architecture.backbone.depth,
+            checkpoint_dir=self.params.architecture.backbone.checkpoint)
+
+        if self.params.fine_tuning.fine_tune and \
+                self.params.fine_tuning.freeze_backbone:
+            logging.warning('Freezing backbone for fine tuning')
+
+            for layer in backbone.layers:
+                layer.trainable = False
+
+        fpn = self.fpn_class(
+            self.params.architecture.neck.filters,
+            self.params.architecture.neck.min_level,
+            self.params.architecture.neck.max_level,
+            self.params.architecture.neck.backbone_max_level)
+
+        box_head = self.head_class(
+            self.params.architecture.num_head_convs,
+            self.params.architecture.num_head_filters,
+            num_anchors * 4,
+            name='box-head')
+
+        class_head = self.head_class(
+            self.params.architecture.num_head_convs,
+            self.params.architecture.num_head_filters,
+            num_anchors * num_classes,
+            prediction_bias_initializer=prior_prob_init,
+            name='class-head')
+
+        model = self.detector_class(backbone, fpn, box_head, class_head)
 
         logging.info('Trainable weights: {}'.format(
             len(model.trainable_weights)))
@@ -207,3 +169,64 @@ class ModelBuilder(BuilderMixin):
             ])))
         return model
 
+    def prepare_model_for_export(self, model):
+        model.optimizer = None
+        model.compiled_loss = None
+        model.compiled_metrics = None
+        model._metrics = []
+
+        inference_model = self._add_post_processing_stage(model)
+        _ = model(tf.random.uniform(shape=[1, 640, 640, 3]))
+        return inference_model
+
+    def _add_post_processing_stage(self, model):
+        class_predictions = []
+        box_predictions = []
+        for i in range(3, 8):
+            predictions_key = 'p{}-predictions'.format(i)
+
+            class_predictions += [
+                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
+                    model.output['class-predictions'][predictions_key])
+            ]
+            box_predictions += [
+                tf.keras.layers.Reshape([-1, 4])(
+                    model.output['box-predictions'][predictions_key])
+            ]
+
+        class_predictions = tf.concat(class_predictions, axis=1)
+        box_predictions = tf.concat(box_predictions, axis=1)
+        predictions = (box_predictions, class_predictions)
+        detections = DecodePredictions(self.params)(predictions)
+        inference_model = tf.keras.Model(inputs=model.inputs,
+                                         outputs=detections,
+                                         name='retinanet_inference')
+        logging.info('Created inference model with params: {}'
+                     .format(self.params.inference))
+        return inference_model
+
+    def make_eval_model(self, model):
+        eval_model = self._add_post_processing_stage(model)
+        return eval_model
+
+    def _fuse_model_outputs(self, model):
+        class_predictions = []
+        box_predictions = []
+        for i in range(3, 8):
+            predictions_key = 'p{}-predictions'.format(i)
+
+            class_predictions += [
+                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
+                    model.output['class-predictions'][predictions_key])
+            ]
+            box_predictions += [
+                tf.keras.layers.Reshape([-1, 4])(
+                    model.output['box-predictions'][predictions_key])
+            ]
+        class_predictions = tf.concat(class_predictions, axis=1)
+        box_predictions = tf.concat(box_predictions, axis=1)
+        predictions = (box_predictions, class_predictions)
+        inference_model = tf.keras.Model(inputs=model.inputs,
+                                         outputs=predictions,
+                                         name='model_with_fused_outputs')
+        return inference_model

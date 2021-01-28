@@ -1,11 +1,18 @@
 import tensorflow as tf
 
-class DetectionHead(tf.keras.layers.Layer):
+from retinanet.core.utils import get_normalization_op
+from retinanet.model.builder import HEAD
+
+
+@HEAD.register_module('retinanet_detection_head')
+class DetectionHead(tf.keras.Model):
 
     def __init__(self,
                  num_head_convs=4,
                  filters=256,
                  output_filters=36,
+                 min_level=3,
+                 max_level=7,
                  prediction_bias_initializer='zeros',
                  **kwargs):
         super(DetectionHead, self).__init__(**kwargs)
@@ -13,13 +20,16 @@ class DetectionHead(tf.keras.layers.Layer):
         self.num_head_convs = num_head_convs
         self.filters = filters
         self.output_filters = filters
+        self.min_level = min_level
+        self.max_level = max_level
         self.prediction_bias_initializer = prediction_bias_initializer
 
         conv_2d_op = tf.keras.layers.Conv2D
-        bn_op = tf.keras.layers.BatchNormalization
+        normalization_op = get_normalization_op()
 
         self.head_convs = []
         self.head_norms = []
+        self.relu_ops = []
 
         for i in range(num_head_convs):
             self.head_convs += [
@@ -34,15 +44,17 @@ class DetectionHead(tf.keras.layers.Layer):
                     bias_initializer=tf.zeros_initializer())
             ]
 
-            norms = []
-            for j in range(3, 8):
-                norms += [
-                    bn_op(momentum=0.997,
-                          epsilon=1e-4,
-                          name='{}-{}-p{}-bn'.format(self.name, i, j))
-                ]
+            norms = {}
+            for level in range(min_level, max_level + 1):
+                level = str(level)
+                norms[level] = normalization_op(
+                    name='{}-{}-p{}-bn'.format(self.name, i, level))
 
             self.head_norms += [norms]
+            self.relu_ops += [
+                tf.keras.layers.ReLU(
+                    name='{}-class-{}-relu'.format(self.name, i))
+            ]
 
         self.prediction_conv = conv_2d_op(
             filters=output_filters,
@@ -51,19 +63,22 @@ class DetectionHead(tf.keras.layers.Layer):
             padding='same',
             name='{}-prediction-conv'.format(self.name),
             kernel_initializer=tf.keras.initializers.RandomNormal(stddev=1e-5),
-            bias_initializer=self.prediction_bias_initializer)
+            bias_initializer=self.prediction_bias_initializer,
+            dtype=tf.float32)
 
     def call(self, features, training=None):
         outputs = {}
 
-        for j, feature in enumerate(features):
-            x = feature
+        for level in range(self.min_level, self.max_level + 1):
+            level = str(level)
+            x = features[level]
+
             for i in range(self.num_head_convs):
                 x = self.head_convs[i](x)
-                x = self.head_norms[i][j](x, training=training)
-                x = tf.nn.relu(x)
+                x = self.head_norms[i][level](x, training=training)
+                x = self.relu_ops[i](x)
 
             x = self.prediction_conv(x)
-            outputs['p{}-{}-predictions'.format(j + 3, self.name)] = x
+            outputs['p{}-predictions'.format(level)] = x
 
         return outputs
