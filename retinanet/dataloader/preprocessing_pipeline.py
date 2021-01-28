@@ -42,10 +42,8 @@ class PreprocessingPipeline:
         resized_image = tf.image.resize(image, size=scaled_shape)
 
         if jitter[0]:
-            resized_image = resized_image[offset[0]:offset[0] +
-                                          target_shape[0],
-                                          offset[1]:offset[1] +
-                                          target_shape[1], :]
+            resized_image = resized_image[offset[0]:offset[0] + target_shape[0],
+                                          offset[1]:offset[1] + target_shape[1], :]
 
         resized_image = tf.image.pad_to_bounding_box(resized_image, 0, 0,
                                                      target_shape[0],
@@ -88,7 +86,7 @@ class PreprocessingPipeline:
             axis=-1,
         )
         bbox, class_ids = self._prepare_labels(bbox, class_ids)
-        return image, bbox, class_ids, scale
+        return image, bbox, class_ids
 
     def resize_val_image(self, image):
         target_shape = self.input_shape

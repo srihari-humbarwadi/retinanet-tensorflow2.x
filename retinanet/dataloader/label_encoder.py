@@ -1,7 +1,7 @@
 import tensorflow as tf
 
 from retinanet.dataloader.anchor_generator import AnchorBoxGenerator
-from retinanet.dataloader.preprocessing_pipeline_v2 import PreprocessingPipelineV2
+from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
 from retinanet.dataloader.utils import compute_iou
 
 
@@ -11,8 +11,18 @@ class LabelEncoder:
         self.encoder_params = params.encoder_params
         self.anchors = AnchorBoxGenerator(*self.input_shape,
                                           params.anchor_params)
-        self.preprocessing_pipeline = PreprocessingPipelineV2(
+        self.preprocessing_pipeline = PreprocessingPipeline(
             self.input_shape, params.dataloader_params)
+
+    @staticmethod
+    def _pad_labels(gt_boxes, cls_ids):
+        gt_boxes = tf.concat([tf.stack([tf.zeros(4), tf.zeros(4)]), gt_boxes],
+                             axis=0)
+        cls_ids = tf.concat([
+            tf.squeeze(tf.stack([-2 * tf.ones(1), -1 * tf.ones(1)])), cls_ids
+        ],
+            axis=0)
+        return gt_boxes, cls_ids
 
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
         if tf.shape(gt_boxes)[0] == 0:
@@ -48,8 +58,7 @@ class LabelEncoder:
         matched_gt_boxes = tf.maximum(matched_gt_boxes, eps)
         box_target = tf.concat(
             [
-                (matched_gt_boxes[:, :2] - self.anchors.boxes[:, :2]) /
-                self.anchors.boxes[:, 2:],
+                (matched_gt_boxes[:, :2] - self.anchors.boxes[:, :2]) / self.anchors.boxes[:, 2:],  # noqa: E501
                 tf.math.log(
                     matched_gt_boxes[:, 2:] / self.anchors.boxes[:, 2:]),
             ],
@@ -64,16 +73,6 @@ class LabelEncoder:
             box_target = box_target / tf.convert_to_tensor(
                 self.encoder_params.box_variance, dtype=tf.float32)
         return box_target
-
-    @staticmethod
-    def _pad_labels(gt_boxes, cls_ids):
-        gt_boxes = tf.concat([tf.stack([tf.zeros(4), tf.zeros(4)]), gt_boxes],
-                             axis=0)
-        cls_ids = tf.concat([
-            tf.squeeze(tf.stack([-2 * tf.ones(1), -1 * tf.ones(1)])), cls_ids
-        ],
-            axis=0)
-        return gt_boxes, cls_ids
 
     def encode_sample(self, sample):
         image, gt_boxes, cls_ids = self.preprocessing_pipeline(sample)

@@ -2,16 +2,16 @@ import os
 
 import tensorflow as tf
 from absl import app, flags, logging
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
-from retinanet.distribute import get_strategy
-from retinanet.model import model_builder
-from retinanet import Executor
+from retinanet.core.utils import get_strategy, set_precision
+from retinanet.model.builder import ModelBuilder
+from retinanet.trainer import Trainer
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
+
 
 flags.DEFINE_string('config_path',
                     default=None,
@@ -49,14 +49,6 @@ flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
 FLAGS = flags.FLAGS
 SUPPORTED_RUN_MODES = ['train', 'val', 'train_val', 'continuous_eval']
-
-
-def set_precision(precision):
-    policy = mixed_precision.Policy(precision)
-    mixed_precision.set_policy(policy)
-
-    logging.info('Compute dtype: {}'.format(policy.compute_dtype))
-    logging.info('Variable dtype: {}'.format(policy.variable_dtype))
 
 
 def main(_):
@@ -124,18 +116,19 @@ def main(_):
             is_multi_host=FLAGS.is_multi_host,
             num_replicas=strategy.num_replicas_in_sync)
 
-    model_fn = model_builder(params)
+    model_builder = ModelBuilder(params)
 
-    trainer = Executor(  # noqa: F841
+    trainer = Trainer(  # noqa: F841
         params=params,
         strategy=strategy,
         run_mode=run_mode,
-        model_fn=model_fn,
+        model_builder=model_builder,
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
-        resume_from=FLAGS.resume_from
-        )
+        resume_from=FLAGS.resume_from)
+
+    trainer.run()
 
 
 if __name__ == '__main__':

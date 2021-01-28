@@ -7,10 +7,9 @@ import tensorflow as tf
 from absl import logging
 
 from retinanet.eval import COCOEvaluator
-from retinanet.model.builder import make_eval_model
 
 
-class Executor:
+class Trainer:
 
     _RUN_MODES = [
         'train',
@@ -24,7 +23,7 @@ class Executor:
                  params,
                  strategy,
                  run_mode,
-                 model_fn,
+                 model_builder,
                  train_input_fn,
                  val_input_fn=None,
                  is_multi_host=False,
@@ -32,7 +31,7 @@ class Executor:
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
-        self.model_fn = model_fn
+        self.model_builder = model_builder
         self.restore_checkpoint = params.training.restore_checkpoint
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
@@ -57,13 +56,14 @@ class Executor:
         self._summary_writers = {}
         self._run_evaluation_at_end = params.training.validation_freq < 1
 
-        if self.run_mode not in Executor._RUN_MODES:
+        if self.run_mode not in self.__class__._RUN_MODES:
             raise AssertionError(
                 'Invalid run mode, aborting!\n Supported run models {}'
-                .format(Executor._RUN_MODES))
+                .format(self.__class__._RUN_MODES))
 
         self._setup()
 
+    def run(self):
         if 'train' in self.run_mode:
             self.train()
 
@@ -75,7 +75,7 @@ class Executor:
 
     def _setup_model(self):
         logging.info('Setting up model for {}'.format(self.run_mode))
-        self._model = self.model_fn()
+        self._model = self.model_builder()
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
 
@@ -85,7 +85,7 @@ class Executor:
             self.use_float16 = True
 
         if 'val' in self.run_mode:
-            self._eval_model = make_eval_model(self._model, self.params)
+            self._eval_model = self.model_builder.make_eval_model(self._model)
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -165,7 +165,6 @@ class Executor:
             .format(self.model_dir, self.run_mode))
 
     def _setup(self):
-
         if not tf.io.gfile.exists(self.model_dir):
             tf.io.gfile.makedirs(self.model_dir)
 
@@ -265,7 +264,7 @@ class Executor:
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))
 
-        loss['num-anchors-matched'] /= tf.shape(images)[0]
+        loss['num-anchors-matched'] /= tf.cast(tf.shape(images)[0], dtype=tf.float32)
         loss['gradient-norm'] = tf.linalg.global_norm(gradients) * self.num_replicas
         return loss
 
@@ -319,12 +318,12 @@ class Executor:
         for i, data in enumerate(dataset_iterator):
             start = time()
             results = self.distributed_eval_step(data)
-            evaluator.accumulate_results(results)
+            evaluator.accumulate(results)
             end = time()
             execution_time = np.round(end - start, 2)
             images_per_second = self.num_replicas / execution_time
 
-            secs = (total_steps - (i+1)) * execution_time
+            secs = (total_steps - (i + 1)) * execution_time
             eta = []
             for interval in [3600, 60, 1]:
                 eta += ['{:02}'.format(int(secs // interval))]
