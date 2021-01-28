@@ -7,7 +7,7 @@ from absl import logging
 from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.core.layers.decode import DecodePredictions
-from retinanet.core.utils import add_l2_regularization, get_optimizer
+from retinanet.core.utils import get_optimizer
 from retinanet.utils.registry import Registry
 
 # registry for internal modules.
@@ -16,6 +16,7 @@ BACKBONE = Registry("backbone")
 HEAD = Registry("head")
 LOSS = Registry("loss")
 DETECTOR = Registry("detector")
+
 
 class BuilderMixin:
 
@@ -80,6 +81,7 @@ class BuilderMixin:
                                          outputs=predictions,
                                          name='model_with_fused_outputs')
         return inference_model
+
 
 class ModelBuilder(BuilderMixin):
     """ builds detector model using config. """
@@ -161,7 +163,6 @@ class ModelBuilder(BuilderMixin):
 
             logging.info('Trainable weights after freezing: {}'.format(
                 len(model.trainable_weights)))
-
 
         optimizer = get_optimizer(self.params.training.optimizer)
         logging.info(

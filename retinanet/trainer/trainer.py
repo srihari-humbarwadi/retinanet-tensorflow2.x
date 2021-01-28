@@ -91,12 +91,13 @@ class Trainer:
         if 'val' in self.run_mode:
             self._eval_model = self.model_builder.make_eval_model(self._model)
         self._weight_decay_vars = self._get_weight_decay_variables()
-        logging.info('Initial weight normalization loss {}'.format(self.weight_decay().numpy()))
-
+        logging.info('Initial weight normalization loss {}'.format(
+            self.weight_decay().numpy()))
 
     def weight_decay(self):
         _alpha = self.params.architecture.weight_decay_alpha
-        return tf.math.add_n([_alpha*tf.nn.l2_loss(x) for x in self._weight_decay_vars])
+        return tf.math.add_n([_alpha * tf.nn.l2_loss(x)
+                              for x in self._weight_decay_vars])
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -197,11 +198,13 @@ class Trainer:
 
         for layer in self._model.layers:
             if not isinstance(layer, tf.keras.Model):
-                if layer.trainable and isinstance(layer, (tf.keras.layers.Conv2D)):
+                if layer.trainable and isinstance(
+                        layer, (tf.keras.layers.Conv2D)):
                     _vars.append(layer.kernel)
             else:
                 for inner_layer in layer.layers:
-                    if inner_layer.trainable and isinstance(inner_layer, (tf.keras.layers.Conv2D)):
+                    if inner_layer.trainable and isinstance(
+                            inner_layer, (tf.keras.layers.Conv2D)):
                         _vars.append(inner_layer.kernel)
         return _vars
 

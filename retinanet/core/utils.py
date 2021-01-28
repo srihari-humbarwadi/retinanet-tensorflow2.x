@@ -22,13 +22,6 @@ def get_optimizer(params):
     return optimizer
 
 
-def add_l2_regularization(weight, alpha=0.0001):
-    def _add_l2_regularization():
-        return alpha * tf.nn.l2_loss(weight)
-
-    return _add_l2_regularization
-
-
 # TODO This function should be removed once we add config parameters
 # for batchnorm layers
 
