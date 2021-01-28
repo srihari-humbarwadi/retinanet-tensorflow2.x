@@ -17,6 +17,10 @@ flags.DEFINE_string('config_path',
                     default=None,
                     help='Path to the config file')
 
+flags.DEFINE_string('hparams',
+                    default=None,
+                    help='hparams overrides the configuration file i.e config_path.')
+
 flags.DEFINE_string('model_dir',
                     default=None,
                     help='Overides `model_dir` specified in the config')
@@ -48,13 +52,19 @@ flags.DEFINE_boolean(
 flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
 
 FLAGS = flags.FLAGS
+
 SUPPORTED_RUN_MODES = ['train', 'val', 'train_val', 'continuous_eval']
 
 
 def main(_):
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
 
-    params = Config(FLAGS.config_path).params
+    config = Config(FLAGS.config_path)
+    params = config.params
+
+    # override config params with hparams string.
+    if FLAGS.hparams:
+        params = config.override(FLAGS.hparams)
 
     if FLAGS.log_dir and (not os.path.exists(FLAGS.log_dir)):
         os.makedirs(FLAGS.log_dir, exist_ok=True)
