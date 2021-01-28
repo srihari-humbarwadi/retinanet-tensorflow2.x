@@ -162,26 +162,6 @@ class ModelBuilder(BuilderMixin):
             logging.info('Trainable weights after freezing: {}'.format(
                 len(model.trainable_weights)))
 
-        #  TODO avoid `model.add_loss`; Maintain a list of all variable names
-        #  that need to be included in weight decay loss. Call tf.nn.l2_loss with
-        #  variable namesinside per_replica_train step
-        if self.params.training.use_weight_decay:
-            alpha = self.params.architecture.weight_decay_alpha
-
-            for layer in model.layers:
-                if isinstance(layer,
-                              tf.keras.layers.Conv2D) and layer.trainable:
-                    model.add_loss(add_l2_regularization(layer.kernel, alpha))
-
-                elif isinstance(layer, tf.keras.Model):
-                    for inner_layer in layer.layers:
-                        if isinstance(inner_layer, tf.keras.layers.Conv2D) and \
-                                inner_layer.trainable:
-                            model.add_loss(
-                                add_l2_regularization(inner_layer.kernel, alpha))
-
-            logging.info('Initial l2_regularization loss {}'.format(
-                tf.math.add_n(model.losses).numpy()))
 
         optimizer = get_optimizer(self.params.training.optimizer)
         logging.info(
@@ -213,11 +193,6 @@ class ModelBuilder(BuilderMixin):
                             tf.keras.layers.BatchNormalization,
                             tf.keras.layers.experimental.SyncBatchNormalization)):
                         layer.trainable = False
-
-        if self.params.training.use_weight_decay:
-            logging.debug(
-                'l2_regularization loss after loading pretrained weights {}'
-                .format(tf.math.add_n(model.losses).numpy()))
 
         _loss_fn = self.loss_fn(
             self.params.architecture.num_classes, self.params.loss)

@@ -63,6 +63,10 @@ class Trainer:
 
         self._setup()
 
+    @property
+    def weight_decay_variables(self):
+        return self._weight_decay_vars
+
     def run(self):
         if 'train' in self.run_mode:
             self.train()
@@ -86,6 +90,13 @@ class Trainer:
 
         if 'val' in self.run_mode:
             self._eval_model = self.model_builder.make_eval_model(self._model)
+        self._weight_decay_vars = self._get_weight_decay_variables()
+        logging.info('Initial weight normalization loss {}'.format(self.weight_decay().numpy()))
+
+
+    def weight_decay(self):
+        _alpha = self.params.architecture.weight_decay_alpha
+        return tf.math.add_n([_alpha*tf.nn.l2_loss(x) for x in self._weight_decay_vars])
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -181,6 +192,19 @@ class Trainer:
             if self.restore_checkpoint:
                 self._restore_checkpoint()
 
+    def _get_weight_decay_variables(self):
+        _vars = []
+
+        for layer in self._model.layers:
+            if not isinstance(layer, tf.keras.Model):
+                if layer.trainable and isinstance(layer, (tf.keras.layers.Conv2D)):
+                    _vars.append(layer.kernel)
+            else:
+                for inner_layer in layer.layers:
+                    if inner_layer.trainable and isinstance(inner_layer, (tf.keras.layers.Conv2D)):
+                        _vars.append(inner_layer.kernel)
+        return _vars
+
     @tf.function
     def _write_train_summaries(self, loss_dict, step):
         with self._summary_writers['train'].as_default():
@@ -247,7 +271,7 @@ class Trainer:
             loss['total-loss'] = loss['weighted-loss']
 
             if self.params.training.use_weight_decay:
-                loss['l2-regularization'] = tf.math.add_n(self._model.losses)
+                loss['l2-regularization'] = self.weight_decay()
                 loss['total-loss'] += loss['l2-regularization']
 
             per_replica_loss = loss['total-loss'] / self.num_replicas
