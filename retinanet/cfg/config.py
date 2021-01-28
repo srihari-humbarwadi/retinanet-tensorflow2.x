@@ -18,6 +18,10 @@ class Config:
         logging.info('Loading config from {}'.format(self.path))
         with open(self.path, 'r') as fp:
             self._params = EasyDict(json.load(fp))
+        logging.debug(self)
+
+    def __repr__(self):
+        return '\n' + json.dumps(self._params, indent=4)
 
     @property
     def params(self) -> EasyDict:
