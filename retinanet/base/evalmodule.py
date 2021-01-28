@@ -1,12 +1,12 @@
 """ Base EvalModule Classes. """
-from collections import abstractmethod
-from abc import ABC
+from abc import ABC, abstractmethod
+
 
 class EvalModule(ABC):
     """ abstract class for Evaluation Module. """
 
-    @abstractmethod
     @property
+    @abstractmethod
     def score(self):
         raise NotImplementedError('score property is not implemented')
 

@@ -1,3 +1,3 @@
-from retinanet.eval.coco_evaluator import COCOEvaluator
+from retinanet.eval.evaluator import COCOEvaluator
 
 __all__ = ['COCOEvaluator']

@@ -7,11 +7,12 @@ from absl import logging
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
-from retinanet.base.evalmodule import EvalModule
+from retinanet.base import EvalModule
 
 
 class COCOMixin:
     """ COCOMixin with supporting functions. """
+
     def get_coco_evaluater(self):
         return COCO(self.annotation_file_path)
 
@@ -20,8 +21,8 @@ class COCOMixin:
         cocoEval.accumulate()
         cocoEval.summarize()
 
-    def setup_summary(self, cocoEval: COCOeval = None)
-       scores = {
+    def setup_summary(self, cocoEval: COCOeval = None):
+        scores = {
             'AP-IoU=0.50:0.95': cocoEval.stats[0],
             'AP-IoU=0.50': cocoEval.stats[1],
             'AP-IoU=0.75': cocoEval.stats[2],
@@ -30,8 +31,10 @@ class COCOMixin:
         }
         return scores
 
+
 class COCOEvaluator(EvalModule, COCOMixin):
     """ COCO evaluation class. """
+
     def __init__(
             self,
             input_shape,

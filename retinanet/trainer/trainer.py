@@ -318,7 +318,7 @@ class Trainer:
         for i, data in enumerate(dataset_iterator):
             start = time()
             results = self.distributed_eval_step(data)
-            evaluator.accumulate_results(results)
+            evaluator.accumulate(results)
             end = time()
             execution_time = np.round(end - start, 2)
             images_per_second = self.num_replicas / execution_time
