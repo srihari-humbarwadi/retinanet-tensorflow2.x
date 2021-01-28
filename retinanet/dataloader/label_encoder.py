@@ -14,6 +14,16 @@ class LabelEncoder:
         self.preprocessing_pipeline = PreprocessingPipeline(
             self.input_shape, params.dataloader_params)
 
+    @staticmethod
+    def _pad_labels(gt_boxes, cls_ids):
+        gt_boxes = tf.concat([tf.stack([tf.zeros(4), tf.zeros(4)]), gt_boxes],
+                             axis=0)
+        cls_ids = tf.concat([
+            tf.squeeze(tf.stack([-2 * tf.ones(1), -1 * tf.ones(1)])), cls_ids
+        ],
+            axis=0)
+        return gt_boxes, cls_ids
+
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
         if tf.shape(gt_boxes)[0] == 0:
             return -1 * tf.ones([tf.shape(anchor_boxes)[0]], dtype=tf.int32)
@@ -63,16 +73,6 @@ class LabelEncoder:
             box_target = box_target / tf.convert_to_tensor(
                 self.encoder_params.box_variance, dtype=tf.float32)
         return box_target
-
-    @staticmethod
-    def _pad_labels(gt_boxes, cls_ids):
-        gt_boxes = tf.concat([tf.stack([tf.zeros(4), tf.zeros(4)]), gt_boxes],
-                             axis=0)
-        cls_ids = tf.concat([
-            tf.squeeze(tf.stack([-2 * tf.ones(1), -1 * tf.ones(1)])), cls_ids
-        ],
-            axis=0)
-        return gt_boxes, cls_ids
 
     def encode_sample(self, sample):
         image, gt_boxes, cls_ids = self.preprocessing_pipeline(sample)

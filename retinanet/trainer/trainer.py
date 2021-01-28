@@ -63,6 +63,7 @@ class Trainer:
 
         self._setup()
 
+    def run(self):
         if 'train' in self.run_mode:
             self.train()
 
