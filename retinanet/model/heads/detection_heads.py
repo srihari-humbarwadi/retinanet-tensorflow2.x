@@ -29,6 +29,7 @@ class DetectionHead(tf.keras.Model):
 
         self.head_convs = []
         self.head_norms = []
+        self.relu_ops = []
 
         for i in range(num_head_convs):
             self.head_convs += [
@@ -50,6 +51,10 @@ class DetectionHead(tf.keras.Model):
                     name='{}-{}-p{}-bn'.format(self.name, i, level))
 
             self.head_norms += [norms]
+            self.relu_ops += [
+                tf.keras.layers.ReLU(
+                    name='{}-class-{}-relu'.format(self.name, i))
+            ]
 
         self.prediction_conv = conv_2d_op(
             filters=output_filters,
@@ -71,7 +76,7 @@ class DetectionHead(tf.keras.Model):
             for i in range(self.num_head_convs):
                 x = self.head_convs[i](x)
                 x = self.head_norms[i][level](x, training=training)
-                x = tf.nn.relu(x)
+                x = self.relu_ops[i](x)
 
             x = self.prediction_conv(x)
             outputs['p{}-predictions'.format(level)] = x
