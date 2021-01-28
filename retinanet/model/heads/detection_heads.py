@@ -58,7 +58,8 @@ class DetectionHead(tf.keras.Model):
             padding='same',
             name='{}-prediction-conv'.format(self.name),
             kernel_initializer=tf.keras.initializers.RandomNormal(stddev=1e-5),
-            bias_initializer=self.prediction_bias_initializer)
+            bias_initializer=self.prediction_bias_initializer,
+            dtype=tf.float32)
 
     def call(self, features, training=None):
         outputs = {}
