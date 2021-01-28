@@ -1,5 +1,6 @@
 """ Hyperparameters for trainer and model. """
 import json
+import collections.abc
 from typing import Text, List, Dict
 
 from absl import logging
@@ -31,11 +32,22 @@ class Config:
         config_dict = json.loads(config)
         return config_dict
 
+    @staticmethod
+    def update(d, u):
+        def _update(d, u):
+            for k, v in u.items():
+                if isinstance(v, collections.abc.Mapping):
+                    d[k] = _update(d.get(k, {}), v)
+                else:
+                    d[k] = v
+            return d
+        return _update(d, u)
+
     def override(self, config: Text) -> EasyDict:
         assert isinstance(config, str), "wrong type for hparams"
         try:
             config_dict = self._parser(config)
         except:
             raise ValueError("wrong extension or format for hparams")
-        self._params.update(config_dict)
+        self._params = self.update(self._params, config_dict)
         return self._params
