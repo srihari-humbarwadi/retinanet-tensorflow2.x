@@ -48,7 +48,17 @@ class ModelBuilder:
         prior_prob_init = \
             tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
 
-        backbone = self.backbone_builder()
+        backbone = self.backbone_class(
+            self.input_shape,
+            self.params.architecture.backbone.depth,
+            checkpoint_dir=self.params.architecture.backbone.checkpoint)
+
+        if self.params.fine_tuning.fine_tune and \
+                self.params.fine_tuning.freeze_backbone:
+            logging.warning('Freezing backbone for fine tuning')
+
+            for layer in backbone.layers:
+                layer.trainable = False
 
         fpn = self.fpn_class(
             self.params.architecture.neck.filters,
@@ -158,26 +168,6 @@ class ModelBuilder:
                 for x in model.trainable_variables
             ])))
         return model
-
-    #  TODO just call `self.backbone_class` like we do for FPN
-    def backbone_builder(self):
-        backbone = self.backbone_class(
-            self.input_shape,
-            self.params.architecture.backbone.depth,
-            checkpoint_dir=self.params.architecture.backbone.checkpoint)
-
-        if self.params.fine_tuning.fine_tune:
-            if self.params.fine_tuning.freeze_backbone:
-                logging.warning('Freezing backbone for fine tuning')
-
-                for layer in backbone.layers:
-                    if isinstance(layer, (
-                            tf.keras.layers.Conv2D,
-                            tf.keras.layers.BatchNormalization,
-                            tf.keras.layers.experimental.SyncBatchNormalization)):
-                        layer.trainable = False
-
-        return backbone
 
     def prepare_model_for_export(self, model):
         model.optimizer = None
