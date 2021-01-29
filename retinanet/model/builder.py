@@ -4,7 +4,6 @@ import re
 import numpy as np
 import tensorflow as tf
 from absl import logging
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.core.layers.decode import DecodePredictions
 from retinanet.core.utils import get_optimizer
@@ -16,6 +15,9 @@ BACKBONE = Registry("backbone")
 HEAD = Registry("head")
 LOSS = Registry("loss")
 DETECTOR = Registry("detector")
+
+# TODO: Skip Mixins, Implement separate class for Postprocessing module builder once
+# nms ops are finalized
 
 
 class BuilderMixin:
@@ -86,11 +88,24 @@ class BuilderMixin:
 class ModelBuilder(BuilderMixin):
     """ builds detector model using config. """
 
+    FREEZE_VARS_REGEX = {
+        'backbone': re.compile(r'^(?!((fpn)|(box-head)|(class-head)))'),
+        'backbone-bn': re.compile(
+            r'^(?!((fpn)|(box-head)|(class-head))).*(batch_normalization)'),
+        'fpn': re.compile(r'^(fpn)'),
+        'fpn-bn': re.compile(r'^(fpn).*(batch_normalization)'),
+        'head': re.compile(r'^((box-head)|(class-head))(?!.*prediction)'),
+        'head-bn': re.compile(r'^((box-head)|(class-head)).*(batch_normalization)'),
+        'bn': re.compile(r'(batch_normalization)'),
+        'resnet_initial': re.compile(
+            r'^(conv2d(|_([1-9]|10))|batch_normalization(|_([1-9]|10)))\/')
+    }
+
     def __init__(self, params):
         self.params = params
         self.detector_class = DETECTOR.get(params.architecture.detector)
         self.backbone_class = BACKBONE.get(params.architecture.backbone.type)
-        self.fpn_class = NECK.get(params.architecture.neck.type)
+        self.neck_class = NECK.get(params.architecture.neck.type)
 
         # TODO (kartik4949): remove hardcoded head
         self.head_class = HEAD.get('retinanet_detection_head')
@@ -104,14 +119,9 @@ class ModelBuilder(BuilderMixin):
     def __call__(self):
 
         num_classes = self.params.architecture.num_classes
-
         num_scales = len(self.params.anchor_params.scales)
         num_aspect_rations = len(self.params.anchor_params.aspect_ratios)
-
         num_anchors = num_scales * num_aspect_rations
-
-        prior_prob_init = \
-            tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
 
         backbone = self.backbone_class(
             self.input_shape,
@@ -125,11 +135,14 @@ class ModelBuilder(BuilderMixin):
             for layer in backbone.layers:
                 layer.trainable = False
 
-        fpn = self.fpn_class(
+        neck = self.neck_class(
             self.params.architecture.neck.filters,
             self.params.architecture.neck.min_level,
             self.params.architecture.neck.max_level,
             self.params.architecture.neck.backbone_max_level)
+
+        prior_prob_init = \
+            tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
 
         box_head = self.head_class(
             self.params.architecture.num_head_convs,
@@ -144,38 +157,13 @@ class ModelBuilder(BuilderMixin):
             prediction_bias_initializer=prior_prob_init,
             name='class-head')
 
-        model = self.detector_class(backbone, fpn, box_head, class_head)
-
-        logging.info('Trainable weights: {}'.format(
-            len(model.trainable_weights)))
-
-        # TODO unify all weight freezing functionality
-        if self.params.architecture.freeze_initial_layers:
-            freeze_pattern = \
-                r'(conv2d(|_([1-9]|10))|batch_normalization(|_([1-9]|10)))\/'
-            logging.info('Freezing initial weights')
-
-            for layer in model.layers[1].layers:
-                for weight in layer.weights:
-                    if re.search(freeze_pattern, weight.name) \
-                            is not None and layer.trainable:
-                        layer.trainable = False
-
-            logging.info('Trainable weights after freezing: {}'.format(
-                len(model.trainable_weights)))
-
-        optimizer = get_optimizer(self.params.training.optimizer)
+        model = self.detector_class(backbone, neck, box_head, class_head)
+        optimizer = get_optimizer(
+            self.params.training.optimizer,
+            precision=self.params.floatx.precision)
         logging.info(
             'Optimizer Config: \n{}'
             .format(json.dumps(optimizer.get_config(), indent=4)))
-
-        # TODO `get_optimizer` should handle this
-        if self.params.floatx.precision == 'mixed_float16':
-            logging.info(
-                'Wrapping optimizer with `LossScaleOptimizer` for AMP training'
-            )
-            optimizer = mixed_precision.LossScaleOptimizer(
-                optimizer, loss_scale='dynamic')
 
         if self.params.fine_tuning.fine_tune:
             logging.info(
@@ -185,25 +173,7 @@ class ModelBuilder(BuilderMixin):
                                skip_mismatch=True,
                                by_name=True)
 
-            # TODO freeze batchnorm with unified interface for freezing weights
-            if self.params.fine_tuning.freeze_batch_normalization:
-                logging.warning('Freezing BatchNormalization layers for fine tuning')
-
-                for layer in model.layers:
-                    if isinstance(layer, (
-                            tf.keras.layers.BatchNormalization,
-                            tf.keras.layers.experimental.SyncBatchNormalization)):
-                        layer.trainable = False
-
         _loss_fn = self.loss_fn(
             self.params.architecture.num_classes, self.params.loss)
         model.compile(optimizer=optimizer, loss=_loss_fn)
-
-        model.summary(print_fn=logging.debug)
-
-        logging.info('Total trainable parameters: {:,}'.format(
-            sum([
-                tf.keras.backend.count_params(x)
-                for x in model.trainable_variables
-            ])))
         return model
