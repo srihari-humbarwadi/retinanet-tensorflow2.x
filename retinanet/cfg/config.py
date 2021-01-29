@@ -1,7 +1,7 @@
 """ Hyperparameters for trainer and model. """
-import json
 import collections.abc
-from typing import Text, List, Dict
+import json
+from typing import List, Text
 
 from absl import logging
 from easydict import EasyDict
@@ -29,12 +29,7 @@ class Config:
 
     @property
     def keys(self) -> List:
-        return self.config_dict.keys()
-
-    @classmethod
-    def _parser(cls, config: Text) -> Dict:
-        config_dict = json.loads(config)
-        return config_dict
+        return self._params.keys()
 
     @staticmethod
     def update(d, u):
@@ -48,10 +43,17 @@ class Config:
         return _update(d, u)
 
     def override(self, config: Text) -> EasyDict:
-        assert isinstance(config, str), "wrong type for hparams"
+
+        if not isinstance(config, str):
+            raise AssertionError(
+                '`config` must be a json string but got {}'.format(type(config)))
+
         try:
-            config_dict = self._parser(config)
-        except:
-            raise ValueError("wrong extension or format for hparams")
+            config_dict = json.loads(config)
+
+        except json.JSONDecodeError:
+            raise ValueError(
+                'Failed to decode json string, please validate your config overides')
+
         self._params = self.update(self._params, config_dict)
         return self._params
