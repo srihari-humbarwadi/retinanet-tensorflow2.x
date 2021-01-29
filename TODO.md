@@ -1,3 +1,4 @@
+ - [ ] Fix input dataset sharding when training in multi work/ multi host mode. Current implementation skips shuffling dataset to avoid different works processing same sampple. This should be done preferably by setting a global random seed that is shared across all the tpu workers.
  - [ ] refactor post processing
  - [ ] add tf.image.non_max_suppression_padded
  - [ ] enable batch post processing
