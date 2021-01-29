@@ -33,9 +33,7 @@
 		"num_head_filters": 256,
 		"num_head_convs": 4,
 		"num_classes": 91,
-		"num_anchors": 9,
-		"weight_decay_alpha": 0.0001,
-		"freeze_initial_layers": true
+		"num_anchors": 9
 	},
 	"loss": {
 		"focal_loss": {
@@ -50,6 +48,7 @@
 	},
 	"training": {
 		"use_weight_decay": true,
+		"weight_decay_alpha": 0.0001,
 		"batch_size": {
 			"train": 256,
 			"val": 8
@@ -59,6 +58,9 @@
 			"name": "v3-32"
 		},
 		"restore_checkpoint": true,
+		"freeze_variables": [
+			"resnet_initial"
+		],
 		"train_steps": 33750,
 		"validation_samples": 4952,
 		"validation_freq": -1,
