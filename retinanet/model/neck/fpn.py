@@ -40,12 +40,12 @@ class FPN(tf.keras.Model):
                 strides=1,
                 kernel_initializer=tf.initializers.VarianceScaling(),
                 padding='same',
-                name='l' + str(level))
+                name='l' + str(level) + '-conv2d')
 
         for level in range(min_level, max_level + 1):
             level = str(level)
             self.output_norms[level] = normalization_op(
-                name='p' + str(level) + '-bn')
+                name='p' + str(level) + '-batch_normalization')
 
             self.output_convs[level] = conv_2d_op(
                 filters=self.filters,
@@ -53,7 +53,7 @@ class FPN(tf.keras.Model):
                 kernel_initializer=tf.initializers.VarianceScaling(),
                 padding='same',
                 strides=1 if int(level) < min_level + 3 else 2,
-                name='p' + str(level))
+                name='p' + str(level) + '-conv2d')
 
         for level in range(backbone_max_level + 1, max_level):
             level = str(level)

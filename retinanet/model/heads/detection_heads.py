@@ -38,7 +38,7 @@ class DetectionHead(tf.keras.Model):
                     kernel_size=3,
                     strides=1,
                     padding='same',
-                    name='{}-class-{}'.format(self.name, i),
+                    name='{}-class-{}-conv2d'.format(self.name, i),
                     kernel_initializer=tf.keras.initializers.RandomNormal(
                         stddev=0.01),
                     bias_initializer=tf.zeros_initializer())
@@ -48,7 +48,7 @@ class DetectionHead(tf.keras.Model):
             for level in range(min_level, max_level + 1):
                 level = str(level)
                 norms[level] = normalization_op(
-                    name='{}-{}-p{}-bn'.format(self.name, i, level))
+                    name='{}-{}-p{}-batch_normalization'.format(self.name, i, level))
 
             self.head_norms += [norms]
             self.relu_ops += [
@@ -61,7 +61,7 @@ class DetectionHead(tf.keras.Model):
             kernel_size=3,
             strides=1,
             padding='same',
-            name='{}-prediction-conv'.format(self.name),
+            name='{}-prediction-conv2d'.format(self.name),
             kernel_initializer=tf.keras.initializers.RandomNormal(stddev=1e-5),
             bias_initializer=self.prediction_bias_initializer,
             dtype=tf.float32)
