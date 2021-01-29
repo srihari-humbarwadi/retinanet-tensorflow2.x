@@ -4,8 +4,8 @@ import tensorflow as tf
 from absl import app, flags, logging
 
 from retinanet.cfg import Config
-from retinanet.dataloader import InputPipeline
 from retinanet.core.utils import get_strategy, set_precision
+from retinanet.dataloader import InputPipeline
 from retinanet.model.builder import ModelBuilder
 from retinanet.trainer import Trainer
 
