@@ -2,6 +2,7 @@
  - [ ] add tf.image.non_max_suppression_padded
  - [ ] enable batch post processing
  - [ ] check saving loading weights and saved_model
+ - [ ] make sure model works with existing onnx graphsurgeon and trt conversion scripts
  - [ ] Add support for freezing backbone, fpn, head
  - [ ] Verify fine tuning
  - [ ] Release resnet50 30x schedule model (~39.5-40.5 mAP)z

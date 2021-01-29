@@ -98,7 +98,7 @@ class ModelBuilder(BuilderMixin):
         'head-bn': re.compile(r'^((box-head)|(class-head)).*(batch_normalization)'),
         'bn': re.compile(r'(batch_normalization)'),
         'resnet_initial': re.compile(
-            r'^(conv2d(|_([1-9]|10))|batch_normalization(|_([1-9]|10)))\/')
+            r'^(conv2d(|_([1-9]|10))|(sync_)?batch_normalization(|_([1-9]|10)))\/')
     }
 
     def __init__(self, params):

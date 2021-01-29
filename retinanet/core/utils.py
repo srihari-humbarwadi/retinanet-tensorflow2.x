@@ -33,8 +33,6 @@ def get_optimizer(params, precision):
 # for batchnorm layers
 
 def get_normalization_op():
-    return tf.keras.layers.experimental.SyncBatchNormalization
-
     use_sync_bn = tf.distribute.get_strategy().num_replicas_in_sync > 1
     use_sync_bn = use_sync_bn and 'USE_SYNC_BN' in os.environ
 
