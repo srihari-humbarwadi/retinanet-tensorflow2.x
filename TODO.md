@@ -1,0 +1,7 @@
+ - [ ] refactor post processing
+ - [ ] add tf.image.non_max_suppression_padded
+ - [ ] enable batch post processing
+ - [ ] check saving loading weights and saved_model
+ - [ ] Add support for freezing backbone, fpn, head
+ - [ ] Verify fine tuning
+ - [ ] Release resnet50 30x schedule model (~39.5-40.5 mAP)z
