@@ -7,13 +7,13 @@ class EvalModule(ABC):
 
     @property
     @abstractmethod
-    def score(self):
-        raise NotImplementedError('score property is not implemented')
+    def scores(self):
+        raise NotImplementedError('`scores` property is not implemented')
 
     @abstractmethod
     def accumulate(self):
-        raise NotImplementedError('accumulate method is not implemented')
+        raise NotImplementedError('`accumulate` method is not implemented')
 
     @abstractmethod
     def evaluate(self, results):
-        raise NotImplementedError('evaluate method is not implemented.')
+        raise NotImplementedError('`evaluate` method is not implemented')
