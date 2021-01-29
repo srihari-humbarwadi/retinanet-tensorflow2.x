@@ -1,6 +1,6 @@
-import os
 import json
-from time import time, sleep
+import os
+from time import sleep, time
 
 import numpy as np
 import tensorflow as tf
@@ -63,10 +63,6 @@ class Trainer:
 
         self._setup()
 
-    @property
-    def weight_decay_variables(self):
-        return self._weight_decay_vars
-
     def run(self):
         if 'train' in self.run_mode:
             self.train()
@@ -83,6 +79,16 @@ class Trainer:
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
 
+        logging.info('Trainable variables: {}'.format(
+            len(self._model.trainable_variables)))
+
+        _has_frozen_layers = self._maybe_freeze_layers()
+
+        if _has_frozen_layers:
+            logging.info(
+                'Trainable variables after freezing: {}'
+                .format(len(self._model.trainable_variables)))
+
         if isinstance(
             self.optimizer,
                 tf.keras.mixed_precision.experimental.LossScaleOptimizer):
@@ -90,14 +96,41 @@ class Trainer:
 
         if 'val' in self.run_mode:
             self._eval_model = self.model_builder.make_eval_model(self._model)
-        self._weight_decay_vars = self._get_weight_decay_variables()
-        logging.info('Initial weight normalization loss {}'.format(
-            self.weight_decay().numpy()))
 
-    def weight_decay(self):
-        _alpha = self.params.architecture.weight_decay_alpha
-        return tf.math.add_n([_alpha * tf.nn.l2_loss(x)
-                              for x in self._weight_decay_vars])
+        self._model.summary(print_fn=logging.debug)
+        logging.info('Total trainable parameters: {:,}'.format(
+            sum([
+                tf.keras.backend.count_params(x)
+                for x in self._model.trainable_variables
+            ])))
+
+        self._weight_decay_vars = self._get_weight_decay_variables()
+        logging.info('Initial weight decay loss: {}'.format(
+            np.round(self.weight_decay(), 4)))
+
+    def _maybe_freeze_layers(self):
+        _freeze_patterns = self.params.training.freeze_variables
+        _layers = []
+
+        if not _freeze_patterns:
+            return False
+
+        for _pattern in _freeze_patterns:
+            _regex = self.model_builder.FREEZE_VARS_REGEX[_pattern]
+
+            logging.warning(
+                'Freezing layers with variables that match pattern: {}'
+                .format(_regex.pattern))
+
+            for layer in self._model.layers:
+                _layers.extend(Trainer._maybe_flatten_layers(layer))
+
+            for layer in _layers:
+                for weight in layer.weights:
+                    if _regex.search(weight.name):
+                        layer.trainable = False
+                        logging.debug('Freezing layer: {}'.format(layer.name))
+        return True
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -193,20 +226,29 @@ class Trainer:
             if self.restore_checkpoint:
                 self._restore_checkpoint()
 
+    @staticmethod
+    def _maybe_flatten_layers(layer):
+        if hasattr(layer, 'layers'):
+            return layer.layers
+        return [layer]
+
+    def weight_decay(self):
+        _alpha = self.params.training.weight_decay_alpha
+        return tf.math.add_n([_alpha * tf.nn.l2_loss(x)
+                              for x in self._weight_decay_vars])
+
     def _get_weight_decay_variables(self):
-        _vars = []
+        weight_decay_vars = []
+        _layers = []
 
         for layer in self._model.layers:
-            if not isinstance(layer, tf.keras.Model):
-                if layer.trainable and isinstance(
-                        layer, (tf.keras.layers.Conv2D)):
-                    _vars.append(layer.kernel)
-            else:
-                for inner_layer in layer.layers:
-                    if inner_layer.trainable and isinstance(
-                            inner_layer, (tf.keras.layers.Conv2D)):
-                        _vars.append(inner_layer.kernel)
-        return _vars
+            _layers.extend(Trainer._maybe_flatten_layers(layer))
+
+        for layer in _layers:
+            if layer.trainable and isinstance(layer, tf.keras.layers.Conv2D):
+                weight_decay_vars.append(layer.kernel)
+
+        return weight_decay_vars
 
     @tf.function
     def _write_train_summaries(self, loss_dict, step):
@@ -485,3 +527,7 @@ class Trainer:
     @property
     def model(self):
         return self._model
+
+    @property
+    def weight_decay_variables(self):
+        return self._weight_decay_vars
