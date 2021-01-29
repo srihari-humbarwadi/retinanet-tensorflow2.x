@@ -88,9 +88,7 @@
 	},
 	"fine_tuning": {
 		"fine_tune": false,
-		"pretrained_checkpoint": "",
-		"freeze_backbone": false,
-		"freeze_batch_normalization": false
+		"pretrained_checkpoint": ""
 	},
 	"anchor_params": {
 		"areas": [

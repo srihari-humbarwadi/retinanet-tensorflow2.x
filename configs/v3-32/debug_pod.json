@@ -13,14 +13,14 @@
 		"channels": 3
 	},
 	"floatx": {
-		"precision": "float32"
+		"precision": "mixed_bfloat16"
 	},
 	"architecture": {
 		"name": "RetinaNet",
 		"backbone": {
 			"type": "resnet",
 			"depth": 50,
-			"checkpoint": "../resnet50_checkpoint"
+			"checkpoint": "gs://tfrc_datasets/resnet50"
 		},
 		"detector": "retinanet",
 		"neck": {
@@ -51,10 +51,10 @@
 		"weight_decay_alpha": 0.0001,
 		"batch_size": {
 			"train": 256,
-			"val": 1
+			"val": 8
 		},
 		"strategy": {
-			"type": "gpu",
+			"type": "tpu",
 			"name": "v3-32"
 		},
 		"restore_checkpoint": true,
@@ -73,7 +73,7 @@
 			"nesterov": true,
 			"lr_params": {
 				"warmup_learning_rate": 0.0067,
-				"warmup_steps": 2000,
+				"warmup_steps": 1000,
 				"values": [
 					0.32,
 					0.032,
@@ -88,9 +88,7 @@
 	},
 	"fine_tuning": {
 		"fine_tune": false,
-		"pretrained_checkpoint": "",
-		"freeze_backbone": false,
-		"freeze_batch_normalization": false
+		"pretrained_checkpoint": ""
 	},
 	"anchor_params": {
 		"areas": [
@@ -125,7 +123,7 @@
 	"dataloader_params": {
 		"tfrecords": {
 			"train": "gs://tfrc_datasets/coco_tfrecords/train*",
-			"val": "coco_tfrecords/val*"
+			"val": "gs://tfrc_datasets/coco_tfrecords/val*"
 		},
 		"augmentations": {
 			"use_augmentation": true,
