@@ -127,7 +127,7 @@ class Trainer:
 
             for layer in _layers:
                 for weight in layer.weights:
-                    if _regex.search(weight.name):
+                    if _regex.search(weight.name) and layer.trainable:
                         layer.trainable = False
                         logging.debug('Freezing layer: {}'.format(layer.name))
         return True

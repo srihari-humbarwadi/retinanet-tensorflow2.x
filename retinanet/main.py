@@ -128,7 +128,7 @@ def main(_):
 
     model_builder = ModelBuilder(params)
 
-    trainer = Trainer(  # noqa: F841
+    trainer = Trainer(
         params=params,
         strategy=strategy,
         run_mode=run_mode,
