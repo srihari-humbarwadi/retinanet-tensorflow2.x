@@ -38,7 +38,7 @@ class Parser(ABC):
 
     @abstractmethod
     def _build_dataset(self):
-        pass
+        raise NotImplementedError('`_build_dataset` method is not implemented')
 
     @property
     def name(self):
