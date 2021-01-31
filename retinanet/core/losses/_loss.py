@@ -1,5 +1,4 @@
 import tensorflow as tf
-import functools
 from retinanet.model.builder import LOSS
 
 
