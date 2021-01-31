@@ -20,6 +20,7 @@ class RetinaNetLoss:
         class_targets, box_targets, class_preds, class_targets = self._concat_outs(targets, predictions)
         ignore_mask = tf.where(tf.equal(class_targets, -2.0), 0.0, 1.0)
         class_loss = self.class_loss(class_targets, class_preds, sample_weight=ignore_mask)
+        class_loss = class_loss / normalizer
         box_loss = self.box_loss(targets['box-targets'],
                                  predictions['box-predictions'], normalizer)
 
