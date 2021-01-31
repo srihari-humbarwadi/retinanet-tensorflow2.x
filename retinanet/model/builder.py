@@ -195,8 +195,7 @@ class ModelBuilder(BuilderMixin):
                             tf.keras.layers.experimental.SyncBatchNormalization)):
                         layer.trainable = False
 
-        _loss_fn = self.loss_fn(
-            self.params.architecture.num_classes, self.params.loss)
+        _loss_fn = self.loss_fn(self.params)
         model.compile(optimizer=optimizer, loss=_loss_fn)
 
         model.summary(print_fn=logging.debug)
