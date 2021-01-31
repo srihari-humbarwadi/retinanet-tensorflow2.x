@@ -11,24 +11,28 @@ class RetinaNetLoss:
         self.params = params
         self.num_classes = params.architecture.num_classes
 
-        self._box_loss_weight = tf.convert_to_tensor(params.loss.box_loss_weight)
+        self._box_loss_weight = tf.convert_to_tensor(
+            params.loss.box_loss_weight)
         self._class_loss_weight = tf.convert_to_tensor(
             params.loss.class_loss_weight)
 
     def __call__(self, targets, predictions):
-        class_targets, box_targets, class_preds, box_preds= self._concat_outs(targets, predictions)
+        class_targets, box_targets, class_preds, box_preds = self._concat_outs(
+            targets, predictions)
 
         # ignore and positive masks
         ignore_mask = tf.where(tf.equal(class_targets, -2.0), 0.0, 1.0)
         positive_mask = tf.not_equal(box_targets, 0.0)
 
-        class_loss = self.class_loss(class_targets, class_preds, sample_weight=ignore_mask)
+        class_loss = self.class_loss(
+            class_targets, class_preds, sample_weight=ignore_mask)
         box_loss = self.box_loss(box_targets,
                                  box_preds, sample_weight=positive_mask)
 
         # reduce sum
         class_loss = tf.reduce_sum(class_loss)
         box_loss = tf.reduce_sum(box_loss)
+
         # normalize losses.
         normalizer = tf.reduce_sum(targets['num-positives']) + 1.0
         class_loss = class_loss / normalizer
@@ -54,17 +58,19 @@ class RetinaNetLoss:
         b = self.params.training.batch_size.train
         for i in range(min_level, max_level + 1):
             key = 'p{}-predictions'.format(i)
-            class_preds.append(tf.reshape(predictions['class-predictions'][key], (b,-1)))
-            box_preds.append(tf.reshape(predictions['box-predictions'][key], (b, -1)))
-            class_targets.append(tf.reshape(targets['class-targets'][i], (b, -1)))
+            class_preds.append(tf.reshape(
+                predictions['class-predictions'][key], (b, -1)))
+            box_preds.append(tf.reshape(
+                predictions['box-predictions'][key], (b, -1)))
+            class_targets.append(tf.reshape(
+                targets['class-targets'][i], (b, -1)))
             box_targets.append(tf.reshape(targets['box-targets'][i], (b, -1)))
-        class_targets = tf.concat(class_targets, axis = -1)
-        box_targets = tf.concat(box_targets, axis = -1)
-        class_preds = tf.reshape(tf.concat(class_preds, axis = -1), (b, tf.shape(class_targets)[-1], self.num_classes))
-        box_preds = tf.concat(box_preds, axis = -1)
+        class_targets = tf.concat(class_targets, axis=-1)
+        box_targets = tf.concat(box_targets, axis=-1)
+        class_preds = tf.reshape(tf.concat(
+            class_preds, axis=-1), (b, tf.shape(class_targets)[-1], self.num_classes))
+        box_preds = tf.concat(box_preds, axis=-1)
         return class_targets, box_targets, class_preds, box_preds
-
-
 
 
 class SmoothL1Loss:
@@ -73,7 +79,7 @@ class SmoothL1Loss:
 
     def __call__(self, y_true, y_pred):
         loss = tf.keras.losses.huber(y_true[..., None],
-                             y_pred[..., None], delta=self.delta)
+                                     y_pred[..., None], delta=self.delta)
         return loss
 
 
@@ -105,12 +111,13 @@ class BoxLoss(tf.keras.losses.Loss):
 
 class ClassLoss(tf.keras.losses.Loss):
     def __init__(self, params, **kwargs):
-        self.class_loss = FocalLoss(params.loss.focal_loss.alpha, params.loss.focal_loss.gamma)
+        self.class_loss = FocalLoss(
+            params.loss.focal_loss.alpha, params.loss.focal_loss.gamma)
         self._num_classes = params.architecture.num_classes
         super().__init__(**kwargs)
 
     def __call__(self, targets, predictions, sample_weight=None):
         loss = self.class_loss(
-                tf.one_hot(tf.cast(targets, dtype=tf.int32),
-                           depth=self._num_classes), predictions)
+            tf.one_hot(tf.cast(targets, dtype=tf.int32),
+                       depth=self._num_classes), predictions)
         return loss
