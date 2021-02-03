@@ -164,3 +164,6 @@ outputs/
 *.jpg
 *.avi
 *.mp4
+
+# debug files/configs
+*debug*
