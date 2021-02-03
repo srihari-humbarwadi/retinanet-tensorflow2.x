@@ -1,13 +1,12 @@
-import os
 import json
-from time import time, sleep
+import os
+from time import sleep, time
 
 import numpy as np
 import tensorflow as tf
 from absl import logging
 
 from retinanet.eval import COCOEvaluator
-from retinanet.model.builder import make_eval_model
 
 
 class Executor:
@@ -24,7 +23,7 @@ class Executor:
                  params,
                  strategy,
                  run_mode,
-                 model_fn,
+                 model_builder,
                  train_input_fn,
                  val_input_fn=None,
                  is_multi_host=False,
@@ -32,7 +31,7 @@ class Executor:
         self.params = params
         self.distribute_strategy = strategy
         self.run_mode = run_mode
-        self.model_fn = model_fn
+        self.model_builder = model_builder
         self.restore_checkpoint = params.training.restore_checkpoint
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
@@ -75,9 +74,27 @@ class Executor:
 
     def _setup_model(self):
         logging.info('Setting up model for {}'.format(self.run_mode))
-        self._model = self.model_fn()
+        self._model = self.model_builder()
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
+
+        if self.params.fine_tuning.fine_tune:
+            logging.info(
+                'Loading pretrained weights for fine-tuning from {}'.format(
+                    self.params.fine_tuning.pretrained_checkpoint))
+            self._model.load_weights(self.params.fine_tuning.pretrained_checkpoint,
+                                     skip_mismatch=True,
+                                     by_name=True)
+
+        logging.info('Trainable variables: {}'.format(
+            len(self._model.trainable_variables)))
+
+        _has_frozen_layers = self._maybe_freeze_layers()
+
+        if _has_frozen_layers:
+            logging.info(
+                'Trainable variables after freezing: {}'
+                .format(len(self._model.trainable_variables)))
 
         if isinstance(
             self.optimizer,
@@ -85,7 +102,42 @@ class Executor:
             self.use_float16 = True
 
         if 'val' in self.run_mode:
-            self._eval_model = make_eval_model(self._model, self.params)
+            self._eval_model = self.model_builder.make_eval_model(self._model)
+
+        self._model.summary(print_fn=logging.debug)
+        logging.info('Total trainable parameters: {:,}'.format(
+            sum([
+                tf.keras.backend.count_params(x)
+                for x in self._model.trainable_variables
+            ])))
+
+        self._weight_decay_vars = self._get_weight_decay_variables()
+        logging.info('Initial weight decay loss: {}'.format(
+            np.round(self.weight_decay(), 4)))
+
+    def _maybe_freeze_layers(self):
+        _freeze_patterns = self.params.training.freeze_variables
+        _layers = []
+
+        if not _freeze_patterns:
+            return False
+
+        for _pattern in _freeze_patterns:
+            _regex = self.model_builder.FREEZE_VARS_REGEX[_pattern]
+
+            logging.warning(
+                'Freezing layers with variables that match pattern: {}'
+                .format(_regex.pattern))
+
+            for layer in self._model.layers:
+                _layers.extend(Executor._maybe_flatten_layers(layer))
+
+            for layer in _layers:
+                for weight in layer.weights:
+                    if _regex.search(weight.name) and layer.trainable:
+                        layer.trainable = False
+                        logging.debug('Freezing layer: {}'.format(layer.name))
+        return True
 
     def _setup_dataset(self):
         if 'val' in self.run_mode:
@@ -165,7 +217,6 @@ class Executor:
             .format(self.model_dir, self.run_mode))
 
     def _setup(self):
-
         if not tf.io.gfile.exists(self.model_dir):
             tf.io.gfile.makedirs(self.model_dir)
 
@@ -181,6 +232,30 @@ class Executor:
 
             if self.restore_checkpoint:
                 self._restore_checkpoint()
+
+    @staticmethod
+    def _maybe_flatten_layers(layer):
+        if hasattr(layer, 'layers'):
+            return layer.layers
+        return [layer]
+
+    def weight_decay(self):
+        _alpha = self.params.training.weight_decay_alpha
+        return tf.math.add_n([_alpha * tf.nn.l2_loss(x)
+                              for x in self._weight_decay_vars])
+
+    def _get_weight_decay_variables(self):
+        weight_decay_vars = []
+        _layers = []
+
+        for layer in self._model.layers:
+            _layers.extend(Executor._maybe_flatten_layers(layer))
+
+        for layer in _layers:
+            if layer.trainable and isinstance(layer, tf.keras.layers.Conv2D):
+                weight_decay_vars.append(layer.kernel)
+
+        return weight_decay_vars
 
     @tf.function
     def _write_train_summaries(self, loss_dict, step):
@@ -248,7 +323,7 @@ class Executor:
             loss['total-loss'] = loss['weighted-loss']
 
             if self.params.training.use_weight_decay:
-                loss['l2-regularization'] = tf.math.add_n(self._model.losses)
+                loss['l2-regularization'] = self.weight_decay()
                 loss['total-loss'] += loss['l2-regularization']
 
             per_replica_loss = loss['total-loss'] / self.num_replicas
@@ -265,7 +340,7 @@ class Executor:
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))
 
-        loss['num-anchors-matched'] /= tf.shape(images)[0]
+        loss['num-anchors-matched'] /= tf.cast(tf.shape(images)[0], dtype=tf.float32)
         loss['gradient-norm'] = tf.linalg.global_norm(gradients) * self.num_replicas
         return loss
 
@@ -324,7 +399,7 @@ class Executor:
             execution_time = np.round(end - start, 2)
             images_per_second = self.num_replicas / execution_time
 
-            secs = (total_steps - (i+1)) * execution_time
+            secs = (total_steps - (i + 1)) * execution_time
             eta = []
             for interval in [3600, 60, 1]:
                 eta += ['{:02}'.format(int(secs // interval))]
@@ -459,3 +534,7 @@ class Executor:
     @property
     def model(self):
         return self._model
+
+    @property
+    def weight_decay_variables(self):
+        return self._weight_decay_vars
