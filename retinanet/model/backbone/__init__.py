@@ -1,3 +1,3 @@
-from retinanet.model.backbone.builder import backbone_builder
+from retinanet.model.backbone.builder import build_backbone
 
-__all__ = ['backbone_builder']
+__all__ = ['build_backbone']
