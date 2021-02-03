@@ -43,17 +43,17 @@ class COCOEvaluator:
             resize_scale = tf.tile(tf.expand_dims(
                 resize_scale, axis=0), multiples=[1, 2])
 
-            valid_detections = detections.valid_detections[i].numpy()
+            valid_detections = detections['valid_detections'][i].numpy()
             boxes = \
-                detections.nmsed_boxes[i][:valid_detections].numpy(
+                detections['boxes'][i][:valid_detections].numpy(
                 ) / resize_scale
 
-            train_ids = detections.nmsed_classes[i][:valid_detections].numpy()
-            scores = detections.nmsed_scores[i][:valid_detections].numpy()
+            classes = detections['classes'][i][:valid_detections].numpy()
+            scores = detections['scores'][i][:valid_detections].numpy()
 
             boxes = np.int32(boxes)
             boxes[:, 2:] = boxes[:, 2:] - boxes[:, :2]
-            for box, int_id, score in zip(boxes, train_ids, scores):
+            for box, int_id, score in zip(boxes, classes, scores):
                 temp_dict = coco_eval_dict.copy()
                 temp_dict['image_id'] = int(image_ids[i])
                 temp_dict['category_id'] = int(int_id)
