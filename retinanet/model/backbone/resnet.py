@@ -262,11 +262,10 @@ def block_group(inputs, filters, block_fn, blocks, strides, name):
     return tf.identity(inputs, name)
 
 
-def resnet_fn(input_shape,
+def resnet_fn(input_layer,
               block_fn,
               layers,
               norm_activation=norm_activation_builder(activation='relu')):
-    input_layer = tf.keras.Input(shape=input_shape, name='image_input')
     inputs = conv2d_fixed_padding(inputs=input_layer,
                                   filters=64,
                                   kernel_size=7,
@@ -302,11 +301,16 @@ def resnet_fn(input_shape,
                      blocks=layers[3],
                      strides=2,
                      name='block_group4')
-    return input_layer, c3, c4, c5
+    return {
+        '2': c2,
+        '3': c3,
+        '4': c4,
+        '5': c5
+    }
 
 
-def resnet_builder(input_shape, depth, checkpoint_dir=None):
-    model_params = {
+class ResNet(tf.keras.Model):
+    _MODEL_CONFIG = {
         10: {
             'block': residual_block,
             'layers': [1, 1, 1, 1]
@@ -337,18 +341,22 @@ def resnet_builder(input_shape, depth, checkpoint_dir=None):
         }
     }
 
-    block = model_params[depth]['block']
-    layers = model_params[depth]['layers']
+    def __init__(self, input_shape, depth, checkpoint=None):
+        input_layer = tf.keras.Input(shape=input_shape, name="resnet_input")
+        outputs = resnet_fn(
+            input_layer,
+            block_fn=ResNet._MODEL_CONFIG[depth]['block'],
+            layers=ResNet._MODEL_CONFIG[depth]['layers'])
 
-    inputs, *outputs = resnet_fn(input_shape, block, layers)
-    model = tf.keras.Model(inputs=[inputs],
-                           outputs=outputs,
-                           name='resnet_' + str(depth))
-    if checkpoint_dir:
-        latest_checkpoint = tf.train.latest_checkpoint(checkpoint_dir)
-        model.load_weights(latest_checkpoint).assert_consumed()
-        logging.info('Initialized weights from {}'.format(latest_checkpoint))
-    else:
-        logging.warning('Proceeding with random initialization!')
+        super(ResNet, self).__init__(
+            inputs=[input_layer],
+            outputs=outputs,
+            name='resnet_' + str(depth))
 
-    return model
+        if checkpoint:
+            latest_checkpoint = tf.train.latest_checkpoint(checkpoint)
+            self.load_weights(latest_checkpoint).assert_consumed()
+            logging.info(
+                'Initialized weights from {}'.format(latest_checkpoint))
+        else:
+            logging.warning('Proceeding with random initialization!')
