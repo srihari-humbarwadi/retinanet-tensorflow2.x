@@ -2,12 +2,11 @@ import os
 
 import tensorflow as tf
 from absl import app, flags, logging
-from tensorflow.keras.mixed_precision import experimental as mixed_precision
 
 from retinanet.cfg import Config
 from retinanet.dataloader import InputPipeline
 from retinanet.distribute import get_strategy
-from retinanet.model import model_builder
+from retinanet.model import ModelBuilder
 from retinanet import Executor
 
 tf.get_logger().propagate = False
@@ -52,8 +51,8 @@ SUPPORTED_RUN_MODES = ['train', 'val', 'train_val', 'continuous_eval']
 
 
 def set_precision(precision):
-    policy = mixed_precision.Policy(precision)
-    mixed_precision.set_policy(policy)
+    policy = tf.keras.mixed_precision.Policy(precision)
+    tf.keras.mixed_precision.set_global_policy(policy)
 
     logging.info('Compute dtype: {}'.format(policy.compute_dtype))
     logging.info('Variable dtype: {}'.format(policy.variable_dtype))
@@ -124,18 +123,18 @@ def main(_):
             is_multi_host=FLAGS.is_multi_host,
             num_replicas=strategy.num_replicas_in_sync)
 
-    model_fn = model_builder(params)
+    model_builder = ModelBuilder(params)
 
-    trainer = Executor(  # noqa: F841
+    _ = Executor(
         params=params,
         strategy=strategy,
         run_mode=run_mode,
-        model_fn=model_fn,
+        model_builder=model_builder,
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
         resume_from=FLAGS.resume_from
-        )
+    )
 
 
 if __name__ == '__main__':
