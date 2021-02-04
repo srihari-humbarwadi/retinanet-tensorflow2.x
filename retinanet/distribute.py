@@ -40,7 +40,8 @@ def get_strategy(params):
                     'Changed TPU name from {} to {} (overided with ENV VAR `TPU_NAME`)'  # noqa: E501
                     .format(params.name, tpu_name))
 
-        logging.info('Configuring TPU: {} with correct tensorflow version')
+        logging.info('Configuring TPU: {} with correct tensorflow version'
+                     .format(tpu_name))
 
         c = Client(tpu_name)
         c.configure_tpu_version(tf.__version__, restart_type='ifNeeded')
