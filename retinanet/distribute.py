@@ -2,6 +2,7 @@ import os
 
 import tensorflow as tf
 from absl import logging
+from cloud_tpu_client import Client
 
 
 def get_strategy(params):
@@ -39,8 +40,17 @@ def get_strategy(params):
                     'Changed TPU name from {} to {} (overided with ENV VAR `TPU_NAME`)'  # noqa: E501
                     .format(params.name, tpu_name))
 
+        logging.info('Configuring TPU: {} with correct tensorflow version')
+
+        c = Client(tpu_name)
+        c.configure_tpu_version(tf.__version__, restart_type='ifNeeded')
+
+        logging.info('Done Configuring TPU: {} with tensorflow version: {}'
+                     .format(tpu_name, tf.__version__))
+
         resolver = tf.distribute.cluster_resolver.TPUClusterResolver.connect(
             tpu_name)
+
         return tf.distribute.TPUStrategy(resolver)
 
     raise ValueError('Unsupported strategy requested')
