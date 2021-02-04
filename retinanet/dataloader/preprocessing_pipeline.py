@@ -88,7 +88,7 @@ class PreprocessingPipeline:
             axis=-1,
         )
         bbox, class_ids = self._prepare_labels(bbox, class_ids)
-        return image, bbox, class_ids, scale
+        return image, bbox, class_ids
 
     def resize_val_image(self, image):
         target_shape = self.input_shape
