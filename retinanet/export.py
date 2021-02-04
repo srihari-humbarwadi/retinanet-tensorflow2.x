@@ -4,8 +4,8 @@ import tensorflow as tf
 from absl import app, flags, logging
 
 from retinanet.cfg import Config
-from retinanet.dataloader import PreprocessingPipeline
-from retinanet.model import model_builder, prepare_model_for_export
+from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
+from retinanet.model import ModelBuilder
 from retinanet import Executor
 
 tf.get_logger().propagate = False
@@ -78,13 +78,13 @@ def main(_):
 
     train_input_fn = None
     val_input_fn = None
-    model_fn = model_builder(params)
+    model_builder = ModelBuilder(params)
 
     trainer = Executor(
         params=params,
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,
-        model_fn=model_fn,
+        model_builder=model_builder,
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         resume_from=checkpoint_name
@@ -144,7 +144,7 @@ def main(_):
                 'valid_detections': detections.valid_detections[0]
             }
 
-        inference_model = prepare_model_for_export(trainer)
+        inference_model = model_builder.prepare_model_for_export(trainer.model)
 
         tf.saved_model.save(
             inference_model,
