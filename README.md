@@ -9,10 +9,13 @@
  - [x] Export `saved_model`
  - [x] COCO mAP evaluation callback
  - [x] Supports fine tuning on custom datasets
- - [ ] Multiscale inference
+ - [x] Supports continuous evaluation
+ - [ ] Supports all NMS variants `combined`, `per class soft/hard`, `global soft/hard` [WIP]
+ - [ ] Batched inference [WIP]
+ - [ ] Add **sotabench**
  - [ ] Export TensorRT model
  - [ ] Export Onnx model
- - [ ] Batched inference
+
 
 
 
