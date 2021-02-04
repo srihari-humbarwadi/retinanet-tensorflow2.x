@@ -63,7 +63,7 @@ class PreprocessingPipelineV2:
                                   self.augmentation_params.scale_jitter.max_scale)
 
         scaled_shape = tf.cast(tf.round(scale * target_size), dtype=tf.int32)
-        image = tf.image.resize(image, size=scaled_shape)
+        image = tf.image.resize(image, size=[scaled_shape, scaled_shape])
         return image
 
     def _random_crop_image_and_labels(self, image, boxes, class_ids):
