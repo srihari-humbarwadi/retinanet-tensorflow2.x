@@ -84,14 +84,15 @@ class ModelBuilder:
         class_predictions = []
         box_predictions = []
         for i in range(3, 8):
+            key = str(i)
             class_predictions += [
                 tf.keras.layers.Reshape(
                     [-1, self.params.architecture.head.num_classes])(
-                    model.output['class-predictions'][i])
+                    model.output['class-predictions'][key])
             ]
             box_predictions += [
                 tf.keras.layers.Reshape([-1, 4])(
-                    model.output['box-predictions'][i])
+                    model.output['box-predictions'][key])
             ]
 
         class_predictions = tf.concat(class_predictions, axis=1)
@@ -113,13 +114,14 @@ class ModelBuilder:
         class_predictions = []
         box_predictions = []
         for i in range(3, 8):
+            key = str(i)
             class_predictions += [
                 tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
-                    model.output['class-predictions'][i])
+                    model.output['class-predictions'][key])
             ]
             box_predictions += [
                 tf.keras.layers.Reshape([-1, 4])(
-                    model.output['box-predictions'][i])
+                    model.output['box-predictions'][key])
             ]
         class_predictions = tf.concat(class_predictions, axis=1)
         box_predictions = tf.concat(box_predictions, axis=1)

@@ -76,6 +76,6 @@ class DetectionHead(tf.keras.Model):
                 x = self.head_norms[i][level](x, training=training)
                 x = self.relu_ops[i](x)
 
-            outputs[int(level)] = self.prediction_conv(x)
+            outputs[level] = self.prediction_conv(x)
 
         return outputs
