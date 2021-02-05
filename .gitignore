@@ -167,3 +167,4 @@ outputs/
 
 # debug files/configs
 *debug*
+*test*
