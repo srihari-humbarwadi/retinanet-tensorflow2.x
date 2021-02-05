@@ -1,9 +1,9 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-resnet50-640x640-3x-256",
+        "name": "mscoco-retinanet-resnet50-640x640-3x-64",
         "run_mode": "train",
-        "model_dir": "gs://tfrc_datasets/model_files",
-        "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
+        "model_dir": "model_files",
+        "tensorboard_dir": "debug_tensorboard"
     },
     "input": {
         "input_shape": [
@@ -13,13 +13,13 @@
         "channels": 3
     },
     "floatx": {
-        "precision": "mixed_bfloat16"
+        "precision": "float32"
     },
     "architecture": {
         "backbone": {
             "type": "resnet",
             "depth": 50,
-            "checkpoint": "gs://tfrc_datasets/resnet50"
+            "checkpoint": ""
         },
         "fpn": {
             "type": "default",
@@ -50,12 +50,12 @@
         "use_weight_decay": true,
         "weight_decay_alpha": 0.0001,
         "batch_size": {
-            "train": 256,
-            "val": 8
+            "train": 1,
+            "val": 1
         },
         "strategy": {
-            "type": "tpu",
-            "name": "v3-32"
+            "type": "gpu",
+            "name": ""
         },
         "restore_checkpoint": true,
         "freeze_variables": [
@@ -122,8 +122,8 @@
     },
     "dataloader_params": {
         "tfrecords": {
-            "train": "gs://tfrc_datasets/coco_tfrecords/train*",
-            "val": "gs://tfrc_datasets/coco_tfrecords/val*"
+            "train": "",
+            "val": "coco_tfrecords/val*"
         },
         "augmentations": {
             "use_augmentation": true,
