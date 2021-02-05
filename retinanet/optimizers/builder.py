@@ -29,7 +29,7 @@ def build_optimizer(params, precision):
             optimizer, dynamic=True)
 
     logging.info(
-        'Optimizer Config: \n{}'
+        'Optimizer Config:\n{}'
         .format(json.dumps(optimizer.get_config(), indent=4)))
 
     return optimizer
