@@ -102,7 +102,8 @@ class Executor:
             self.use_float16 = True
 
         if 'val' in self.run_mode:
-            self._eval_model = self.model_builder.make_eval_model(self._model)
+            self._eval_model = \
+                self.model_builder.add_post_processing_stage(self._model)
 
         self._model.summary(print_fn=logging.debug)
         logging.info('Total trainable parameters: {:,}'.format(

@@ -1,14 +1,17 @@
+import json
 import re
 
 import tensorflow as tf
 from absl import logging
 
+from retinanet.losses import RetinaNetLoss
 from retinanet.model.backbone import build_backbone
 from retinanet.model.fpn import build_fpn
-from retinanet.model.layers import DecodePredictions
 from retinanet.model.head import build_heads
+from retinanet.model.layers import (FilterTopKDetections, FuseDetections,
+                                    GenerateDetections,
+                                    TransformBoxesAndScores)
 from retinanet.optimizers import build_optimizer
-from retinanet.losses import RetinaNetLoss
 
 
 class ModelBuilder:
@@ -76,57 +79,34 @@ class ModelBuilder:
         model.compiled_metrics = None
         model._metrics = []
 
-        inference_model = self._add_post_processing_stage(model)
-        _ = model(tf.random.uniform(shape=[1, 640, 640, 3]))
+        inference_model = self.add_post_processing_stage(model)
         return inference_model
 
-    def _add_post_processing_stage(self, model):
-        class_predictions = []
-        box_predictions = []
-        for i in range(3, 8):
-            key = str(i)
-            class_predictions += [
-                tf.keras.layers.Reshape(
-                    [-1, self.params.architecture.head.num_classes])(
-                    model.output['class-predictions'][key])
-            ]
-            box_predictions += [
-                tf.keras.layers.Reshape([-1, 4])(
-                    model.output['box-predictions'][key])
-            ]
+    def add_post_processing_stage(self, model, skip_nms=False):
+        logging.info('Postprocessing stage config:\n{}'
+                     .format(json.dumps(self.params.inference, indent=4)))
 
-        class_predictions = tf.concat(class_predictions, axis=1)
-        box_predictions = tf.concat(box_predictions, axis=1)
-        predictions = (box_predictions, class_predictions)
-        detections = DecodePredictions(self.params)(predictions)
-        inference_model = tf.keras.Model(inputs=model.inputs,
-                                         outputs=detections,
-                                         name='retinanet_inference')
-        logging.info('Created inference model with params: {}'
-                     .format(self.params.inference))
-        return inference_model
+        x = model.output
+        x = FuseDetections(
+            min_level=self.params.architecture.fpn.min_level,
+            max_level=self.params.architecture.fpn.max_level)(x)
 
-    def make_eval_model(self, model):
-        eval_model = self._add_post_processing_stage(model)
-        return eval_model
+        x = TransformBoxesAndScores(params=self.params)(x)
 
-    def _fuse_model_outputs(self, model):
-        class_predictions = []
-        box_predictions = []
-        for i in range(3, 8):
-            key = str(i)
-            class_predictions += [
-                tf.keras.layers.Reshape([-1, self.params.architecture.num_classes])(
-                    model.output['class-predictions'][key])
-            ]
-            box_predictions += [
-                tf.keras.layers.Reshape([-1, 4])(
-                    model.output['box-predictions'][key])
-            ]
-        class_predictions = tf.concat(class_predictions, axis=1)
-        box_predictions = tf.concat(box_predictions, axis=1)
-        predictions = (box_predictions, class_predictions)
-        inference_model = tf.keras.Model(inputs=model.inputs,
-                                         outputs=predictions,
-                                         name='model_with_fused_outputs')
-        return inference_model
+        if not skip_nms:
+
+            if self.params.inference.pre_nms_top_k > 0:
+                x = FilterTopKDetections(
+                    top_k=self.params.inference.pre_nms_top_k,
+                    filter_per_class=self.params.inference.filter_per_class)(x)
+
+            x = GenerateDetections(
+                iou_threshold=self.params.inference.iou_threshold,
+                score_threshold=self.params.inference.score_threshold,
+                max_detections=self.params.inference.max_detections,
+                soft_nms_sigma=self.params.inference.soft_nms_sigma,
+                num_classes=self.params.architecture.head.num_classes,
+                mode=self.params.inference.mode)(x)
+
+        model = tf.keras.Model(inputs=[model.input], outputs=x)
+        return model
