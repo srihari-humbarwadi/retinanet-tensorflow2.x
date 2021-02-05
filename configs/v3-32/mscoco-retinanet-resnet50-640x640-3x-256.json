@@ -148,10 +148,12 @@
         "shuffle_buffer_size": 1024
     },
     "inference": {
-        "nms_iou_threshold": 0.5,
-        "confidence_threshold": 0.05,
+        "mode": "CombinedNMS",
+        "iou_threshold": 0.5,
+        "score_threshold": 0.05,
+        "soft_nms_sigma": 0.5,
         "pre_nms_top_k": 5000,
-        "max_detections_per_class": 100,
+        "filter_per_class": true,
         "max_detections": 100
     }
 }
