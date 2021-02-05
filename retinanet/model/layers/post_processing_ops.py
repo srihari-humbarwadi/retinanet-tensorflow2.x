@@ -19,13 +19,16 @@ class FuseDetections(tf.keras.layers.Layer):
         class_logits = []
         encoded_boxes = []
 
-        box_predictions_shape = box_predictions[3].get_shape().as_list()
-        class_predictions_shape = class_predictions[3].get_shape().as_list()
+        box_predictions_shape = \
+            box_predictions[str(self.min_level)].get_shape().as_list()
+        class_predictions_shape = \
+            class_predictions[str(self.min_level)].get_shape().as_list()
 
         anchors_at_each_location = box_predictions_shape[-1] // 4
         num_classes = class_predictions_shape[-1] // anchors_at_each_location
 
         for level in range(self.min_level, self.max_level + 1):
+            level = str(level)
             _cls_preds = class_predictions[level]
             _box_preds = box_predictions[level]
 
@@ -192,6 +195,9 @@ class GenerateDetections(tf.keras.layers.Layer):
 
         scores = predictions['scores']
         boxes = predictions['boxes']
+
+        if len(boxes.get_shape().as_list()) == 3:
+            boxes = tf.expand_dims(boxes, axis=2)
 
         detections = tf.image.combined_non_max_suppression(
             boxes=boxes,
