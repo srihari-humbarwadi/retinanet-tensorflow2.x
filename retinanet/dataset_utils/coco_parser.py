@@ -85,7 +85,7 @@ class CocoParser(Parser):
             for image_id, annotation in tqdm(coco.imgToAnns.items()):
                 image_path = os.path.join(
                     self._download_path, '{}{}'.format(split_name,
-                                                       CocoParser._YEAR),
+                                                       self._year),
                     coco.imgs[image_id]['file_name'])
                 boxes = []
                 classes = []
