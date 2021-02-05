@@ -1,4 +1,12 @@
-from retinanet.model.layers.decode_predictions import DecodePredictions
 from retinanet.model.layers.nearest_upsampling import NearestUpsampling2D
+from retinanet.model.layers.post_processing_ops import (
+    FilterTopKDetections, FuseDetections, GenerateDetections,
+    TransformBoxesAndScores)
 
-__all__ = ['DecodePredictions', 'NearestUpsampling2D']
+__all__ = [
+    'FilterTopKDetections',
+    'FuseDetections',
+    'GenerateDetections',
+    'NearestUpsampling2D',
+    'TransformBoxesAndScores'
+]
