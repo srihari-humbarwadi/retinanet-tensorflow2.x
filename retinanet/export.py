@@ -138,10 +138,10 @@ def main(_):
 
             return {
                 'image_id': sample['image_id'],
-                'boxes': detections['boxes'][0] / resize_scale,
-                'scores': detections['scores'][0],
-                'classes': tf.cast(detections['classes'][0], dtype=tf.int32),
-                'valid_detections': detections['valid_detections'][0]
+                'boxes': detections['boxes'] / resize_scale,
+                'scores': detections['scores'],
+                'classes': tf.cast(detections['classes'], dtype=tf.int32),
+                'valid_detections': detections['valid_detections']
             }
 
         inference_model = model_builder.prepare_model_for_export(trainer.model)
