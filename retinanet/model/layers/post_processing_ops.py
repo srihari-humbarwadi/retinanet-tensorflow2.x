@@ -132,9 +132,6 @@ class FilterTopKDetections(tf.keras.layers.Layer):
 
         boxes = tf.gather(boxes, indices, batch_dims=1)
 
-        scores = tf.cast(scores, dtype=tf.float32)
-        boxes = tf.cast(boxes, dtype=tf.float32)
-
         return scores, boxes
 
     def _filter_global(self, scores, boxes):
@@ -147,9 +144,6 @@ class FilterTopKDetections(tf.keras.layers.Layer):
 
         scores = tf.gather_nd(scores, anchor_indices, batch_dims=1)
         boxes = tf.gather_nd(boxes, anchor_indices, batch_dims=1)
-
-        scores = tf.cast(scores, dtype=tf.float32)
-        boxes = tf.cast(boxes, dtype=tf.float32)
 
         return scores, boxes
 
@@ -369,6 +363,10 @@ class GenerateDetections(tf.keras.layers.Layer):
         }
 
     def call(self, predictions):
+
+        predictions = tf.nest.map_structure(
+            lambda x: tf.cast(x, dtype=tf.float32), predictions)
+
         if self.mode == 'CombinedNMS':
             return self._combined_nms(predictions)
 
