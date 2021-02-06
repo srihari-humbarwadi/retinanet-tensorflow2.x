@@ -29,7 +29,7 @@ class NormActivation:
     """Combined Normalization and Activation layers."""
 
     def __init__(self,
-                 momentum=0.997,
+                 normalization_op_params=None,
                  init_zero=False,
                  use_activation=True,
                  activation='relu',
@@ -48,20 +48,22 @@ class NormActivation:
         `relu` and `swish`.
       name: `str` name for the operation.
     """
+        if normalization_op_params is None:
+            raise AssertionError('`normalization_op_params` cannot be `None`')
+
         if init_zero:
             gamma_initializer = tf.keras.initializers.Zeros()
         else:
             gamma_initializer = tf.keras.initializers.Ones()
 
-        normalization_op = get_normalization_op()
+        normalization_op = get_normalization_op(**normalization_op_params)
 
         self._normalization_op = normalization_op(
-            momentum=momentum,
-            epsilon=1e-4,
             center=True,
             scale=True,
             gamma_initializer=gamma_initializer,
             name=name)
+
         self._use_activation = use_activation
         if activation == 'relu':
             self._activation_op = tf.nn.relu
@@ -78,11 +80,11 @@ class NormActivation:
         return inputs
 
 
-def norm_activation_builder(momentum=0.997,
+def norm_activation_builder(normalization_op_params,
                             activation='relu',
                             **kwargs):
     return functools.partial(NormActivation,
-                             momentum=momentum,
+                             normalization_op_params=normalization_op_params,
                              activation=activation,
                              **kwargs)
 
@@ -146,7 +148,7 @@ def residual_block(inputs,
                    filters,
                    strides,
                    activation_op=tf.nn.relu,
-                   norm_activation=norm_activation_builder(activation='relu'),
+                   normalization_op_params=None,
                    use_projection=False):
     """Standard building block for residual networks with BN after convolutions.
     Args:
@@ -162,6 +164,9 @@ def residual_block(inputs,
     Returns:
       The output `Tensor` of the block.
     """
+    norm_activation = norm_activation_builder(
+        normalization_op_params, activation='relu')
+
     shortcut = inputs
     if use_projection:
         # Projection shortcut in first layer to match filters and strides
@@ -191,7 +196,7 @@ def bottleneck_block(
         filters,
         strides,
         activation_op=tf.nn.relu,
-        norm_activation=norm_activation_builder(activation='relu'),
+        normalization_op_params=None,
         use_projection=False):
     """Bottleneck block variant for residual networks with BN after convolutions.
     Args:
@@ -207,6 +212,10 @@ def bottleneck_block(
     Returns:
       The output `Tensor` of the block.
     """
+
+    norm_activation = norm_activation_builder(
+        normalization_op_params, activation='relu')
+
     shortcut = inputs
     if use_projection:
         # Projection shortcut only in first block within a group. Bottleneck
@@ -239,7 +248,14 @@ def bottleneck_block(
     return activation_op(inputs + shortcut)
 
 
-def block_group(inputs, filters, block_fn, blocks, strides, name):
+def block_group(
+        inputs,
+        filters,
+        block_fn,
+        blocks,
+        strides,
+        name,
+        normalization_op_params=None):
     """Creates one group of blocks for the ResNet model.
     Args:
       inputs: `Tensor` of size `[batch, channels, height, width]`.
@@ -254,10 +270,18 @@ def block_group(inputs, filters, block_fn, blocks, strides, name):
     """
     # Only the first block per block_group uses projection shortcut and
     # strides.
-    inputs = block_fn(inputs, filters, strides, use_projection=True)
+    inputs = block_fn(
+        inputs,
+        filters,
+        strides,
+        normalization_op_params=normalization_op_params, use_projection=True)
 
     for _ in range(1, blocks):
-        inputs = block_fn(inputs, filters, 1)
+        inputs = block_fn(
+            inputs,
+            filters,
+            1,
+            normalization_op_params=normalization_op_params)
 
     return tf.identity(inputs, name)
 
@@ -265,7 +289,11 @@ def block_group(inputs, filters, block_fn, blocks, strides, name):
 def resnet_fn(input_layer,
               block_fn,
               layers,
-              norm_activation=norm_activation_builder(activation='relu')):
+              normalization_op_params=None):
+
+    norm_activation = norm_activation_builder(
+        normalization_op_params, activation='relu')
+
     inputs = conv2d_fixed_padding(inputs=input_layer,
                                   filters=64,
                                   kernel_size=7,
@@ -282,25 +310,29 @@ def resnet_fn(input_layer,
                      block_fn=block_fn,
                      blocks=layers[0],
                      strides=1,
-                     name='block_group1')
+                     name='block_group1',
+                     normalization_op_params=normalization_op_params)
     c3 = block_group(inputs=c2,
                      filters=128,
                      block_fn=block_fn,
                      blocks=layers[1],
                      strides=2,
-                     name='block_group2')
+                     name='block_group2',
+                     normalization_op_params=normalization_op_params)
     c4 = block_group(inputs=c3,
                      filters=256,
                      block_fn=block_fn,
                      blocks=layers[2],
                      strides=2,
-                     name='block_group3')
+                     name='block_group3',
+                     normalization_op_params=normalization_op_params)
     c5 = block_group(inputs=c4,
                      filters=512,
                      block_fn=block_fn,
                      blocks=layers[3],
                      strides=2,
-                     name='block_group4')
+                     name='block_group4',
+                     normalization_op_params=normalization_op_params)
     return {
         '2': c2,
         '3': c3,
@@ -341,12 +373,19 @@ class ResNet(tf.keras.Model):
         }
     }
 
-    def __init__(self, input_shape, depth, checkpoint=None):
+    def __init__(
+            self,
+            input_shape,
+            depth,
+            checkpoint=None,
+            normalization_op_params=None):
+
         input_layer = tf.keras.Input(shape=input_shape, name="resnet_input")
         outputs = resnet_fn(
             input_layer,
             block_fn=ResNet._MODEL_CONFIG[depth]['block'],
-            layers=ResNet._MODEL_CONFIG[depth]['layers'])
+            layers=ResNet._MODEL_CONFIG[depth]['layers'],
+            normalization_op_params=normalization_op_params)
 
         super(ResNet, self).__init__(
             inputs=[input_layer],

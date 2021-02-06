@@ -12,6 +12,7 @@ class DetectionHead(tf.keras.Model):
                  min_level=3,
                  max_level=7,
                  prediction_bias_initializer='zeros',
+                 normalization_op_params=None,
                  **kwargs):
         super(DetectionHead, self).__init__(**kwargs)
 
@@ -23,7 +24,7 @@ class DetectionHead(tf.keras.Model):
         self.prediction_bias_initializer = prediction_bias_initializer
 
         conv_2d_op = tf.keras.layers.Conv2D
-        normalization_op = get_normalization_op()
+        normalization_op = get_normalization_op(**normalization_op_params)
 
         self.head_convs = []
         self.head_norms = []

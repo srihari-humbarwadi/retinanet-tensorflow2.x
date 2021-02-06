@@ -13,6 +13,7 @@ class FPN(tf.keras.Model):
                  min_level=3,
                  max_level=7,
                  backbone_max_level=5,
+                 normalization_op_params=None,
                  **kwargs):
         super(FPN, self).__init__(**kwargs)
 
@@ -22,7 +23,7 @@ class FPN(tf.keras.Model):
         self.backbone_max_level = backbone_max_level
 
         conv_2d_op = tf.keras.layers.Conv2D
-        normalization_op = get_normalization_op()
+        normalization_op = get_normalization_op(**normalization_op_params)
 
         self.upsample_op = functools.partial(NearestUpsampling2D, scale=2)
         self.lateral_convs = {}

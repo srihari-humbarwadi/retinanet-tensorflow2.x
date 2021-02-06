@@ -1,15 +1,22 @@
-import os
+import functools
 
 import tensorflow as tf
 from absl import logging
 
 
-def get_normalization_op():
-    use_sync_bn = tf.distribute.get_strategy().num_replicas_in_sync > 1
-    use_sync_bn = use_sync_bn and 'USE_SYNC_BN' in os.environ
+def get_normalization_op(**params):
+    num_replicas = tf.distribute.get_strategy().num_replicas_in_sync
 
-    if use_sync_bn:
+    if params.get('use_sync', None) and num_replicas > 1:
         logging.debug('Using SyncBatchNormalization')
-        return tf.keras.layers.experimental.SyncBatchNormalization
+        op = tf.keras.layers.experimental.SyncBatchNormalization
 
-    return tf.keras.layers.BatchNormalization
+    else:
+        op = tf.keras.layers.BatchNormalization
+
+    normalization_op = functools.partial(
+        op,
+        momentum=params.get('momentum'),
+        epsilon=params.get('epsilon')
+    )
+    return normalization_op

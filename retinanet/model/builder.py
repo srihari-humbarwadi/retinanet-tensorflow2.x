@@ -38,14 +38,17 @@ class ModelBuilder:
 
         backbone = build_backbone(
             input_shape=input_shape,
-            params=self.params.architecture.backbone)
+            params=self.params.architecture.backbone,
+            normalization_op_params=self.params.architecture.batch_norm)
 
-        fpn = build_fpn(params=self.params.architecture.fpn)
+        fpn = build_fpn(params=self.params.architecture.fpn,
+                        normalization_op_params=self.params.architecture.batch_norm)
 
         box_head, class_head = build_heads(
             params=self.params.architecture.head,
             min_level=self.params.architecture.fpn.min_level,
-            max_level=self.params.architecture.fpn.max_level)
+            max_level=self.params.architecture.fpn.max_level,
+            normalization_op_params=self.params.architecture.batch_norm)
 
         features = backbone(images)
         features = fpn(features)

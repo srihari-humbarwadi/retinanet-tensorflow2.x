@@ -16,6 +16,15 @@
         "precision": "mixed_bfloat16"
     },
     "architecture": {
+        "conv_2d": {
+            "use_seperable_conv": false,
+            "use_bias_before_bn": true
+        },
+        "batch_norm": {
+            "use_sync": true,
+            "momentum": 0.99,
+            "epsilon": 0.001
+        },
         "backbone": {
             "type": "resnet",
             "depth": 50,
