@@ -25,7 +25,7 @@ class COCOEvaluator:
         logging.info('Initialized COCOEvaluator with {}'.format(
             self.annotation_file_path))
 
-    def accumulate_results(self, results):
+    def accumulate_results(self, results, rescale_detections=True):
         image_ids = results['image_id']
         detections = results['detections']
         resize_scales = results['resize_scale']
@@ -38,18 +38,20 @@ class COCOEvaluator:
             'bbox': [],
             'score': None
         }
+
         for i in range(batch_size):
-            resize_scale = resize_scales[i] / self._input_shape
-            resize_scale = tf.tile(tf.expand_dims(
-                resize_scale, axis=0), multiples=[1, 2])
 
             valid_detections = detections['valid_detections'][i].numpy()
-            boxes = \
-                detections['boxes'][i][:valid_detections].numpy(
-                ) / resize_scale
-
+            boxes = detections['boxes'][i][:valid_detections].numpy()
             classes = detections['classes'][i][:valid_detections].numpy()
             scores = detections['scores'][i][:valid_detections].numpy()
+
+            if rescale_detections:
+                resize_scale = resize_scales[i] / self._input_shape
+                resize_scale = tf.tile(tf.expand_dims(
+                    resize_scale, axis=0), multiples=[1, 2])
+
+                boxes /= resize_scale
 
             boxes = np.int32(boxes)
             boxes[:, 2:] = boxes[:, 2:] - boxes[:, :2]
