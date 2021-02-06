@@ -86,16 +86,16 @@ class ModelBuilder:
         logging.info('Postprocessing stage config:\n{}'
                      .format(json.dumps(self.params.inference, indent=4)))
 
-        x = model.output
         x = FuseDetections(
             min_level=self.params.architecture.fpn.min_level,
-            max_level=self.params.architecture.fpn.max_level)(x)
+            max_level=self.params.architecture.fpn.max_level)(model.output)
 
         x = TransformBoxesAndScores(params=self.params)(x)
 
         if not skip_nms:
 
             if self.params.inference.pre_nms_top_k > 0:
+
                 x = FilterTopKDetections(
                     top_k=self.params.inference.pre_nms_top_k,
                     filter_per_class=self.params.inference.filter_per_class)(x)
@@ -109,4 +109,9 @@ class ModelBuilder:
                 mode=self.params.inference.mode)(x)
 
         model = tf.keras.Model(inputs=[model.input], outputs=x)
+
+        for layer in model.layers:
+            logging.debug('Layer Name: {} | Output Shape: {}'
+                          .format(layer.name, layer.output_shape))
+
         return model
