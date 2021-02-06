@@ -131,6 +131,10 @@ class FilterTopKDetections(tf.keras.layers.Layer):
         indices = tf.transpose(indices, [0, 2, 1])
 
         boxes = tf.gather(boxes, indices, batch_dims=1)
+
+        scores = tf.cast(scores, dtype=tf.float32)
+        boxes = tf.cast(boxes, dtype=tf.float32)
+
         return scores, boxes
 
     def _filter_global(self, scores, boxes):
@@ -143,6 +147,9 @@ class FilterTopKDetections(tf.keras.layers.Layer):
 
         scores = tf.gather_nd(scores, anchor_indices, batch_dims=1)
         boxes = tf.gather_nd(boxes, anchor_indices, batch_dims=1)
+
+        scores = tf.cast(scores, dtype=tf.float32)
+        boxes = tf.cast(boxes, dtype=tf.float32)
 
         return scores, boxes
 
