@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-resnet50-640x640-3x-64",
+        "name": "mscoco-retinanet-resnet50-640x640-3x-256",
         "run_mode": "train",
         "model_dir": "model_files",
         "tensorboard_dir": "debug_tensorboard"
