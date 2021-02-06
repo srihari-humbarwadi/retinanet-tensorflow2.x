@@ -12,7 +12,7 @@
  - [x] Supports continuous evaluation
  - [x] Supports all NMS variants `combined`, `per class soft/hard`, `global soft/hard`
  - [x] Supports Batched inference
- - [ ] Add **sotabench** [WIP]
+ - [ ] Add **sotabench**
  - [ ] Export TensorRT model
  - [ ] Export Onnx model
 
@@ -23,7 +23,7 @@
 ### Training
  - Use `prepare_coco_dataset.sh` to download the COCO2017 dataset and create the tfrecords.
  - If you plan to train on **Google Cloud TPU**, upload the `coco_tfrecords` folder to your **Google Cloud Storage** bucket.
- - `USE_SYNC_BN="" python3 -m retinanet.main --config_path configs/v3-32/retinanet-640-6x-256-tpu-pod.json --log_dir logs --alsologtostderr --is_multi_host` to train, you should now be able to see logs similar to this. (use `--is_multi_host` only when training on **TPU Pods**)
+ - `python3 -m retinanet --config_path configs/v3-32/mscoco-retinanet-resnet50-640x640-3x-256.json --log_dir logs --alsologtostderr --is_multi_host` to train, you should now be able to see logs similar to this. (use `--is_multi_host` only when training on **TPU Pods**)
 
 ```
 I0119 06:09:24.804542 140235606591296 main.py:82] Running on 32 replicas
@@ -84,13 +84,13 @@ tik = time()
 detections = serving_fn(image=image, image_id=tf.constant(idx))
 toc = time()
 
-valid_detections = detections['valid_detections'].numpy()
-boxes = detections['boxes'][:valid_detections].numpy()
+valid_detections = detections['valid_detections'][0].numpy()
+boxes = detections['boxes'][0][:valid_detections].numpy()
 classes = [
     label_map[str(idx)]
-    for idx in detections['class_ids'][:valid_detections].numpy()
+    for idx in detections['classes'][0][:valid_detections].numpy()
 ]
-scores = detections['scores'][:valid_detections].numpy()
+scores = detections['scores'][0][:valid_detections].numpy()
 
 #  Visualize detections
 visualize_detections(image,
@@ -99,6 +99,7 @@ visualize_detections(image,
                      scores,
                      title='Image: {}'.format(idx),
                      save=False,
+                     score_threshold=0.30,
                      filename='outputs/image_{}.png'.format(idx))
 
 print('Inference time: {:.2f} ms'.format((toc - tik) * 1000))
@@ -163,3 +164,8 @@ Year = {2017},
 Eprint = {arXiv:1708.02002},
 }
 ```
+___
+
+#### References
+ - https://github.com/tensorflow/models
+ - https://github.com/facebookresearch/detectron2
