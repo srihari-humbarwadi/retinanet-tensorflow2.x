@@ -12,6 +12,7 @@ class DetectionHead(tf.keras.Model):
                  min_level=3,
                  max_level=7,
                  prediction_bias_initializer='zeros',
+                 conv_2d_op_params=None,
                  normalization_op_params=None,
                  **kwargs):
         super(DetectionHead, self).__init__(**kwargs)
@@ -23,8 +24,24 @@ class DetectionHead(tf.keras.Model):
         self.max_level = max_level
         self.prediction_bias_initializer = prediction_bias_initializer
 
-        conv_2d_op = tf.keras.layers.Conv2D
         normalization_op = get_normalization_op(**normalization_op_params)
+
+        if not conv_2d_op_params.use_seperable_conv:
+            conv_2d_op = tf.keras.layers.Conv2D
+
+            kernel_initializer_config = {
+                'kernel_initializer': tf.keras.initializers.RandomNormal(
+                    stddev=0.01)
+            }
+
+        else:
+            conv_2d_op = tf.keras.layers.SeparableConv2D
+            kernel_initializer_config = {
+                'depthwise_initializer': tf.keras.initializers.RandomNormal(
+                    stddev=0.01),
+                'pointwise_initializer': tf.keras.initializers.RandomNormal(
+                    stddev=0.01)
+            }
 
         self.head_convs = []
         self.head_norms = []
@@ -38,9 +55,8 @@ class DetectionHead(tf.keras.Model):
                     strides=1,
                     padding='same',
                     name='{}-class-{}-conv2d'.format(self.name, i),
-                    kernel_initializer=tf.keras.initializers.RandomNormal(
-                        stddev=0.01),
-                    bias_initializer=tf.zeros_initializer())
+                    bias_initializer=tf.zeros_initializer(),
+                    **kernel_initializer_config)
             ]
 
             norms = {}
@@ -55,7 +71,7 @@ class DetectionHead(tf.keras.Model):
                     name='{}-class-{}-relu'.format(self.name, i))
             ]
 
-        self.prediction_conv = conv_2d_op(
+        self.prediction_conv = tf.keras.layers.Conv2D(
             filters=output_filters,
             kernel_size=3,
             strides=1,

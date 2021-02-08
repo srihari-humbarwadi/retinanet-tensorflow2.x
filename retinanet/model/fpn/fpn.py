@@ -13,6 +13,7 @@ class FPN(tf.keras.Model):
                  min_level=3,
                  max_level=7,
                  backbone_max_level=5,
+                 conv_2d_op_params=None,
                  normalization_op_params=None,
                  **kwargs):
         super(FPN, self).__init__(**kwargs)
@@ -22,7 +23,6 @@ class FPN(tf.keras.Model):
         self.max_level = max_level
         self.backbone_max_level = backbone_max_level
 
-        conv_2d_op = tf.keras.layers.Conv2D
         normalization_op = get_normalization_op(**normalization_op_params)
 
         self.upsample_op = functools.partial(NearestUpsampling2D, scale=2)
@@ -31,15 +31,29 @@ class FPN(tf.keras.Model):
         self.output_norms = {}
         self.relu_ops = {}
 
+        if not conv_2d_op_params.use_seperable_conv:
+            conv_2d_op = tf.keras.layers.Conv2D
+
+            kernel_initializer_config = {
+                'kernel_initializer': tf.initializers.VarianceScaling()
+            }
+
+        else:
+            conv_2d_op = tf.keras.layers.SeparableConv2D
+            kernel_initializer_config = {
+                'depthwise_initializer': tf.initializers.VarianceScaling(),
+                'pointwise_initializer': tf.initializers.VarianceScaling()
+            }
+
         for level in range(min_level, backbone_max_level + 1):
             level = str(level)
             self.lateral_convs[level] = conv_2d_op(
                 filters=self.filters,
                 kernel_size=1,
                 strides=1,
-                kernel_initializer=tf.initializers.VarianceScaling(),
                 padding='same',
-                name='l' + str(level) + '-conv2d')
+                name='l' + str(level) + '-conv2d',
+                **kernel_initializer_config)
 
         for level in range(min_level, max_level + 1):
             level = str(level)
@@ -49,10 +63,11 @@ class FPN(tf.keras.Model):
             self.output_convs[level] = conv_2d_op(
                 filters=self.filters,
                 kernel_size=3,
-                kernel_initializer=tf.initializers.VarianceScaling(),
                 padding='same',
                 strides=1 if int(level) < min_level + 3 else 2,
-                name='p' + str(level) + '-conv2d')
+                use_bias=conv_2d_op_params.use_bias_before_bn,
+                name='p' + str(level) + '-conv2d',
+                **kernel_initializer_config)
 
         for level in range(backbone_max_level + 1, max_level):
             level = str(level)
