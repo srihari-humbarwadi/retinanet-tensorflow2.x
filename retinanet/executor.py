@@ -5,6 +5,8 @@ from time import sleep, time
 import numpy as np
 import tensorflow as tf
 from absl import logging
+from tensorflow.python.profiler.model_analyzer import profile
+from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 from retinanet.eval import COCOEvaluator
 
@@ -104,6 +106,9 @@ class Executor:
         if 'val' in self.run_mode:
             self._eval_model = \
                 self.model_builder.add_post_processing_stage(self._model)
+
+            flops = self.get_flops()
+            logging.info('Total flops (multiplyadds): {:,}'.format(flops))
 
         self._model.summary(print_fn=logging.debug)
         logging.info('Total trainable parameters: {:,}'.format(
@@ -536,6 +541,20 @@ class Executor:
 
         if self._run_evaluation_at_end and 'val' in self.run_mode:
             self.evaluate()
+
+    def get_flops(self):
+        @tf.function(input_signature=[
+            tf.TensorSpec(
+                shape=(1,) + self._eval_model.input_shape[1:],
+                dtype=tf.float32, name='images')])
+        def inference_function(images):
+            return self._eval_model(images, training=False)
+
+        concrete_funtion = inference_function.get_concrete_function()
+        graph_info = profile(concrete_funtion.graph,
+                             options=ProfileOptionBuilder.float_operation())
+        flops = graph_info.total_float_ops // 2
+        return flops
 
     @property
     def model(self):
