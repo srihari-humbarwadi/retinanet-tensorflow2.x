@@ -12,6 +12,7 @@
  - [x] Supports continuous evaluation
  - [x] Supports all NMS variants `combined`, `per class soft/hard`, `global soft/hard`
  - [x] Supports Batched inference
+ - [ ] Weight Averaging [WIP]
  - [ ] Add **sotabench**
  - [ ] Export TensorRT model
  - [ ] Export Onnx model
