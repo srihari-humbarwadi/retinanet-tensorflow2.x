@@ -486,7 +486,7 @@ class Executor:
             end = time()
 
             if self.use_float16:
-                learning_rate = self.optimizer._optimizer._decayed_lr('float')
+                learning_rate = self.optimizer.inner_optimizer._decayed_lr('float')
             else:
                 learning_rate = self.optimizer._decayed_lr('float')
 
