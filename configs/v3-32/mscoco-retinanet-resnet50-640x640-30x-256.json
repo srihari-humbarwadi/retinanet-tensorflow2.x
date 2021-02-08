@@ -73,7 +73,7 @@
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 200,
-        "save_every": 5625,
+        "save_every": 6000,
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
