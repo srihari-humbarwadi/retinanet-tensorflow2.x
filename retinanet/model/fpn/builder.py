@@ -10,7 +10,8 @@ def build_fpn(params, conv_2d_op_params=None, normalization_op_params=None):
             backbone_max_level=params.backbone_max_level,
             use_residual_connections=False,
             conv_2d_op_params=conv_2d_op_params,
-            normalization_op_params=normalization_op_params)
+            normalization_op_params=normalization_op_params,
+            name='fpn_default')
 
     elif params.type == 'default_residual':
         fpn = FPN(
@@ -20,7 +21,8 @@ def build_fpn(params, conv_2d_op_params=None, normalization_op_params=None):
             backbone_max_level=params.backbone_max_level,
             use_residual_connections=True,
             conv_2d_op_params=conv_2d_op_params,
-            normalization_op_params=normalization_op_params)
+            normalization_op_params=normalization_op_params,
+            name='fpn_residual'))
 
     else:
         raise ValueError('{} FPN not implemented'.format(params.type))
