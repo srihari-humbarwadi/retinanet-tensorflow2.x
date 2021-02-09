@@ -13,6 +13,7 @@ class FPN(tf.keras.Model):
                  min_level=3,
                  max_level=7,
                  backbone_max_level=5,
+                 use_residual_connections=False,
                  conv_2d_op_params=None,
                  normalization_op_params=None,
                  **kwargs):
@@ -22,6 +23,7 @@ class FPN(tf.keras.Model):
         self.min_level = min_level
         self.max_level = max_level
         self.backbone_max_level = backbone_max_level
+        self.use_residual_connections = use_residual_connections
 
         normalization_op = get_normalization_op(**normalization_op_params)
 
@@ -29,7 +31,11 @@ class FPN(tf.keras.Model):
         self.lateral_convs = {}
         self.output_convs = {}
         self.output_norms = {}
+        self.add_ops = {}
         self.relu_ops = {}
+
+        if use_residual_connections:
+            self.residual_add_ops = {}
 
         if not conv_2d_op_params.use_seperable_conv:
             conv_2d_op = tf.keras.layers.Conv2D
@@ -55,6 +61,14 @@ class FPN(tf.keras.Model):
                 name='l' + str(level) + '-conv2d',
                 **kernel_initializer_config)
 
+            if use_residual_connections:
+                self.residual_add_ops[level] = tf.keras.layers.Add(
+                    name='p' + str(level) + '-residual_add_op')
+
+            if not int(level) == min_level:
+                name = 'l' + str(int(level) - 1) + '-m' + level + '-add_op'
+                self.add_ops[level] = tf.keras.layers.Add(name=name)
+
         for level in range(min_level, max_level + 1):
             level = str(level)
             self.output_norms[level] = normalization_op(
@@ -76,17 +90,22 @@ class FPN(tf.keras.Model):
 
     def call(self, features, training=None):
         outputs = {}
+        residuals = {}
 
         for level in range(self.min_level, self.backbone_max_level + 1):
             level = str(level)
             conv_layer = self.lateral_convs[level]
             outputs[level] = conv_layer(features[level])
 
+            if self.use_residual_connections:
+                residuals[level] = outputs[level]
+
         for level in range(self.backbone_max_level, self.min_level, -1):
             level = str(level)
-            name = 'm{}-upsample'.format(int(level) - 1)
-            outputs[str(int(level) - 1)] += self.upsample_op(name=name)(
-                outputs[level])
+            name = 'm{}-upsample'.format(level)
+            outputs[str(int(level) - 1)] = \
+                self.add_ops[level]([outputs[str(int(level) - 1)],
+                                     self.upsample_op(name=name)(outputs[level])])
 
         for level in range(self.min_level, self.max_level + 1):
             level = str(level)
@@ -99,10 +118,15 @@ class FPN(tf.keras.Model):
 
             else:
                 prev_level_output = \
-                    self.relu_ops[str(int(level) - 1)
-                                  ](outputs[str(int(level) - 1)])
+                    self.relu_ops[str(int(level) - 1)](outputs[str(int(level) - 1)])
 
                 outputs[level] = self.output_convs[level](prev_level_output)
+
+        if self.use_residual_connections:
+            for level in range(self.min_level, self.backbone_max_level + 1):
+                level = str(level)
+                outputs[level] = \
+                    self.residual_add_ops[level]([outputs[level], residuals[level]])
 
         for level in range(self.min_level, self.max_level + 1):
             level = str(level)
