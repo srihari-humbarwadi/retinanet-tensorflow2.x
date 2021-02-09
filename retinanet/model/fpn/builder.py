@@ -13,7 +13,7 @@ def build_fpn(params, conv_2d_op_params=None, normalization_op_params=None):
             normalization_op_params=normalization_op_params,
             name='fpn_default')
 
-    elif params.type == 'default_residual':
+    elif params.type == 'residual':
         fpn = FPN(
             filters=params.filters,
             min_level=params.min_level,
@@ -22,7 +22,7 @@ def build_fpn(params, conv_2d_op_params=None, normalization_op_params=None):
             use_residual_connections=True,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
-            name='fpn_residual'))
+            name='fpn_residual')
 
     else:
         raise ValueError('{} FPN not implemented'.format(params.type))
