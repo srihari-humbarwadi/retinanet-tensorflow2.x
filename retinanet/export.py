@@ -80,7 +80,7 @@ def main(_):
     val_input_fn = None
     model_builder = ModelBuilder(params)
 
-    trainer = Executor(
+    executor = Executor(
         params=params,
         strategy=tf.distribute.OneDeviceStrategy(device='/cpu:0'),
         run_mode=run_mode,
@@ -90,23 +90,23 @@ def main(_):
         resume_from=checkpoint_name
     )
 
-    trainer.restore_status.assert_consumed()
+    executor.restore_status.assert_consumed()
 
     if FLAGS.export_h5:
-        export_dir = os.path.join(FLAGS.export_dir, trainer.name)
+        export_dir = os.path.join(FLAGS.export_dir, executor.name)
 
         if not os.path.exists(export_dir):
             os.makedirs(export_dir, exist_ok=True)
 
         latest_checkpoint = os.path.basename(
-            tf.train.latest_checkpoint(trainer.model_dir))
+            tf.train.latest_checkpoint(executor.model_dir))
 
         export_filename = os.path.join(export_dir, latest_checkpoint + '.h5')
 
         logging.info(
             'Exporting `weights in h5 format` to {}'.format(export_filename))
 
-        trainer.model.save_weights(export_filename)
+        executor.model.save_weights(export_filename)
 
     if FLAGS.export_saved_model:
         logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
@@ -144,7 +144,7 @@ def main(_):
                 'valid_detections': detections['valid_detections']
             }
 
-        inference_model = model_builder.prepare_model_for_export(trainer.model)
+        inference_model = model_builder.prepare_model_for_export(executor.model)
 
         tf.saved_model.save(
             inference_model,

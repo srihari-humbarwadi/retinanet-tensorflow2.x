@@ -125,7 +125,7 @@ def main(_):
 
     model_builder = ModelBuilder(params)
 
-    _ = Executor(
+    executor = Executor(
         params=params,
         strategy=strategy,
         run_mode=run_mode,
@@ -135,6 +135,8 @@ def main(_):
         is_multi_host=FLAGS.is_multi_host,
         resume_from=FLAGS.resume_from
     )
+
+    executor.run()
 
 
 if __name__ == '__main__':
