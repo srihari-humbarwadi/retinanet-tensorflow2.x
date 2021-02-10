@@ -347,8 +347,16 @@ class ResNet(tf.keras.Model):
             'block': residual_block,
             'layers': [1, 1, 1, 1]
         },
+        14: {
+            'block': bottleneck_block,
+            'layers': [1, 1, 1, 1]
+        },
         18: {
             'block': residual_block,
+            'layers': [2, 2, 2, 2]
+        },
+        26: {
+            'block': bottleneck_block,
             'layers': [2, 2, 2, 2]
         },
         34: {
