@@ -22,8 +22,8 @@
         },
         "batch_norm": {
             "use_sync": true,
-            "momentum": 0.997,
-            "epsilon": 0.0001
+            "momentum": 0.99,
+            "epsilon": 0.001
         },
         "backbone": {
             "type": "resnet",
@@ -72,7 +72,7 @@
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
-        "steps_per_execution": 256,
+        "steps_per_execution": 100,
         "save_every": 6400,
         "optimizer": {
             "name": "sgd",
@@ -137,8 +137,8 @@
             "use_augmentation": true,
             "horizontal_flip": true,
             "scale_jitter": {
-                "min_scale": 0.5,
-                "max_scale": 2.0
+                "min_scale": 0.25,
+                "max_scale": 2.5
             }
         },
         "preprocessing": {
