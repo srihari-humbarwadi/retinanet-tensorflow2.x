@@ -466,28 +466,17 @@ class Executor:
         if self.use_float16:
             logging.info('Training with AMP turned on!')
 
+        self._add_graph_trace()
+
         dataset_iterator = iter(self._train_dataset)
 
-        is_traced = False
-
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
-
-            if not is_traced:
-                logging.warning('Collecting trace for `distributed_train_step`')
-                tf.summary.trace_on(graph=True, profiler=False)
-
             start = time()
 
             loss_dict = self.distributed_train_step(
                 dataset_iterator,
                 tf.convert_to_tensor(self.steps_per_execution))
             current_step = int(self.optimizer.iterations.numpy())
-
-            if not is_traced:
-                with self._summary_writers['train'].as_default():
-                    tf.summary.trace_export(
-                        '{}_graph'.format(self.name), step=current_step)
-                is_traced = True
 
             end = time()
 
@@ -542,6 +531,21 @@ class Executor:
 
         if self._run_evaluation_at_end and 'val' in self.run_mode:
             self.evaluate()
+
+    def _add_graph_trace(self):
+        @tf.function(input_signature=[
+            tf.TensorSpec(shape=[1, *self._model.input_shape[1:]],
+                          dtype=tf.float32, name='image')])
+        def _forward_pass(image):
+            return self._model(image, training=False)
+
+        logging.warning('Collecting graph trace')
+        concrete_fn = _forward_pass.get_concrete_function()
+
+        with self._summary_writers['train'].as_default():
+            tf.summary.graph(concrete_fn.graph)
+
+        logging.warning('Successfully wrote model graph summary')
 
     def get_flops(self):
         @tf.function(input_signature=[
