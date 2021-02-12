@@ -12,15 +12,18 @@ def get_normalization_op(**params):
 
     if params.get('use_sync', None):
         if isinstance(strategy, tf.distribute.TPUStrategy):
+            logging.debug('Using `{}`'.format('TpuBatchNormalization'))
             op = TpuBatchNormalization
 
         elif num_replicas > 1:
+            logging.debug('Using `{}`'.format('SyncBatchNormalization'))
             op = tf.keras.layers.experimental.SyncBatchNormalization
+
+        else:
+            op = tf.keras.layers.BatchNormalization
 
     else:
         op = tf.keras.layers.BatchNormalization
-
-    logging.debug('Using {}'.format(op.__class__.__name__))
 
     normalization_op = functools.partial(
         op,
