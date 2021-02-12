@@ -7,6 +7,7 @@ from retinanet.dataloader.tfrecord_parser import parse_example
 
 class InputPipeline:
     _SUPPORTED_RUN_MODES = ['train', 'val']
+    _RANDOM_SEED = 1337
 
     def __init__(self, run_mode, params, is_multi_host, num_replicas):
 
@@ -24,33 +25,29 @@ class InputPipeline:
         self.label_encoder = LabelEncoder(params)
 
     def __call__(self, input_context=None):
+        batch_size = self.batch_size
         autotune = tf.data.experimental.AUTOTUNE
-        options = tf.data.Options()
-        options.experimental_deterministic = False
-        options.experimental_distribute.auto_shard_policy = \
-            tf.data.experimental.AutoShardPolicy.OFF
 
-        dataset = tf.data.Dataset.list_files(self.tfrecord_files, shuffle=False)
-        dataset = dataset.with_options(options)
+        matched_tfrecord_files = tf.io.gfile.glob(self.tfrecord_files)
+        num_files = len(matched_tfrecord_files)
 
         logging.info('Found {} {} tfrecords matching {}'.format(
-            len(dataset), self.run_mode, self.tfrecord_files))
+            num_files, self.run_mode, self.tfrecord_files))
 
-        batch_size = self.batch_size
+        dataset = tf.data.Dataset.from_tensor_slices(matched_tfrecord_files)
+
+        if not self.run_mode == 'val':
+            dataset = dataset.shuffle(
+                num_files,
+                seed=InputPipeline._RANDOM_SEED,
+                reshuffle_each_iteration=True)
+            dataset = dataset.repeat()
+
         if self.is_multi_host and input_context is not None:
-            unsharded_dataset_len = len(dataset)
             batch_size = input_context.get_per_replica_batch_size(
                 self.batch_size)
             dataset = dataset.shard(input_context.num_input_pipelines,
                                     input_context.input_pipeline_id)
-
-            logging.warning(
-                '[Worker ID {}] Using {}/{} {} tfrecords'
-                .format(
-                    input_context.input_pipeline_id,
-                    len(dataset),
-                    unsharded_dataset_len,
-                    self.run_mode))
 
             logging.info(
                 '[Worker ID {}] Using per_replica batch_size of {} for {}'
@@ -61,12 +58,11 @@ class InputPipeline:
 
         dataset = dataset.cache()
 
-        if not self.run_mode == 'val':
-            dataset = dataset.repeat()
+        dataset = dataset.interleave(
+            map_func=tf.data.TFRecordDataset,
+            cycle_length=32,
+            num_parallel_calls=autotune)
 
-        dataset = dataset.interleave(map_func=tf.data.TFRecordDataset,
-                                     cycle_length=32,
-                                     num_parallel_calls=autotune)
         if self.run_mode == 'val':
             preprocess_fn = \
                 self.label_encoder.preprocessing_pipeline.preprocess_val_sample
@@ -81,9 +77,12 @@ class InputPipeline:
             return dataset
 
         dataset = dataset.shuffle(self.shuffle_buffer_size)
-        dataset = dataset.map(map_func=lambda x: self.label_encoder.
-                              encode_sample(parse_example(x)),
-                              num_parallel_calls=autotune)
+
+        dataset = dataset.map(
+            map_func=lambda x: self.label_encoder.
+            encode_sample(parse_example(x)),
+            num_parallel_calls=autotune)
+
         dataset = dataset.batch(batch_size=batch_size, drop_remainder=True)
         dataset = dataset.prefetch(autotune)
         return dataset
