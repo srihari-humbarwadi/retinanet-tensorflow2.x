@@ -24,6 +24,10 @@ flags.DEFINE_string('resume_from',
                     default=None,
                     help='Overides latest_checkpoint')
 
+flags.DEFINE_boolean('enable_weight_histograms',
+                     default=False,
+                     help='Write histogram and norm to tensorboard for each trainable weight')  # noqa: E501
+
 flags.DEFINE_boolean('run_evaluation',
                      default=False,
                      help='Overides `run_mode` specified in the config')
@@ -133,6 +137,7 @@ def main(_):
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
+        enable_weight_histograms=FLAGS.enable_weight_histograms,
         resume_from=FLAGS.resume_from
     )
 
