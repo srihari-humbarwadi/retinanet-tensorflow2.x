@@ -12,43 +12,56 @@ from retinanet import Executor
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
 
-flags.DEFINE_string('config_path',
-                    default=None,
-                    help='Path to the config file')
+flags.DEFINE_string(
+    name='config_path',
+    default=None,
+    help='Path to the config file')
 
-flags.DEFINE_string('model_dir',
-                    default=None,
-                    help='Overides `model_dir` specified in the config')
+flags.DEFINE_string(
+    name='model_dir',
+    default=None,
+    help='Overides `model_dir` specified in the config')
 
-flags.DEFINE_string('resume_from',
-                    default=None,
-                    help='Overides latest_checkpoint')
+flags.DEFINE_string(
+    name='resume_from',
+    default=None,
+    help='Overides latest_checkpoint')
 
-flags.DEFINE_boolean('enable_weight_histograms',
-                     default=False,
-                     help='Write histogram and norm to tensorboard for each trainable weight')  # noqa: E501
+flags.DEFINE_boolean(
+    name='enable_weight_histograms',
+    default=False,
+    help='Write histogram and norm to tensorboard for each trainable weight')
 
-flags.DEFINE_boolean('run_evaluation',
-                     default=False,
-                     help='Overides `run_mode` specified in the config')
+flags.DEFINE_boolean(
+    name='run_evaluation',
+    default=False,
+    help='Overides `run_mode` specified in the config')
 
-flags.DEFINE_boolean('run_continuous_evaluation',
-                     default=False,
-                     help='Overides `run_mode` specified in the config')
+flags.DEFINE_boolean(
+    name='run_continuous_evaluation',
+    default=False,
+    help='Overides `run_mode` specified in the config')
 
-flags.DEFINE_boolean('xla', default=False, help='Compile with XLA JIT')
+flags.DEFINE_boolean(
+    name='xla',
+    default=False,
+    help='Compile with XLA JIT')
 
-flags.DEFINE_boolean('gpu_memory_allow_growth',
-                     default=False,
-                     help='If enabled, the runtime doesn\'t allocate all of the available memory')  # noqa: E501
+flags.DEFINE_boolean(
+    name='gpu_memory_allow_growth',
+    default=False,
+    help='If enabled, the runtime doesn\'t allocate all of the available memory')
 
 
 flags.DEFINE_boolean(
-    'is_multi_host',
+    name='is_multi_host',
     default=0,
     help='Set this to true if running on TPU Pods or MultiWorker setup')
 
-flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
+flags.DEFINE_boolean(
+    name='debug',
+    default=False,
+    help='Print debugging info')
 
 FLAGS = flags.FLAGS
 SUPPORTED_RUN_MODES = ['train', 'val', 'train_val', 'continuous_eval']

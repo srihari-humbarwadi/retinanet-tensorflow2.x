@@ -11,36 +11,45 @@ from retinanet import Executor
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
 
-flags.DEFINE_string('config_path',
-                    default=None,
-                    help='Path to the config file')
+flags.DEFINE_string(
+    name='config_path',
+    default=None,
+    help='Path to the config file')
 
-flags.DEFINE_string('export_dir',
-                    default='export',
-                    help='Path to store the model artefacts')
+flags.DEFINE_string(
+    name='export_dir',
+    default='export',
+    help='Path to store the model artefacts')
 
-flags.DEFINE_boolean('export_saved_model',
-                     default=False,
-                     help='Export weights as a `saved_model`')
+flags.DEFINE_boolean(
+    name='export_saved_model',
+    default=False,
+    help='Export weights as a `saved_model`')
 
-flags.DEFINE_boolean('export_h5',
-                     default=False,
-                     help='Export weights as an h5 file (can be used for fine tuning)')  # noqa: E501
+flags.DEFINE_boolean(
+    name='export_h5',
+    default=False,
+    help='Export weights as an h5 file (can be used for fine tuning)')
 
-flags.DEFINE_string('checkpoint_name',
-                    default='latest',
-                    help='Restores model weights from `checkpoint_name`. Default behaviours uses the latest available checkpoint'  # noqa: E501
-                    )
+flags.DEFINE_string(
+    name='checkpoint_name',
+    default='latest',
+    help='Restores model weights from `checkpoint_name`. Default behaviours uses the latest available checkpoint')  # noqa: E501
 
-flags.DEFINE_string('overide_model_dir',
-                    default='null',
-                    help='Use local filesystem to load checkpoint')
+flags.DEFINE_string(
+    name='overide_model_dir',
+    default='null',
+    help='Use local filesystem to load checkpoint')
 
-flags.DEFINE_boolean('disable_pre_nms_top_k',
-                     default=False,
-                     help='Skip top k filtering before applying nms')
+flags.DEFINE_boolean(
+    name='disable_pre_nms_top_k',
+    default=False,
+    help='Skip top k filtering before applying nms')
 
-flags.DEFINE_boolean('debug', default=False, help='Print debugging info')
+flags.DEFINE_boolean(
+    name='debug',
+    default=False,
+    help='Print debugging info')
 
 FLAGS = flags.FLAGS
 
