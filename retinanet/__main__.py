@@ -150,7 +150,7 @@ def main(_):
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
-        enable_weight_histograms=FLAGS.enable_weights_info,
+        enable_weights_info=FLAGS.enable_weights_info,
         resume_from=FLAGS.resume_from
     )
 
