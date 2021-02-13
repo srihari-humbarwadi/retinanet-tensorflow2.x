@@ -29,7 +29,7 @@ class Executor:
                  train_input_fn,
                  val_input_fn=None,
                  is_multi_host=False,
-                 enable_weight_histograms=False,
+                 enable_weights_info=False,
                  resume_from=None):
         self.params = params
         self.distribute_strategy = strategy
@@ -39,7 +39,7 @@ class Executor:
         self.train_input_fn = train_input_fn
         self.val_input_fn = val_input_fn
         self.is_multi_host = is_multi_host
-        self.enable_weight_histograms = enable_weight_histograms
+        self.enable_weights_info = enable_weights_info
         self.resume_from = resume_from
         self.train_steps = params.training.train_steps
         self.validation_samples = params.training.validation_samples
@@ -272,18 +272,20 @@ class Executor:
         return weight_decay_vars
 
     @tf.function
-    def _write_weight_histograms(self, step):
+    def _write_weights_info(self, step, write_histogram=False):
         with self._summary_writers['train'].as_default():
             with tf.name_scope('weights'):
                 for weight in self._model.trainable_weights:
                     tf.summary.scalar(
-                        name=weight.name,
+                        name='{}_norm'.format(weight.name),
                         data=tf.norm(weight),
                         step=step)
-                    tf.summary.histogram(
-                        name=weight.name,
-                        data=weight,
-                        step=step)
+
+                    if write_histogram:
+                        tf.summary.histogram(
+                            name='{}_histogram'.format(weight.name),
+                            data=weight,
+                            step=step)
 
         self._summary_writers['train'].flush()
 
@@ -528,9 +530,12 @@ class Executor:
                 loss_dict,
                 tf.convert_to_tensor(current_step, dtype=tf.int64))
 
-            if self.enable_weight_histograms:
-                self._write_weight_histograms(
-                    step=tf.convert_to_tensor(current_step, dtype=tf.int64))
+            if self.enable_weights_info:
+                write_histogram = current_step % (50 * self.steps_per_execution) == 0
+
+                self._write_weights_info(
+                    step=tf.convert_to_tensor(current_step, dtype=tf.int64),
+                    write_histogram=write_histogram)
 
             logging.info('[global_step {}/{}] [ETA: {}] [{:.2f} imgs/s] {}'
                          .format(

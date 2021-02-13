@@ -28,7 +28,7 @@ flags.DEFINE_string(
     help='Overides latest_checkpoint')
 
 flags.DEFINE_boolean(
-    name='enable_weight_histograms',
+    name='enable_weights_info',
     default=False,
     help='Write histogram and norm to tensorboard for each trainable weight')
 
@@ -150,7 +150,7 @@ def main(_):
         train_input_fn=train_input_fn,
         val_input_fn=val_input_fn,
         is_multi_host=FLAGS.is_multi_host,
-        enable_weight_histograms=FLAGS.enable_weight_histograms,
+        enable_weight_histograms=FLAGS.enable_weights_info,
         resume_from=FLAGS.resume_from
     )
 
