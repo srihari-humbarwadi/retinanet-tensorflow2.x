@@ -276,8 +276,14 @@ class Executor:
         with self._summary_writers['train'].as_default():
             with tf.name_scope('weights'):
                 for weight in self._model.trainable_weights:
-                    tf.summary.scalar(tf.norm(weight), step=step)
-                    tf.summary.histogram(weight.name, weight)
+                    tf.summary.scalar(
+                        name=weight.name,
+                        data=tf.norm(weight),
+                        step=step)
+                    tf.summary.histogram(
+                        name=weight.name,
+                        data=weight,
+                        step=step)
 
         self._summary_writers['train'].flush()
 
@@ -290,7 +296,7 @@ class Executor:
                           'weighted-loss',
                           'total-loss']:
                     v = loss_dict[k]
-                    tf.summary.scalar(k, data=v, step=step)
+                    tf.summary.scalar(name=k, data=v, step=step)
 
                 if self.params.training.use_weight_decay:
                     tf.summary.scalar(
@@ -304,7 +310,7 @@ class Executor:
                           'num-anchors-matched',
                           'execution-time']:
                     v = loss_dict[k]
-                    tf.summary.scalar(k, data=v, step=step)
+                    tf.summary.scalar(name=k, data=v, step=step)
 
         self._summary_writers['train'].flush()
 
@@ -318,7 +324,7 @@ class Executor:
                           'AR-(all)-IoU=0.50:0.95',
                           'AR-(L)-IoU=0.50:0.95']:
                     v = scores[k]
-                    tf.summary.scalar(k, data=v, step=step)
+                    tf.summary.scalar(name=k, data=v, step=step)
 
         self._summary_writers['eval'].flush()
 
