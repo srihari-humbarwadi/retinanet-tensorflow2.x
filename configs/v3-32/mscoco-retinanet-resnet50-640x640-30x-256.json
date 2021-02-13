@@ -52,6 +52,10 @@
         "smooth_l1_loss": {
             "delta": 0.1
         },
+        "normalizer": {
+            "use_moving_average": false,
+            "momentum": 0.99
+        },
         "class_loss_weight": 1.0,
         "box_loss_weight": 50.0
     },

@@ -1,9 +1,10 @@
 import tensorflow as tf
+from absl import logging
 
 from retinanet.losses.loss_impl import BoxLoss, ClassLoss
 
 
-class RetinaNetLoss:
+class RetinaNetLoss(tf.Module):
     def __init__(self, num_classes, params):
         self.box_loss = BoxLoss(params.smooth_l1_loss)
         self.class_loss = ClassLoss(num_classes, params.focal_loss)
@@ -12,8 +13,31 @@ class RetinaNetLoss:
         self._class_loss_weight = tf.convert_to_tensor(
             params.class_loss_weight)
 
+        if params.normalizer.use_moving_average:
+            self.use_moving_average_normalizer = True
+            self.normalizer_momentum = params.normalizer.momentum
+
+            self.moving_average_normalizer = tf.Variable(
+                0.0,
+                name='moving_average_normalizer',
+                dtype=tf.float32,
+                synchronization=tf.VariableSynchronization.ON_READ,
+                trainable=False,
+                aggregation=tf.VariableAggregation.MEAN)
+
+            logging.warning(
+                'Using moving average loss normalizer with momentum: {}'
+                .format(self.normalizer_momentum))
+
     def __call__(self, targets, predictions):
         normalizer = tf.reduce_sum(targets['num-positives']) + 1.0
+
+        if self.use_moving_average_normalizer:
+            normalizer = tf.keras.backend.moving_average_update(
+                self.moving_average_normalizer,
+                normalizer,
+                self.normalizer_momentum)
+
         class_loss = self.class_loss(targets['class-targets'],
                                      predictions['class-predictions'],
                                      normalizer)

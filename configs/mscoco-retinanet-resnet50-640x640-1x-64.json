@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-resnet50-640x640-3x-256",
+        "name": "mscoco-retinanet-resnet50-640x640-1x-64",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -63,18 +63,18 @@
         "use_weight_decay": true,
         "weight_decay_alpha": 0.0001,
         "batch_size": {
-            "train": 256,
+            "train": 64,
             "val": 8
         },
         "strategy": {
             "type": "tpu",
-            "name": "v3-32"
+            "name": "v3-8"
         },
         "restore_checkpoint": true,
         "freeze_variables": [
             "resnet_initial"
         ],
-        "train_steps": 16875,
+        "train_steps": 22500,
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
@@ -86,15 +86,15 @@
             "nesterov": true,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
-                "warmup_steps": 1000,
+                "warmup_steps": 500,
                 "values": [
-                    0.32,
-                    0.032,
-                    0.0032
+                    0.08,
+                    0.008,
+                    0.0008
                 ],
                 "boundaries": [
-                    11250,
-                    15000
+                    15000,
+                    20000
                 ]
             }
         }
