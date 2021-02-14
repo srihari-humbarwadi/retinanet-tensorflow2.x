@@ -13,8 +13,10 @@ class RetinaNetLoss(tf.Module):
         self._class_loss_weight = tf.convert_to_tensor(
             params.class_loss_weight)
 
+        self._use_moving_average_normalizer = False
+
         if params.normalizer.use_moving_average:
-            self.use_moving_average_normalizer = True
+            self._use_moving_average_normalizer = True
             self.normalizer_momentum = params.normalizer.momentum
 
             self.moving_average_normalizer = tf.Variable(
@@ -32,7 +34,7 @@ class RetinaNetLoss(tf.Module):
     def __call__(self, targets, predictions):
         normalizer = tf.reduce_sum(targets['num-positives']) + 1.0
 
-        if self.use_moving_average_normalizer:
+        if self._use_moving_average_normalizer:
             normalizer = tf.keras.backend.moving_average_update(
                 self.moving_average_normalizer,
                 normalizer,
