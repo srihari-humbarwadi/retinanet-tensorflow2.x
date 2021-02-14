@@ -54,7 +54,7 @@ class DetectionHead(tf.keras.Model):
                     kernel_size=3,
                     strides=1,
                     padding='same',
-                    name='{}-class-{}-conv2d'.format(self.name, i),
+                    name='{}-{}-conv2d'.format(self.name, i),
                     bias_initializer=tf.zeros_initializer(),
                     **kernel_initializer_config)
             ]
