@@ -7,7 +7,7 @@
  - Schedule            : 3x (1x is ~12 epochs)
  - Time required       : 50mins
  - System              : v3-32 TPU pod
- - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-3x-256">mscoco-retinanet-resnet50-640x640-3x-256</a>
+ - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-3x-256.json">mscoco-retinanet-resnet50-640x640-3x-256</a>
  - weights             : <a href="#">coming soon </a>
 
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.377
@@ -31,7 +31,7 @@
  - Schedule            : 30x (1x is ~12 epochs)
  - Time required       : 9h:30min
  - System              : v3-32 TPU pod
- - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256">mscoco-retinanet-resnet50-640x640-30x-256</a>
+ - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json">mscoco-retinanet-resnet50-640x640-30x-256</a>
  - weights             : <a href="#">coming soon </a> 
 
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.395
