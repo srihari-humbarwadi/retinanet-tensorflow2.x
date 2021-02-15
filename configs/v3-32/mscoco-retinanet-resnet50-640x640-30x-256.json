@@ -18,7 +18,7 @@
     "architecture": {
         "conv_2d": {
             "use_seperable_conv": false,
-            "use_bias_before_bn": true
+            "use_bias_before_bn": false
         },
         "batch_norm": {
             "use_sync": true,
