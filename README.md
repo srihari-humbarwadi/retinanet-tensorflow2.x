@@ -75,10 +75,10 @@ with open('coco_label_map.json', 'r') as f:
     label_map = json.load(f)
 
 #  Load `saved_model`
-model = tf.saved_model.load('model_files/retinanet-1024-30x-64-tpu')
+model = tf.saved_model.load('model_files/saved_models/mscoco-retinanet-resnet50-640x640-30x-256/')
 serving_fn = model.signatures['serving_default']
 
-idx = 336
+idx = 4348
 image = read_image(images[idx])
 
 tik = time()
@@ -99,9 +99,9 @@ visualize_detections(image,
                      classes,
                      scores,
                      title='Image: {}'.format(idx),
-                     save=False,
+                     save=True,
                      score_threshold=0.30,
-                     filename='outputs/image_{}.png'.format(idx))
+                     filename='assets/image_{}.png'.format(idx))
 
 print('Inference time: {:.2f} ms'.format((toc - tik) * 1000))
 ```
@@ -116,31 +116,6 @@ ___
     <td valign="top"><img src="assets/image_4348.png"></td>
   </tr>
  </table>
-
-___
-### Results 
-<pre>
- - Training Dataset    : COCO2017 train split
- - Evaluation Dataset  : COCO2017 validation split
- - Backbone            : ResNet50 v1 trained on ImageNet
- - Schedule            : 3x (1x is ~12 epochs)
- - Time required       : 50mins
- - System              : v3-32 TPU pod
-</pre> 
- ```
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.377
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.570
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.401
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.177
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.426
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.551
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.315
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.492
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.520
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.278
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.588
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.710
- ```
 
 ___
 ### Tensorboard
