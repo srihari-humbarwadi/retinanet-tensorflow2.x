@@ -3,7 +3,7 @@
 <pre>
  - Training dataset    : COCO2017 train split
  - Evaluation dataset  : COCO2017 validation split
- - Backbone            : ResNet50 v1 trained on ImageNet
+ - Backbone            : ResNet50 v1 (ImageNet pretrained weights)
  - Schedule            : 3x (1x is ~12 epochs)
  - Time required       : 50mins
  - System              : v3-32 TPU pod
@@ -27,7 +27,7 @@
  <pre>
  - Training dataset    : COCO2017 train split
  - Evaluation dataset  : COCO2017 validation split
- - Backbone            : ResNet50 v1 trained on ImageNet
+ - Backbone            : ResNet50 v1 (random weights initialization)
  - Schedule            : 30x (1x is ~12 epochs)
  - Time required       : 9h:30min
  - System              : v3-32 TPU pod
