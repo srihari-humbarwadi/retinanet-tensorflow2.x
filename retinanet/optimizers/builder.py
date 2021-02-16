@@ -2,6 +2,7 @@ from copy import deepcopy
 import json
 
 import tensorflow as tf
+import tensorflow_addons as tfa
 from absl import logging
 
 from retinanet.optimizers.piecewise_constant_decay_with_warmup import \
@@ -11,6 +12,9 @@ from retinanet.optimizers.piecewise_constant_decay_with_warmup import \
 def build_optimizer(params, precision):
     _params = deepcopy(params)
     lr_params = _params.pop('lr_params', None)
+    use_moving_average = _params.pop('use_moving_average', None)
+    moving_average_decay = _params.pop('moving_average_decay', None)
+
     learning_rate_fn = PiecewiseConstantDecayWithLinearWarmup(
         lr_params.warmup_learning_rate, lr_params.warmup_steps,
         lr_params.boundaries, lr_params.values)
@@ -22,6 +26,13 @@ def build_optimizer(params, precision):
     }
 
     optimizer = tf.optimizers.get(config)
+
+    if use_moving_average:
+        optimizer = tfa.optimizers.MovingAverage(
+            optimizer=optimizer,
+            average_decay=moving_average_decay,
+            dynamic_decay=True)
+
     if precision == 'mixed_float16':
         logging.info(
             'Wrapping optimizer with `LossScaleOptimizer` for AMP training')

@@ -83,6 +83,8 @@
             "momentum": 0.9,
             "nesterov": false,
             "global_clipnorm": 16.0,
+            "use_moving_average": false,
+            "moving_average_decay": 0.99,            
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
                 "warmup_steps": 2000,
