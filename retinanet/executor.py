@@ -111,7 +111,7 @@ class Executor:
                 self.model_builder.add_post_processing_stage(self._model)
 
             flops = self.get_flops()
-            logging.info('Total flops (multiplyadds): {:,}'.format(flops))
+            logging.info('Total flops (multiply accumulate ops): {:,}'.format(flops))
 
         self._model.summary(print_fn=logging.debug)
         logging.info('Total trainable parameters: {:,}'.format(
@@ -412,7 +412,7 @@ class Executor:
 
         total_steps = self.val_steps
         dataset_iterator = iter(self._val_dataset)
-        global_step = tf.convert_to_tensor(
+        current_step = tf.convert_to_tensor(
             self.optimizer.iterations, dtype=tf.int64)
 
         evaluator = COCOEvaluator(
@@ -421,7 +421,7 @@ class Executor:
             prediction_file_path=self.name + '.json')
 
         logging.info('Evaluating at step {} for {} eval steps'
-                     .format(global_step.numpy(), total_steps))
+                     .format(current_step.numpy(), total_steps))
 
         for i, data in enumerate(dataset_iterator):
             start = time()
@@ -431,19 +431,17 @@ class Executor:
             execution_time = np.round(end - start, 2)
             images_per_second = self.num_replicas / execution_time
 
-            secs = (total_steps - (i + 1)) * execution_time
-            eta = []
-            for interval in [3600, 60, 1]:
-                eta += ['{:02}'.format(int(secs // interval))]
-                secs %= interval
-            eta = ':'.join(eta)
+            eta = Executor._format_eta((total_steps - (i + 1)) * execution_time)
 
-            logging.info('[eval_step {}/{}] [ETA: {}] [{:.2f} imgs/s]'
-                         .format(
-                             i + 1,
-                             total_steps,
-                             eta,
-                             images_per_second))
+            logging.info(
+                '[global_step {}/{}][eval_step {}/{}] [ETA: {}] [{:.2f} imgs/s]'
+                .format(
+                    current_step,
+                    self.train_steps,
+                    i + 1,
+                    total_steps,
+                    eta,
+                    images_per_second))
 
             if (i + 1) == total_steps:
                 break
@@ -451,12 +449,13 @@ class Executor:
         scores = evaluator.evaluate()
         self._write_eval_summaries(
             scores,
-            global_step)
+            current_step)
 
         logging.info(
-            '[global_step {}] evaluation results: {}'
+            '[global_step {}/{}] evaluation results: {}'
             .format(
-                global_step,
+                current_step,
+                self.train_steps,
                 {k: np.round(v, 2) for k, v in scores.items()}))
         return scores
 
@@ -496,14 +495,15 @@ class Executor:
             loss_dict = self.distributed_train_step(
                 dataset_iterator,
                 tf.convert_to_tensor(self.steps_per_execution))
-            current_step = int(self.optimizer.iterations.numpy())
 
+            current_step = int(self.optimizer.iterations.numpy())
             end = time()
 
-            if self.use_float16:
-                learning_rate = self.optimizer.inner_optimizer._decayed_lr('float')
+            if hasattr(self.optimizer, 'inner_optimizer'):
+                learning_rate = self.optimizer.inner_optimizer.learning_rate(
+                    current_step)
             else:
-                learning_rate = self.optimizer._decayed_lr('float')
+                learning_rate = self.optimizer.learning_rate(current_step)
 
             loss_dict['execution-time'] = np.round(end - start, 2)
             loss_dict['learning-rate'] = learning_rate
@@ -512,12 +512,8 @@ class Executor:
                 self.steps_per_execution / loss_dict['execution-time']
             images_per_second = steps_per_second * self.batch_size
 
-            secs = (self.train_steps - current_step) / steps_per_second
-            eta = []
-            for interval in [3600, 60, 1]:
-                eta += ['{:02}'.format(int(secs // interval))]
-                secs %= interval
-            eta = ':'.join(eta)
+            eta = Executor._format_eta(
+                (self.train_steps - current_step) / steps_per_second)
 
             if current_step % self.save_every == 0:
                 logging.info(
@@ -585,8 +581,20 @@ class Executor:
         concrete_funtion = inference_function.get_concrete_function()
         graph_info = profile(concrete_funtion.graph,
                              options=ProfileOptionBuilder.float_operation())
+
+        # The //2 is necessary since `profile` counts multiply and accumulate
+        # as two flops. We report the total number of multiply accumulate ops,
+        # polularly referred to as MACs
         flops = graph_info.total_float_ops // 2
         return flops
+
+    @staticmethod
+    def _format_eta(secs):
+        eta = []
+        for interval in [3600, 60, 1]:
+            eta += ['{:02}'.format(int(secs // interval))]
+            secs %= interval
+        return ':'.join(eta)
 
     @property
     def model(self):
