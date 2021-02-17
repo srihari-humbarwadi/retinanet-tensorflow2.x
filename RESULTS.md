@@ -1,10 +1,11 @@
 ### Models
+ - All models, unless stated are trained with square inputs.
+ - All models are trained on coco2017 train split and evaluated on the coco2017 val split.
+ - The RetinaNet paper trains the model for ~ 12.7 epochs on the coco2017, this is referred to as 1x schedule, model listed below are trained for 1x, 3x or 30x schedules
 ## ResNet50 640x640
 <pre>
- - Training dataset    : COCO2017 train split
- - Evaluation dataset  : COCO2017 validation split
  - Backbone            : ResNet50 v1 (ImageNet pretrained weights)
- - Schedule            : 3x (1x is ~12 epochs)
+ - Schedule            : 3x
  - Time required       : 50mins
  - System              : v3-32 TPU pod
  - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-3x-256.json">mscoco-retinanet-resnet50-640x640-3x-256</a>
@@ -25,26 +26,24 @@
 </pre> 
 
  <pre>
- - Training dataset    : COCO2017 train split
- - Evaluation dataset  : COCO2017 validation split
- - Backbone            : ResNet50 v1 (random weights initialization)
- - Schedule            : 30x (1x is ~12 epochs)
+ - Backbone            : ResNet50 v1 (random weight initialization)
+ - Schedule            : 30x
  - Time required       : 9h:30min
  - System              : v3-32 TPU pod
  - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json">mscoco-retinanet-resnet50-640x640-30x-256</a>
  - weights             : <a href="#">coming soon </a> 
 
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.395
- Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.587
- Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.420
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.199
- Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.442
- Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.572
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.327
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.514
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.542
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.305
- Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.607
- Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.736
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.398
+ Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.590
+ Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets=100 ] = 0.425
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.194
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.450
+ Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.570
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=  1 ] = 0.330
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 10 ] = 0.513
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.540
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.300
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.608
+ Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.731
 </pre> 
 ___
