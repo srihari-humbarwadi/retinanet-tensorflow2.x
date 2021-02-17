@@ -84,7 +84,7 @@
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": true,
-            "use_moving_average": true,
+            "use_moving_average": false,
             "moving_average_decay": 0.9998,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
