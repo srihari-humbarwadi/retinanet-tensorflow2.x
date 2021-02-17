@@ -1,7 +1,7 @@
 ### Models
  - All models, unless stated are trained with square inputs.
  - All models are trained on coco2017 train split and evaluated on the coco2017 val split.
- - The RetinaNet paper trains the model for ~ 12.7 epochs on the coco2017, this is referred to as 1x schedule, model listed below are trained for 1x, 3x or 30x schedules
+ - The RetinaNet paper trains the model for ~ 12.7 epochs on the coco2017, this is referred to as 1x schedule, the models listed below are trained for 1x, 3x or 30x schedules.
 ## ResNet50 640x640
 <pre>
  - Backbone            : ResNet50 v1 (ImageNet pretrained weights)
