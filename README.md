@@ -2,18 +2,19 @@
 
 #### Supports
  - [x] Performs better than most of the implemetations
- - [x] Multiple ResNet Depths
  - [x] Train on Single/ Multiple GPUs
- - [x] Stable training with Automatic Mixed Precision (~2.5x quicker)
+ - [x] Stable training with Automatic Mixed Precision (~2.5x faster compared to fp32)
  - [x] Train on TPU/ TPU pods
  - [x] Export `saved_model`
  - [x] COCO mAP evaluation callback
- - [x] Supports fine tuning on custom datasets
- - [x] Supports continuous evaluation
- - [x] Supports all NMS variants `combined`, `per class soft/hard`, `global soft/hard`
- - [x] Supports Batched inference
- - [ ] Weight Averaging [WIP]
- - [ ] Add **sotabench**
+ - [x] Fine tuning on custom datasets
+ - [x] Continuous evaluation on separate instance
+ - [x] All NMS variants:  `combined`, `per class soft/hard`, `global soft/hard`
+ - [x] Batched inference
+ - [x] Moving Average Optimizer
+ - [ ] Efficientnet family of backbones [WIP]
+ - [ ] Anchor optimization for custom datasets
+ - [ ] Upload results to **sotabench**
  - [ ] Export TensorRT model
  - [ ] Export Onnx model
 
