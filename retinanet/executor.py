@@ -410,7 +410,7 @@ class Executor:
         if 'eval' not in self._summary_writers:
             self._setup_summary_writers()
 
-        if self.params.optimizer.use_moving_average:
+        if self.params.training.optimizer.use_moving_average:
             logging.info('Loading moving average weights into model')
             self.optimizer.assign_average_vars(self._model.trainable_variables)
 
