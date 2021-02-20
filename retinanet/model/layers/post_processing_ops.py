@@ -370,14 +370,14 @@ class GenerateDetections(tf.keras.layers.Layer):
         if self.mode == 'CombinedNMS':
             return self._combined_nms(predictions)
 
-        elif self.mode == 'GlobalSoftNMS':
+        if self.mode == 'GlobalSoftNMS':
             return self._global_nms(predictions, sigma=self.soft_nms_sigma)
 
-        elif self.mode == 'GlobalHardNMS':
+        if self.mode == 'GlobalHardNMS':
             return self._global_nms(predictions, sigma=0.0)
 
-        elif self.mode == 'PerClassSoftNMS':
+        if self.mode == 'PerClassSoftNMS':
             return self._per_class_nms(predictions, sigma=self.soft_nms_sigma)
 
-        elif self.mode == 'PerClassHardNMS':
+        if self.mode == 'PerClassHardNMS':
             return self._per_class_nms(predictions, sigma=0.0)
