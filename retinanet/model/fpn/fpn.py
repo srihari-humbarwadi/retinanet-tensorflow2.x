@@ -67,7 +67,7 @@ class FPN(tf.keras.Model):
                 self.residual_add_ops[level] = tf.keras.layers.Add(
                     name='p' + str(level) + '-residual_add_op')
 
-            if not int(level) == min_level:
+            if int(level) != min_level:
                 self.fusion_ops[level] = FeatureFusion(
                     mode=fusion_mode,
                     filters=filters,
