@@ -23,7 +23,7 @@
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.278
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.588
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.710
-</pre> 
+</pre>
 
  <pre>
  - Backbone            : ResNet50 v1 (random weight initialization)
@@ -31,7 +31,7 @@
  - Time required       : 9h:30min
  - System              : v3-32 TPU pod
  - config              : <a href="configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json">mscoco-retinanet-resnet50-640x640-30x-256</a>
- - weights             : <a href="#">coming soon </a> 
+ - weights             : <a href="#">coming soon </a>
 
  Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ] = 0.398
  Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets=100 ] = 0.590
@@ -45,5 +45,5 @@
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= small | maxDets=100 ] = 0.300
  Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets=100 ] = 0.608
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.731
-</pre> 
+</pre>
 ___
