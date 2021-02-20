@@ -1,4 +1,5 @@
 from retinanet.model.fpn.fpn import FPN
+from retinanet.model.fpn.pan import PAN
 
 
 def build_fpn(params, conv_2d_op_params=None, normalization_op_params=None):
@@ -12,7 +13,18 @@ def build_fpn(params, conv_2d_op_params=None, normalization_op_params=None):
             use_residual_connections=params.use_residual_connections,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
-            name='fpn_default')
+            name='fpn')
+
+    elif params.type == 'pan':
+        fpn = PAN(
+            filters=params.filters,
+            min_level=params.min_level,
+            max_level=params.max_level,
+            backbone_max_level=params.backbone_max_level,
+            fusion_mode=params.fusion_mode,
+            conv_2d_op_params=conv_2d_op_params,
+            normalization_op_params=normalization_op_params,
+            name='pan')
 
     else:
         raise ValueError('{} FPN not implemented'.format(params.type))

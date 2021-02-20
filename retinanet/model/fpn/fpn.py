@@ -2,8 +2,8 @@ import functools
 
 import tensorflow as tf
 
+from retinanet.model.layers.feature_fusion import FeatureFusion
 from retinanet.model.layers.nearest_upsampling import NearestUpsampling2D
-from retinanet.mode.layers.feature_fusion import FeatureFusion
 from retinanet.model.utils import get_normalization_op
 
 
