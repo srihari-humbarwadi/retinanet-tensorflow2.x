@@ -424,7 +424,7 @@ class Executor:
             annotation_file_path=self.params.training.annotation_file_path,
             prediction_file_path=self.name + '.json')
 
-        logging.info('Evaluating at step {} for {} eval steps'
+        logging.info('Evaluating at step {} for {} steps'
                      .format(current_step.numpy(), total_steps))
 
         for i, data in enumerate(dataset_iterator):
