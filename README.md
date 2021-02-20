@@ -12,12 +12,13 @@
  - [x] All NMS variants:  `combined`, `per class soft/hard`, `global soft/hard`
  - [x] Batched inference
  - [x] Moving Average Optimizer
+ - [x] FPN feature fusion modes `sum`, `fast_attention`, `fast_channel_attention`
  - [ ] Efficientnet family of backbones [WIP]
  - [ ] Anchor optimization for custom datasets
  - [ ] Upload results to **sotabench**
  - [ ] Export TensorRT model
  - [ ] Export Onnx model
-
+ - [ ] Export TF-lite model
 
 
 

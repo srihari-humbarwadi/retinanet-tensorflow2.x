@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-resnet50-640x640-3x-256",
+        "name": "mscoco-retinanet-resnet50-640x640-30x-256",
         "run_mode": "train",
         "model_dir": "model_files",
         "tensorboard_dir": "debug_tensorboard"
@@ -18,13 +18,13 @@
     "architecture": {
         "conv_2d": {
             "use_seperable_conv": false,
-            "use_bias_before_bn": true
+            "use_bias_before_bn": false
         },
         "batch_norm": {
             "use_sync": true,
             "momentum": 0.99,
             "epsilon": 0.001
-        },        
+        },
         "backbone": {
             "type": "resnet",
             "depth": 50,
@@ -32,6 +32,7 @@
         },
         "fpn": {
             "type": "default",
+            "fusion_mode": "sum",
             "filters": 256,
             "min_level": 3,
             "max_level": 7,
@@ -71,32 +72,31 @@
             "name": ""
         },
         "restore_checkpoint": true,
-        "freeze_variables": [
-            "resnet_initial"
-        ],
-        "train_steps": 16875,
+        "freeze_variables": [],
+        "train_steps": 162050,
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
-        "steps_per_execution": 200,
-        "save_every": 10000,
+        "steps_per_execution": 128,
+        "save_every": 6400,
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
-            "nesterov": true,
+            "nesterov": false,
+            "global_clipnorm": 16.0,
             "use_moving_average": false,
             "moving_average_decay": 0.9998,
             "lr_params": {
                 "warmup_learning_rate": 0.0067,
-                "warmup_steps": 1000,
+                "warmup_steps": 500,
                 "values": [
                     0.32,
                     0.032,
                     0.0032
                 ],
                 "boundaries": [
-                    11250,
-                    15000
+                    148160,
+                    157420
                 ]
             }
         }

@@ -13,6 +13,7 @@ class FPN(tf.keras.Model):
                  min_level=3,
                  max_level=7,
                  backbone_max_level=5,
+                 fusion_mode=None,
                  use_residual_connections=False,
                  conv_2d_op_params=None,
                  normalization_op_params=None,
@@ -22,6 +23,7 @@ class FPN(tf.keras.Model):
         self.filters = filters
         self.min_level = min_level
         self.max_level = max_level
+        self.fusion_mode = fusion_mode
         self.backbone_max_level = backbone_max_level
         self.use_residual_connections = use_residual_connections
 
@@ -31,7 +33,7 @@ class FPN(tf.keras.Model):
         self.lateral_convs = {}
         self.output_convs = {}
         self.output_norms = {}
-        self.add_ops = {}
+        self.fusion_ops = {}
         self.relu_ops = {}
 
         if use_residual_connections:
@@ -66,8 +68,10 @@ class FPN(tf.keras.Model):
                     name='p' + str(level) + '-residual_add_op')
 
             if not int(level) == min_level:
-                name = 'l' + str(int(level) - 1) + '-m' + level + '-add_op'
-                self.add_ops[level] = tf.keras.layers.Add(name=name)
+                self.fusion_ops[level] = FeatureFusion(
+                    mode=fusion_mode,
+                    filters=filters,
+                    name='fusion-l' + str(int(level) - 1) + '-m' + level)
 
         for level in range(min_level, max_level + 1):
             level = str(level)
@@ -104,8 +108,8 @@ class FPN(tf.keras.Model):
             level = str(level)
             name = 'm{}-upsample'.format(level)
             outputs[str(int(level) - 1)] = \
-                self.add_ops[level]([outputs[str(int(level) - 1)],
-                                     self.upsample_op(name=name)(outputs[level])])
+                self.fusion_ops[level]([outputs[str(int(level) - 1)],
+                                        self.upsample_op(name=name)(outputs[level])])
 
         for level in range(self.min_level, self.max_level + 1):
             level = str(level)
@@ -134,3 +138,55 @@ class FPN(tf.keras.Model):
                 outputs[level], training=training)
 
         return outputs
+
+
+class FeatureFusion(tf.keras.layers.Layer):
+    _SUPPORTED_FUSION_MODES = ['sum', 'fast_attention', 'fast_channel_attention']
+
+    def __init__(self, mode, filters, name=None, **kwargs):
+
+        if mode not in FeatureFusion._SUPPORTED_FUSION_MODES:
+            raise AssertionError(
+                'Requested unsupported mode: {}, available modes are: {}'
+                .format(mode, FeatureFusion._SUPPORTED_FUSION_MODES))
+
+        super(FeatureFusion, self).__init__(name=name, **kwargs)
+        self.mode = mode
+        self.filters = filters
+
+    def build(self, input_shape):
+        self.add_op = tf.keras.layers.Add(name='{}-add_op'.format(self.name))
+
+        if not self.mode == 'sum':
+
+            if self.mode == 'fast_attention':
+                shape = [1]
+
+            elif self.mode == 'fast_channel_attention':
+                shape = [self.filters]
+
+            self.lower_level_weight = self.add_weight(
+                name='{}-lower-level-weight'.format(self.name),
+                shape=shape,
+                dtype=tf.float32,
+                initializer=tf.initializers.Ones())
+
+            self.upper_level_weight = self.add_weight(
+                name='{}-upper-level-weight'.format(self.name),
+                shape=shape,
+                dtype=tf.float32,
+                initializer=tf.initializers.Ones())
+
+    def call(self, x):
+        lower_level_feature, upper_level_feature = x
+
+        if not self.mode == 'sum':
+            weights_sum = self.lower_level_weight + self.upper_level_weight
+
+            lower_level_feature = tf.math.divide_no_nan(
+                lower_level_feature * self.lower_level_weight, weights_sum + 1e-4)
+
+            upper_level_feature = tf.math.divide_no_nan(
+                upper_level_feature * self.upper_level_weight, weights_sum + 1e-4)
+
+        return self.add_op([lower_level_feature, upper_level_feature])
