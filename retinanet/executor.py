@@ -121,8 +121,7 @@ class Executor:
             ])))
 
         self._weight_decay_vars = self._get_weight_decay_variables()
-        logging.info('Initial weight decay loss: {}'.format(
-            np.round(self.weight_decay(), 4)))
+        logging.info('Initial weight decay loss: {:.4f}'.format(self.weight_decay()))
 
     def _maybe_freeze_layers(self):
         _freeze_patterns = self.params.training.freeze_variables
