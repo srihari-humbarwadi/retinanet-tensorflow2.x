@@ -34,7 +34,7 @@
             "type": "pan",
             "use_residual_connections": false,
             "fusion_mode": "sum",
-            "filters": 128,
+            "filters": 256,
             "min_level": 3,
             "max_level": 7,
             "backbone_max_level": 5
