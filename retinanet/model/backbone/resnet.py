@@ -140,7 +140,7 @@ def conv2d_fixed_padding(inputs,
         strides=strides,
         padding=('SAME' if strides == 1 else 'VALID'),
         use_bias=False,
-        kernel_initializer=tf.initializers.HeNormal(),
+        kernel_initializer=tf.initializers.VarianceScaling(),
         data_format=data_format)(inputs=inputs)
 
 

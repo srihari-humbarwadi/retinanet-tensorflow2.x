@@ -46,14 +46,14 @@ class PAN(tf.keras.Model):
         if not conv_2d_op_params.use_seperable_conv:
             conv_2d_op = tf.keras.layers.Conv2D
             kernel_initializer_config = {
-                'kernel_initializer': tf.initializers.HeNormal()
+                'kernel_initializer': tf.initializers.VarianceScaling()
             }
 
         else:
             conv_2d_op = tf.keras.layers.SeparableConv2D
             kernel_initializer_config = {
-                'depthwise_initializer': tf.initializers.HeNormal(),
-                'pointwise_initializer': tf.initializers.HeNormal()
+                'depthwise_initializer': tf.initializers.VarianceScaling(),
+                'pointwise_initializer': tf.initializers.VarianceScaling()
             }
 
         for level in range(min_level, max_level + 1):
