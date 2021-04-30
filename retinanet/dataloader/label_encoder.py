@@ -14,9 +14,12 @@ class LabelEncoder:
         self.preprocessing_pipeline = PreprocessingPipeline(
             self.input_shape, params.dataloader_params)
 
+        self._all_unmatched = -1 * tf.ones(
+            [self.anchors.boxes.get_shape().as_list()[0]], dtype=tf.int32)
+
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
         if tf.shape(gt_boxes)[0] == 0:
-            return -1 * tf.ones([tf.shape(anchor_boxes)[0]], dtype=tf.int32)
+            return self._all_unmatched
 
         iou_matrix = compute_iou(gt_boxes, anchor_boxes)
 
