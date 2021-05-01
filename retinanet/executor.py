@@ -555,8 +555,8 @@ class Executor:
                              {k: np.round(v, 4)
                               for k, v in loss_dict.items()}))
 
-            if self.params.recovery.use_inflection_detector:
-                value = loss_dict[self.params.recovery.metric_key].numpy()
+            if self.params.training.recovery.use_inflection_detector:
+                value = loss_dict[self.params.training.recovery.metric_key].numpy()
                 if self._inflection_detector.is_value_anomalous(value):
                     logging.warning(
                         'Found inflection in {} values!, recent values: {}'.format(
