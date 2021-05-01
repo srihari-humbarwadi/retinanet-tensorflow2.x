@@ -580,18 +580,23 @@ class Executor:
         return True
 
     def train(self):
-        num_trials = 1
         done = self._run_training_loop()
+        num_trials = 1
 
-        while not done or num_trials < self._max_trials:
+        while not done and num_trials < self._max_trials:
             latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
+
             if latest_checkpoint is not None:
                 checkpointed_at_iteration = int(latest_checkpoint.split('_')[-1])
-                checkpoint_to_load = \
-                    'weights_step_{}'.format(
-                        checkpointed_at_iteration - self.save_every)
-                self._restore_checkpoint(checkpoint=checkpoint_to_load)
 
+                resume_at_iteration = \
+                    (checkpointed_at_iteration // self.save_every) - 1
+
+                if not resume_at_iteration == 0:
+                    self._restore_checkpoint(
+                        checkpoint='weights_step_{}'.format(resume_at_iteration))
+
+            done = self._run_training_loop()
             num_trials += 1
 
         if not done:
