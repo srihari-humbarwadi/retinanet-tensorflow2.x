@@ -10,7 +10,7 @@ class InflectionDetector:
         self._grads = None
         self._diffs = None
 
-    def is_value_anamolous(self, value):
+    def is_value_anomalous(self, value):
         result = False
         self._data += [value]
 

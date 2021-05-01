@@ -80,6 +80,12 @@
         "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 128,
         "save_every": 6400,
+        "recovery": {
+            "use_inflection_detector": true,
+            "metric_key": "l2-regularization",
+            "threshold": 0.25,
+            "max_trials": 2
+        },
         "optimizer": {
             "name": "sgd",
             "momentum": 0.9,
