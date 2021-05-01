@@ -9,6 +9,7 @@ from tensorflow.python.profiler.model_analyzer import profile
 from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 from retinanet.eval import COCOEvaluator
+from retinanet.loss_diagnostics import InflectionDetector
 
 
 class Executor:
@@ -59,6 +60,15 @@ class Executor:
         self.use_float16 = False
         self._summary_writers = {}
         self._run_evaluation_at_end = params.training.validation_freq < 1
+
+        if params.training.recovery.use_inflection_detector:
+            self._inflection_detector = InflectionDetector(
+                name=params.training.recovery.metric_key,
+                threshold=params.training.recovery.threshold)
+            self._max_trials = params.training.recovery.max_trials
+
+        else:
+            self._max_trials = 1
 
         if self.run_mode not in Executor._RUN_MODES:
             raise AssertionError(
@@ -462,7 +472,7 @@ class Executor:
                 {k: np.round(v, 2) for k, v in scores.items()}))
         return scores
 
-    def train(self):
+    def _run_training_loop(self):
         if self.restore_checkpoint and self.restore_status is not None:
             self.restore_status.assert_consumed()
 
@@ -545,6 +555,15 @@ class Executor:
                              {k: np.round(v, 4)
                               for k, v in loss_dict.items()}))
 
+            if self.params.recovery.use_inflection_detector:
+                value = loss_dict[self.params.recovery.metric_key].numpy()
+                if self._inflection_detector.is_value_anomalous(value):
+                    logging.warning(
+                        'Found inflection in {} values!, recent values: {}'.format(
+                            self._inflection_detector.name,
+                            self._inflection_detector.data[-5:]))
+                    return False
+
             if (current_step % self.val_freq == 0) \
                     and (not self._run_evaluation_at_end) \
                     and ('val' in self.run_mode):
@@ -557,6 +576,28 @@ class Executor:
 
         if self._run_evaluation_at_end and 'val' in self.run_mode:
             self.evaluate()
+
+        return True
+
+    def train(self):
+        done = False
+        num_trials = 0
+
+        while not done or num_trials < self.max_trials:
+            done = self._run_training_loop()
+
+            latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
+            if latest_checkpoint is not None:
+                checkpointed_at_iteration = int(latest_checkpoint.split('_')[-1])
+                checkpoint_to_load = \
+                    'weights_step_{}'.format(
+                        checkpointed_at_iteration - self.save_every)
+                self._restore_checkpoint(checkpoint=checkpoint_to_load)
+
+            num_trials += 1
+
+        if not done:
+            logging.warning('Training failed after {} tries'.format(num_trials))
 
     def _add_graph_trace(self):
         @tf.function(input_signature=[
