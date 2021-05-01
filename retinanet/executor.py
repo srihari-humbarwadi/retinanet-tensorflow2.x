@@ -484,7 +484,7 @@ class Executor:
 
         if current_step >= self.train_steps:
             logging.info('Training completed at step {}'.format(current_step))
-            return
+            return True
 
         logging.info(
             'Starting training from step {} for {} steps with {} steps per execution'  # noqa: E501
@@ -580,12 +580,10 @@ class Executor:
         return True
 
     def train(self):
-        done = False
-        num_trials = 0
+        num_trials = 1
+        done = self._run_training_loop()
 
-        while not done or num_trials < self.max_trials:
-            done = self._run_training_loop()
-
+        while not done or num_trials < self._max_trials:
             latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
             if latest_checkpoint is not None:
                 checkpointed_at_iteration = int(latest_checkpoint.split('_')[-1])
