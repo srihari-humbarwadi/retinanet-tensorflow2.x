@@ -278,6 +278,13 @@ class Executor:
                     weight_decay_vars.append(layer.depthwise_kernel)
                     weight_decay_vars.append(layer.pointwise_kernel)
 
+                else:
+                    for var in layer.trainable_variables:
+                        if 'conv2d' in var.name and 'kernel' in var.name:
+                            weight_decay_vars.append(var)
+                        else:
+                            assert 'normalization' in var.name
+
         return weight_decay_vars
 
     @tf.function
