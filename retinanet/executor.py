@@ -590,7 +590,7 @@ class Executor:
                 checkpointed_at_iteration = int(latest_checkpoint.split('_')[-1])
 
                 resume_at_checkpoint_index = \
-                    * ((checkpointed_at_iteration // self.save_every) - 1)
+                    ((checkpointed_at_iteration // self.save_every) - 1)
                 resume_at_iteration = self.save_every * resume_at_checkpoint_index
 
                 if not resume_at_iteration == 0:
