@@ -23,7 +23,7 @@
         "batch_norm": {
             "use_sync": true,
             "momentum": 0.99,
-            "epsilon": 0.001
+            "epsilon": 1e-5
         },
         "backbone": {
             "type": "resnet",
