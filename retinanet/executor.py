@@ -589,12 +589,14 @@ class Executor:
             if latest_checkpoint is not None:
                 checkpointed_at_iteration = int(latest_checkpoint.split('_')[-1])
 
-                resume_at_iteration = \
-                    (checkpointed_at_iteration // self.save_every) - 1
+                resume_at_checkpoint_index = \
+                    * ((checkpointed_at_iteration // self.save_every) - 1)
+                resume_at_iteration = self.save_every * resume_at_checkpoint_index
 
                 if not resume_at_iteration == 0:
                     self._restore_checkpoint(
-                        checkpoint='weights_step_{}'.format(resume_at_iteration))
+                        checkpoint='weights_step_{}'
+                        .format(resume_at_iteration))
 
             done = self._run_training_loop()
             num_trials += 1
