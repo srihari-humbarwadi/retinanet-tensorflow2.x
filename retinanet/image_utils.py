@@ -6,6 +6,10 @@ import tensorflow as tf
 def read_image(path):
     image_bytes = tf.io.read_file(path)
     image = tf.image.decode_image(image_bytes)
+
+    if image.get_shape().as_list()[-1] == 1:
+        image = tf.image.grayscale_to_rgb(image)
+
     return tf.cast(image, dtype=tf.float32)
 
 
