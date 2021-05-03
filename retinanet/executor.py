@@ -600,10 +600,12 @@ class Executor:
                     ((checkpointed_at_iteration // self.save_every) - 1)
                 resume_at_iteration = self.save_every * resume_at_checkpoint_index
 
-                if not resume_at_iteration == 0:
-                    self._restore_checkpoint(
-                        checkpoint='weights_step_{}'
-                        .format(resume_at_iteration))
+                if resume_at_iteration == 0:
+                    break
+
+                self._restore_checkpoint(
+                    checkpoint='weights_step_{}'
+                    .format(resume_at_iteration))
 
             done = self._run_training_loop()
             num_trials += 1
