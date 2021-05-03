@@ -22,7 +22,7 @@
         },
         "batch_norm": {
             "use_sync": true,
-            "momentum": 0.99,
+            "momentum": 0.9,
             "epsilon": 1e-5
         },
         "backbone": {
