@@ -124,30 +124,42 @@ def main(_):
             params.input.input_shape, params.dataloader_params)
 
         @tf.function(input_signature=[{
-            'image': tf.TensorSpec(shape=[None, None, 3],
-                                   name='image',
-                                   dtype=tf.float32),
-            'image_id': tf.TensorSpec(shape=[],
-                                      name='image_id',
-                                      dtype=tf.int32)
-        }
-
-        ])
-        def serving_fn(sample):
+            'image':
+                tf.TensorSpec(shape=[None, None, 3], name='image', dtype=tf.float32),
+            'image_id':
+                tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32)
+        }])
+        def prepare_image(sample):
             image_dict = preprocessing_pipeling.preprocess_val_sample(sample)
-
             input_shape = tf.constant(params.input.input_shape, dtype=tf.float32)
             resize_scale = image_dict['resize_scale'] / input_shape
-            resize_scale = tf.tile(tf.expand_dims(
-                resize_scale, axis=0), multiples=[1, 2])
+            resize_scale = tf.tile(tf.expand_dims(resize_scale, axis=0),
+                                   multiples=[1, 2])
+            return {
+                'image': image_dict['image'],
+                'image_id': sample['image_id'],
+                'resize_scale': resize_scale
+            }
 
+        @tf.function(input_signature=[{
+            'image':
+                tf.TensorSpec(
+                    shape=params.input.input_shape + [params.input.channels],
+                    name='image',
+                    dtype=tf.float32),
+            'image_id':
+                tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32),
+            'resize_scale':
+                tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32),
+        }])
+        def serving_fn(sample):
             detections = inference_model.call(
-                tf.expand_dims(
-                    image_dict['image'], axis=0), training=False)
+                tf.expand_dims(sample['image'], axis=0),
+                training=False)
 
             return {
                 'image_id': sample['image_id'],
-                'boxes': detections['boxes'] / resize_scale,
+                'boxes': detections['boxes'] / sample['resize_scale'],
                 'scores': detections['scores'],
                 'classes': tf.cast(detections['classes'], dtype=tf.int32),
                 'valid_detections': detections['valid_detections']
@@ -158,7 +170,10 @@ def main(_):
         tf.saved_model.save(
             inference_model,
             os.path.join(FLAGS.export_dir, params.experiment.name),
-            signatures={'serving_default': serving_fn.get_concrete_function()})
+            signatures={
+                'serving_default': serving_fn.get_concrete_function(),
+                'prepare_image': prepare_image.get_concrete_function()
+            })
 
 
 if __name__ == '__main__':
