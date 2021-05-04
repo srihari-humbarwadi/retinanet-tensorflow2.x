@@ -68,23 +68,30 @@ I0119 06:18:04.471802 140235606591296 trainer.py:344] [global_step 600/33750] [E
 ___
 ### Running Inference
 ```python
-image_dir = '~/coco2017/val2017'
-images = sorted(glob(image_dir + '/*'))
-print('Found {} images in {}'.format(len(images), image_dir))
+# Populate image paths
+image_dir = '../val2017'
+image_paths = sorted(glob(image_dir + '/*'))
 
-#  Load label mapping
+print('Found {} images in {}'.format(len(image_paths), image_dir))
+
+# Load label mapping
 with open('coco_label_map.json', 'r') as f:
     label_map = json.load(f)
 
-#  Load `saved_model`
-model = tf.saved_model.load('model_files/saved_models/mscoco-retinanet-resnet50-640x640-30x-256/')
-serving_fn = model.signatures['serving_default']
+# Load `saved_model`
+model = tf.saved_model.load(
+    '../model_files/saved_models/mscoco-retinanet-resnet50-640x640-3x-256/')
+
+
+prepare_image_fn = model.signatures['prepare_image']  # get concrete function for preprocessing images
+serving_fn = model.signatures['serving_default']  # get concrete function for running the model
 
 idx = 4348
-image = read_image(images[idx])
-
+image = read_image(image_paths[idx])
+serving_input = prepare_image_fn(image=image,
+                                 image_id=tf.constant([idx], dtype=tf.int32))
 tik = time()
-detections = serving_fn(image=image, image_id=tf.constant(idx))
+detections = serving_fn(**serving_input)
 toc = time()
 
 valid_detections = detections['valid_detections'][0].numpy()
@@ -101,9 +108,9 @@ visualize_detections(image,
                      classes,
                      scores,
                      title='Image: {}'.format(idx),
-                     save=True,
                      score_threshold=0.30,
-                     filename='assets/image_{}.png'.format(idx))
+                     save=False,
+                     filename='image_{}.png'.format(idx))
 
 print('Inference time: {:.2f} ms'.format((toc - tik) * 1000))
 ```
