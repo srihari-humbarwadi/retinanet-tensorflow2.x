@@ -26,6 +26,7 @@ class FuseDetections(tf.keras.layers.Layer):
 
         anchors_at_each_location = box_predictions_shape[-1] // 4
         num_classes = class_predictions_shape[-1] // anchors_at_each_location
+        batch_size = box_predictions_shape[0] or 1
 
         for level in range(self.min_level, self.max_level + 1):
             level = str(level)
@@ -38,12 +39,12 @@ class FuseDetections(tf.keras.layers.Layer):
             class_logits += [
                 tf.reshape(
                     _cls_preds,
-                    shape=[-1, anchors_at_this_level, num_classes])
+                    shape=[batch_size, anchors_at_this_level, num_classes])
             ]
             encoded_boxes += [
                 tf.reshape(
                     _box_preds,
-                    shape=[-1, anchors_at_this_level, 4])
+                    shape=[batch_size, anchors_at_this_level, 4])
             ]
 
         class_logits = tf.concat(class_logits, axis=1)
