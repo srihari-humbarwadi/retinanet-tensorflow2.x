@@ -136,7 +136,7 @@ def main(_):
             resize_scale = tf.tile(tf.expand_dims(resize_scale, axis=0),
                                    multiples=[1, 2])
             return {
-                'image': image_dict['image'],
+                'image': tf.expand_dims(image_dict['image'], axis=0),
                 'image_id': sample['image_id'],
                 'resize_scale': resize_scale
             }
@@ -144,7 +144,7 @@ def main(_):
         @tf.function(input_signature=[{
             'image':
                 tf.TensorSpec(
-                    shape=params.input.input_shape + [params.input.channels],
+                    shape=[None] + params.input.input_shape + [params.input.channels],  # noqa: E501
                     name='image',
                     dtype=tf.float32),
             'image_id':
@@ -153,9 +153,7 @@ def main(_):
                 tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32),
         }])
         def serving_fn(sample):
-            detections = inference_model.call(
-                tf.expand_dims(sample['image'], axis=0),
-                training=False)
+            detections = inference_model.call(sample['image'], training=False)
 
             return {
                 'image_id': sample['image_id'],
