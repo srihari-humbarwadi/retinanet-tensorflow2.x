@@ -26,7 +26,7 @@ class ModelBuilder:
         'head-bn': re.compile(r'^((box-head)|(class-head)).*(batch_normalization)'),
         'bn': re.compile(r'(batch_normalization)'),
         'resnet_initial': re.compile(
-            r'^(?!((fpn)|(box-head)|(class-head))).*(conv2d_fixed_padding(|_([1-9]|10))|(sync_)?batch_normalization(|_([1-9]|10)))\/')  # noqa: E501
+            r'^(?!((fpn)|(box-head)|(class-head))).*(conv2d(_fixed_padding)?(|_([1-9]|10))|(sync_)?batch_normalization(|_([1-9]|10)))\/')  # noqa: E501
     }
 
     def __init__(self, params):

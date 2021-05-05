@@ -142,6 +142,7 @@ pretrained_weights/
 export/
 model_files/
 saved_model/
+trt/
 *.pb
 *.h5
 
@@ -169,3 +170,6 @@ outputs/
 # debug files/configs
 *debug*
 *test*
+
+# lib files
+TensorRT-7.1.3.4.Ubuntu-18.04.x86_64-gnu.cuda-11.0.cudnn8.0*
