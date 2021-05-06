@@ -7,6 +7,21 @@ from absl import logging
 
 from retinanet.optimizers.piecewise_constant_decay_with_warmup import \
     PiecewiseConstantDecayWithLinearWarmup
+from retinanet.optimizers.cosine_decay_with_warmup import \
+    CosineDecayWithLinearWarmup
+
+
+def get_learning_rate_schedule(params):
+    _params = deepcopy(params)
+    schedule_type = _params.pop('schedule_type', None)
+
+    if schedule_type == 'piecewise_constant_decay':
+        return PiecewiseConstantDecayWithLinearWarmup(**_params)
+
+    if schedule_type == 'cosine_decay':
+        return CosineDecayWithLinearWarmup(**_params)
+
+    raise ValueError('Invalid learning rate schedule requested')
 
 
 def build_optimizer(params, precision):
@@ -15,10 +30,7 @@ def build_optimizer(params, precision):
     use_moving_average = _params.pop('use_moving_average', None)
     moving_average_decay = _params.pop('moving_average_decay', None)
 
-    learning_rate_fn = PiecewiseConstantDecayWithLinearWarmup(
-        lr_params.warmup_learning_rate, lr_params.warmup_steps,
-        lr_params.boundaries, lr_params.values)
-    _params['learning_rate'] = learning_rate_fn
+    _params['learning_rate'] = get_learning_rate_schedule(lr_params)
 
     config = {
         'class_name': _params['name'],
