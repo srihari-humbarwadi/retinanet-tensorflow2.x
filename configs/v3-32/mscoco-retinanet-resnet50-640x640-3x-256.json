@@ -92,7 +92,7 @@
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": true,
-            "use_moving_average": false,
+            "use_moving_average": true,
             "moving_average_decay": 0.9998,
             "lr_params": {
                 "schedule_type": "cosine_decay",
