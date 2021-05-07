@@ -46,7 +46,9 @@ def main(_):
     bucket = storage_client.bucket(bucket_name)
 
     for blob in bucket.list_blobs(prefix=weights_dir + '/' + model_dir):
-        if 'checkpoint' in blob.name or 'final_weights' in blob.name:
+        if 'checkpoint' in blob.name \
+            or 'final_weights' in blob.name \
+                or blob.name.endswith('.json'):
             file_name = os.path.join(local_dir, os.path.basename(blob.name))
             try:
                 blob.download_to_filename(file_name)
