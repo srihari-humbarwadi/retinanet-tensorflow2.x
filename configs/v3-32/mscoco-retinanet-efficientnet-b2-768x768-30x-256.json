@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-efficientnet-b2-768x768-3x-256",
+        "name": "mscoco-retinanet-efficientnet-b2-768x768-30x-256",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -73,7 +73,7 @@
         },
         "restore_checkpoint": true,
         "freeze_variables": [],
-        "train_steps": 16875,
+        "train_steps": 162050,
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
@@ -89,6 +89,7 @@
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": true,
+            "global_clipnorm": 16.0,
             "use_moving_average": true,
             "moving_average_decay": 0.9998,
             "lr_params": {
@@ -97,7 +98,7 @@
                 "warmup_learning_rate": 0.008,
                 "alpha": 0.0001,
                 "warmup_steps": 500,
-                "total_steps": 16875
+                "total_steps": 162050
             }
         }
     },

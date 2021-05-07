@@ -145,7 +145,7 @@
             "use_augmentation": true,
             "horizontal_flip": true,
             "scale_jitter": {
-                "min_scale": 0.5,
+                "min_scale": 0.1,
                 "max_scale": 2.0
             }
         },
