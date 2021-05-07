@@ -662,10 +662,10 @@ class Executor:
     @staticmethod
     def _format_eta(secs):
         eta = []
-        for interval in [3600, 60, 1]:
-            eta += ['{:02}'.format(int(secs // interval))]
+        for interval, unit in zip([3600, 60, 1], ['h', 'm', 's']):
+            eta += ['{:02}{}'.format(int(secs // interval), unit)]
             secs %= interval
-        return ':'.join(eta)
+        return ' '.join(eta)
 
     @property
     def model(self):
