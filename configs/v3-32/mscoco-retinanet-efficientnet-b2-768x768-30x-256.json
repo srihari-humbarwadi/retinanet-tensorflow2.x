@@ -73,7 +73,7 @@
         },
         "restore_checkpoint": true,
         "freeze_variables": [],
-        "train_steps": 162050,
+        "train_steps": 168750,
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
@@ -98,7 +98,7 @@
                 "warmup_learning_rate": 0.008,
                 "alpha": 0.0001,
                 "warmup_steps": 500,
-                "total_steps": 162050
+                "total_steps": 168750
             }
         }
     },
