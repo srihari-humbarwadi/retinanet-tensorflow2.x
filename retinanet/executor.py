@@ -516,8 +516,13 @@ class Executor:
         logging.info(
             'Starting training from step {} for {} steps with {} steps per execution'  # noqa: E501
             .format(start_step, self.train_steps, self.steps_per_execution))
-        logging.info('Saving checkpoints every {} steps in {}'.format(
-            self.save_every, self.model_dir))
+
+        if self._save_during_training:
+            logging.warn('Saving checkpoints only after completing training!')
+
+        else:
+            logging.info('Saving checkpoints every {} steps in {}'.format(
+                self.save_every, self.model_dir))
 
         if 'train' not in self._summary_writers:
             self._setup_summary_writers()
