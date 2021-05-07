@@ -280,10 +280,10 @@ class Executor:
 
                 else:
                     for var in layer.trainable_variables:
-                        if 'conv2d' in var.name and 'kernel' in var.name:
+                        if 'kernel' in var.name or 'weight' in var.name:
                             weight_decay_vars.append(var)
                         else:
-                            assert 'normalization' in var.name
+                            assert 'normalization' in var.name or 'bias' in var.name
 
         return weight_decay_vars
 
