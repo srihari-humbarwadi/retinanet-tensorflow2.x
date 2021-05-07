@@ -517,7 +517,7 @@ class Executor:
             'Starting training from step {} for {} steps with {} steps per execution'  # noqa: E501
             .format(start_step, self.train_steps, self.steps_per_execution))
 
-        if self._save_during_training:
+        if not self._save_during_training:
             logging.warn('Saving checkpoints only after completing training!')
 
         else:
