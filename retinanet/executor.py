@@ -60,6 +60,7 @@ class Executor:
         self.restore_status = None
         self.use_float16 = False
         self._summary_writers = {}
+        self._save_during_training = params.training.save_every > 0
         self._run_evaluation_at_end = params.training.validation_freq < 1
 
         if params.training.recovery.use_inflection_detector:
@@ -557,7 +558,7 @@ class Executor:
             eta = Executor._format_eta(
                 (self.train_steps - current_step) / steps_per_second)
 
-            if current_step % self.save_every == 0:
+            if current_step % self.save_every == 0 and self._save_during_training:
                 logging.info(
                     'Saving checkpoint at step {}'.format(current_step))
                 self._model.save_weights(
