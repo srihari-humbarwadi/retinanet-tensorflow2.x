@@ -101,6 +101,9 @@ def main(_):
 
     executor.restore_status.assert_consumed()
 
+    if params.training.optimizer.use_moving_average:
+        executor.assign_moving_averaged_weights()
+
     if FLAGS.export_h5:
         export_dir = os.path.join(FLAGS.export_dir, executor.name)
 

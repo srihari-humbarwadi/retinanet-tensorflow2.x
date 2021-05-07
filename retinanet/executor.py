@@ -234,6 +234,15 @@ class Executor:
             'No existing checkpoints found in {}, running model in {} mode with random weights initialization!'  # noqa: E501
             .format(self.model_dir, self.run_mode))
 
+    def assign_moving_averaged_weights(self):
+        if not self.params.training.optimizer.use_moving_average:
+            raise AssertionError(
+                'Cannot assign moving average weights since `use_moving_average` flag is set to False')  # noqa: E501
+        non_averaged_weights = self._model.get_weights()
+        logging.info('Loading moving average weights into model')
+        self.optimizer.assign_average_vars(self._model.trainable_variables)
+        return non_averaged_weights
+
     def _setup(self):
         if not tf.io.gfile.exists(self.model_dir):
             tf.io.gfile.makedirs(self.model_dir)
@@ -427,8 +436,7 @@ class Executor:
             self._setup_summary_writers()
 
         if self.params.training.optimizer.use_moving_average:
-            logging.info('Loading moving average weights into model')
-            self.optimizer.assign_average_vars(self._model.trainable_variables)
+            non_averaged_weights = self.assign_moving_averaged_weights()
 
         total_steps = self.val_steps
         dataset_iterator = iter(self._val_dataset)
@@ -477,6 +485,11 @@ class Executor:
                 current_step,
                 self.train_steps,
                 {k: np.round(v, 2) for k, v in scores.items()}))
+
+        if self.params.training.optimizer.use_moving_average:
+            logging.info('Loading back non averaged weights into model')
+            self._model.set_weights(non_averaged_weights)
+
         return scores
 
     def _run_training_loop(self):
