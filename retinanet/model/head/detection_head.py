@@ -37,10 +37,8 @@ class DetectionHead(tf.keras.Model):
         else:
             conv_2d_op = tf.keras.layers.SeparableConv2D
             kernel_initializer_config = {
-                'depthwise_initializer': tf.keras.initializers.RandomNormal(
-                    stddev=0.01),
-                'pointwise_initializer': tf.keras.initializers.RandomNormal(
-                    stddev=0.01)
+                'depthwise_initializer': tf.keras.initializers.VarianceScaling(),
+                'pointwise_initializer': tf.keras.initializers.VarianceScaling()
             }
 
         self.head_convs = []
@@ -71,15 +69,15 @@ class DetectionHead(tf.keras.Model):
                     name='{}-class-{}-relu'.format(self.name, i))
             ]
 
-        self.prediction_conv = tf.keras.layers.Conv2D(
+        self.prediction_conv = conv_2d_op(
             filters=output_filters,
             kernel_size=3,
             strides=1,
             padding='same',
             name='{}-prediction-conv2d'.format(self.name),
-            kernel_initializer=tf.keras.initializers.RandomNormal(stddev=1e-5),
             bias_initializer=self.prediction_bias_initializer,
-            dtype=tf.float32)
+            dtype=tf.float32,
+            **kernel_initializer_config)
 
     def call(self, features, training=None):
         outputs = {}
