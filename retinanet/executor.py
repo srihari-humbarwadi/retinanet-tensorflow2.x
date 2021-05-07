@@ -10,6 +10,7 @@ from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 from retinanet.eval import COCOEvaluator
 from retinanet.loss_diagnostics import InflectionDetector
+from retinanet.utils import AverageMeter
 
 
 class Executor:
@@ -450,6 +451,7 @@ class Executor:
 
         logging.info('Evaluating at step {} for {} steps'
                      .format(current_step.numpy(), total_steps))
+        steps_per_second_average_meter = AverageMeter('eval_steps_per_second')
 
         for i, data in enumerate(dataset_iterator):
             start = time()
@@ -457,9 +459,13 @@ class Executor:
             evaluator.accumulate_results(results)
             end = time()
             execution_time = np.round(end - start, 2)
-            images_per_second = self.num_replicas / execution_time
 
-            eta = Executor._format_eta((total_steps - (i + 1)) * execution_time)
+            steps_per_second_average_meter.accumulate(
+                1 / execution_time)
+            steps_per_second = steps_per_second_average_meter.averaged_value
+            images_per_second = steps_per_second * self.num_replicas
+
+            eta = Executor._format_eta((total_steps - (i + 1)) / steps_per_second)
 
             logging.info(
                 '[global_step {}/{}][eval_step {}/{}] [ETA: {}] [{:.2f} imgs/s]'
@@ -521,6 +527,7 @@ class Executor:
         self._add_graph_trace()
 
         dataset_iterator = iter(self._train_dataset)
+        steps_per_second_average_meter = AverageMeter(name='train_steps_per_second')
 
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
             start = time()
@@ -541,8 +548,10 @@ class Executor:
             loss_dict['execution-time'] = np.round(end - start, 2)
             loss_dict['learning-rate'] = learning_rate
 
-            steps_per_second = \
-                self.steps_per_execution / loss_dict['execution-time']
+            steps_per_second_average_meter.accumulate(
+                self.steps_per_execution / loss_dict['execution-time'])
+            steps_per_second = steps_per_second_average_meter.averaged_value
+
             images_per_second = steps_per_second * self.batch_size
 
             eta = Executor._format_eta(
