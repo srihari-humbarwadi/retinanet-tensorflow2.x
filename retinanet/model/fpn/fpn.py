@@ -7,7 +7,7 @@ from retinanet.model.layers.nearest_upsampling import NearestUpsampling2D
 from retinanet.model.utils import get_normalization_op
 
 
-class FPN(tf.keras.Model):
+class FPN(tf.keras.layers.Layer):
 
     def __init__(self,
                  filters=256,

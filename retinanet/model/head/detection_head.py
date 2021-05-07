@@ -3,7 +3,7 @@ import tensorflow as tf
 from retinanet.model.utils import get_normalization_op
 
 
-class DetectionHead(tf.keras.Model):
+class DetectionHead(tf.keras.layers.Layer):
 
     def __init__(self,
                  num_convs=4,
