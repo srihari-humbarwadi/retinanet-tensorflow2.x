@@ -4,7 +4,7 @@ sudo mkswap /swapfile;
 sudo swapon /swapfile
 sudo apt install htop tree -y
 
-pip install easydict pycocotools
+pip3 install easydict pycocotools
 
 wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip
 unzip annotations_trainval2017.zip
