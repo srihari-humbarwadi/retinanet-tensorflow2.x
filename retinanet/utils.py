@@ -26,3 +26,11 @@ class AverageMeter:
     @property
     def data(self):
         return self._data
+
+
+def format_eta(secs):
+    eta = []
+    for interval, unit in zip([3600, 60, 1], ['h', 'm', 's']):
+        eta += ['{:02}{}'.format(int(secs // interval), unit)]
+        secs %= interval
+    return ' '.join(eta)

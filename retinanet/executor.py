@@ -10,7 +10,7 @@ from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 from retinanet.eval import COCOEvaluator
 from retinanet.loss_diagnostics import InflectionDetector
-from retinanet.utils import AverageMeter
+from retinanet.utils import AverageMeter, format_eta
 
 
 class Executor:
@@ -466,7 +466,7 @@ class Executor:
             steps_per_second = steps_per_second_average_meter.averaged_value
             images_per_second = steps_per_second * self.num_replicas
 
-            eta = Executor._format_eta((total_steps - (i + 1)) / steps_per_second)
+            eta = format_eta((total_steps - (i + 1)) / steps_per_second)
 
             logging.info(
                 '[global_step {}/{}][eval_step {}/{}] [ETA: {}] [{:.2f} imgs/s]'
@@ -560,7 +560,7 @@ class Executor:
 
             images_per_second = steps_per_second * self.batch_size
 
-            eta = Executor._format_eta(
+            eta = format_eta(
                 (self.train_steps - current_step) / steps_per_second)
 
             if current_step % self.save_every == 0 and self._save_during_training:
@@ -673,14 +673,6 @@ class Executor:
         # polularly referred to as MACs
         flops = graph_info.total_float_ops // 2
         return flops
-
-    @staticmethod
-    def _format_eta(secs):
-        eta = []
-        for interval, unit in zip([3600, 60, 1], ['h', 'm', 's']):
-            eta += ['{:02}{}'.format(int(secs // interval), unit)]
-            secs %= interval
-        return ' '.join(eta)
 
     @property
     def model(self):
