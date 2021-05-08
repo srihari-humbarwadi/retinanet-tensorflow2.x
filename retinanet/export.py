@@ -36,10 +36,15 @@ flags.DEFINE_string(
     default='latest',
     help='Restores model weights from `checkpoint_name`. Default behaviours uses the latest available checkpoint')  # noqa: E501
 
+flags.DEFINE_boolean(
+    name='ignore_moving_average_weights',
+    default=False,
+    help='Loads non averaged weights if `use_moving_average` is set to True')
+
 flags.DEFINE_string(
-    name='overide_model_dir',
-    default='null',
-    help='Use local filesystem to load checkpoint')
+    name='model_dir',
+    default=None,
+    help='Overides `model_dir` specified in the config')
 
 flags.DEFINE_boolean(
     name='disable_pre_nms_top_k',
@@ -65,8 +70,8 @@ def main(_):
     logging.get_absl_handler().use_absl_log_file(
         'export_' + params.experiment.name)
 
-    if not FLAGS.overide_model_dir == 'null':
-        params.experiment.model_dir = FLAGS.overide_model_dir
+    if not FLAGS.model_dir == 'null':
+        params.experiment.model_dir = FLAGS.model_dir
         logging.warning('Using local path {} as `model_dir`'.format(
             params.experiment.model_dir))
 
@@ -102,7 +107,11 @@ def main(_):
     executor.restore_status.assert_consumed()
 
     if params.training.optimizer.use_moving_average:
-        executor.assign_moving_averaged_weights()
+        non_averaged_weights = executor.assign_moving_averaged_weights()
+
+        if FLAGS.ignore_moving_average_weights:
+            logging.warning('Loading back non averaged weights into model')
+            executor.model.set_weights(non_averaged_weights)
 
     if FLAGS.export_h5:
         export_dir = os.path.join(FLAGS.export_dir, executor.name)
