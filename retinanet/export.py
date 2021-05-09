@@ -2,11 +2,13 @@ import os
 
 import tensorflow as tf
 from absl import app, flags, logging
+from tensorflow.python.framework.convert_to_constants import \
+    convert_variables_to_constants_v2_as_graph
 
+from retinanet import Executor
 from retinanet.cfg import Config
 from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
 from retinanet.model import ModelBuilder
-from retinanet import Executor
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -132,15 +134,28 @@ def main(_):
     if FLAGS.export_saved_model:
         logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
 
-        preprocessing_pipeling = PreprocessingPipeline(
-            params.input.input_shape, params.dataloader_params)
+        serving_fn_input_signature = {
+            'image':
+                tf.TensorSpec(
+                    shape=[None] + params.input.input_shape + [params.input.channels],  # noqa: E501
+                    name='image',
+                    dtype=tf.float32),
+            'image_id':
+                tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32),
+            'resize_scale':
+                tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32),
+        }
 
-        @tf.function(input_signature=[{
+        preprocessing_fn_input_signature = {
             'image':
                 tf.TensorSpec(shape=[None, None, 3], name='image', dtype=tf.float32),
             'image_id':
                 tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32)
-        }])
+        }
+        preprocessing_pipeling = PreprocessingPipeline(
+            params.input.input_shape, params.dataloader_params)
+
+        @tf.function
         def prepare_image(sample):
             image_dict = preprocessing_pipeling.preprocess_val_sample(sample)
             input_shape = tf.constant(params.input.input_shape, dtype=tf.float32)
@@ -153,17 +168,7 @@ def main(_):
                 'resize_scale': resize_scale
             }
 
-        @tf.function(input_signature=[{
-            'image':
-                tf.TensorSpec(
-                    shape=[None] + params.input.input_shape + [params.input.channels],  # noqa: E501
-                    name='image',
-                    dtype=tf.float32),
-            'image_id':
-                tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32),
-            'resize_scale':
-                tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32),
-        }])
+        @tf.function()
         def serving_fn(sample):
             detections = inference_model.call(sample['image'], training=False)
 
@@ -177,12 +182,37 @@ def main(_):
 
         inference_model = model_builder.prepare_model_for_export(executor.model)
 
+        frozen_concerete_fn, _ = convert_variables_to_constants_v2_as_graph(
+            serving_fn.get_concrete_function(serving_fn_input_signature),
+            aggressive_inlining=True)
+
+        class InferenceModule(tf.Module):
+            def __init__(self, inference_function):
+                super(InferenceModule, self).__init__(name='inference_module')
+                self.inference_function = inference_function
+
+            @tf.function
+            def run_inference(self, sample):
+                outputs = self.inference_function(**sample)
+                return {
+                    'image_id': outputs[2],
+                    'boxes': outputs[0],
+                    'scores': outputs[3],
+                    'classes': outputs[1],
+                    'valid_detections': outputs[4]
+                }
+
+        inference_module = InferenceModule(frozen_concerete_fn)
+
         tf.saved_model.save(
-            inference_model,
+            inference_module,
             os.path.join(FLAGS.export_dir, params.experiment.name),
             signatures={
-                'serving_default': serving_fn.get_concrete_function(),
-                'prepare_image': prepare_image.get_concrete_function()
+                'serving_default':
+                inference_module.run_inference.get_concrete_function(
+                    serving_fn_input_signature),
+                'prepare_image': prepare_image.get_concrete_function(
+                    preprocessing_fn_input_signature)
             })
 
 
