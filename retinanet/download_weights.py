@@ -15,6 +15,10 @@ flags.DEFINE_boolean(
     default=False,
     help='Print debugging info')
 
+flags.DEFINE_string(
+    name='checkpointed_at',
+    default='final',
+    help='Step to download checkpoint from')
 
 flags.DEFINE_string(
     name='local_dir',
@@ -47,7 +51,7 @@ def main(_):
 
     for blob in bucket.list_blobs(prefix=weights_dir + '/' + model_dir):
         if 'checkpoint' in blob.name \
-            or 'final_weights' in blob.name \
+            or FLAGS.checkpointed_at in blob.name \
                 or blob.name.endswith('.json'):
             file_name = os.path.join(local_dir, os.path.basename(blob.name))
             try:
