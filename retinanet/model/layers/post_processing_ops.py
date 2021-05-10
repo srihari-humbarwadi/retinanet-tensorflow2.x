@@ -70,6 +70,8 @@ class TransformBoxesAndScores(tf.keras.layers.Layer):
 
         self._anchors = AnchorBoxGenerator(
             *params.input.input_shape,
+            params.architecture.fpn.min_level,
+            params.architecture.fpn.max_level,
             params.anchor_params)
 
         self._box_variance = tf.convert_to_tensor(
@@ -120,14 +122,18 @@ class FilterTopKDetections(tf.keras.layers.Layer):
 
     def _filter_per_class(self, scores, boxes):
         _, num_anchors, num_classes = scores.get_shape().as_list()
+        top_k = min(self.top_k, num_anchors)
 
         scores = tf.transpose(scores, [0, 2, 1])
         scores = tf.reshape(scores, [-1, num_anchors])
 
-        scores, indices = tf.nn.top_k(scores, self.top_k, sorted=False)
+        scores, indices = tf.nn.top_k(
+            scores,
+            top_k,
+            sorted=False)
 
-        scores = tf.reshape(scores, [-1, num_classes, self.top_k])
-        indices = tf.reshape(indices, [-1, num_classes, self.top_k])
+        scores = tf.reshape(scores, [-1, num_classes, top_k])
+        indices = tf.reshape(indices, [-1, num_classes, top_k])
         scores = tf.transpose(scores, [0, 2, 1])
         indices = tf.transpose(indices, [0, 2, 1])
 
@@ -137,10 +143,11 @@ class FilterTopKDetections(tf.keras.layers.Layer):
 
     def _filter_global(self, scores, boxes):
         _, num_anchors, num_classes = scores.get_shape().as_list()
+        top_k = min(self.top_k, num_anchors * num_classes)
 
         scores_reshaped = tf.reshape(scores,
                                      [-1, num_anchors * num_classes])
-        _, indices = tf.math.top_k(scores_reshaped, self.top_k, sorted=False)
+        _, indices = tf.math.top_k(scores_reshaped, top_k, sorted=False)
         anchor_indices = tf.expand_dims(indices // num_classes, 2)
 
         scores = tf.gather_nd(scores, anchor_indices, batch_dims=1)
