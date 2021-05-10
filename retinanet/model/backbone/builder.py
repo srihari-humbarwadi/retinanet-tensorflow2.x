@@ -1,6 +1,7 @@
 from copy import deepcopy
 from retinanet.model.backbone.resnet import ResNet
 from retinanet.model.backbone.efficientnet import EfficientNet
+from retinanet.model.backbone.mobiledet import MobileDet
 
 
 def build_backbone(input_shape, params, normalization_op_params=None):
@@ -20,6 +21,12 @@ def build_backbone(input_shape, params, normalization_op_params=None):
             checkpoint=params.checkpoint,
             normalization_op_params=normalization_op_params,
             override_params=params.get('override_params', None))
+
+    if 'mobiledet' in params.type.lower():
+        return MobileDet(
+            input_shape=input_shape,
+            model_name=params.type,
+            normalization_op_params=normalization_op_params)
 
     raise ValueError('{} backbone not implemented'.format(
         params.type))
