@@ -282,15 +282,15 @@ class Executor:
 
         for layer in _layers:
             if layer.trainable:
-                if isinstance(layer, tf.keras.layers.Conv2D):
-                    weight_decay_vars.append(layer.kernel)
-
-                elif isinstance(layer, tf.keras.layers.SeparableConv2D):
+                if isinstance(layer, tf.keras.layers.SeparableConv2D):
                     weight_decay_vars.append(layer.depthwise_kernel)
                     weight_decay_vars.append(layer.pointwise_kernel)
 
                 elif isinstance(layer, tf.keras.layers.DepthwiseConv2D):
                     weight_decay_vars.append(layer.depthwise_kernel)
+
+                elif isinstance(layer, tf.keras.layers.Conv2D):
+                    weight_decay_vars.append(layer.kernel)
 
                 else:
                     for var in layer.trainable_variables:
