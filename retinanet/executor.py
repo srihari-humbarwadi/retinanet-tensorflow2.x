@@ -283,7 +283,10 @@ class Executor:
         for layer in _layers:
             if layer.trainable:
                 if isinstance(layer, tf.keras.layers.Conv2D):
-                    weight_decay_vars.append(layer.kernel)
+                    if hasattr(layer, 'kernel'):
+                        weight_decay_vars.append(layer.kernel)
+                    elif hasattr(layer, 'depthwise_kernel'):
+                        weight_decay_vars.append(layer.depthwise_kernel)
 
                 elif isinstance(layer, tf.keras.layers.SeparableConv2D):
                     weight_decay_vars.append(layer.depthwise_kernel)
@@ -632,7 +635,9 @@ class Executor:
                     break
 
                 self._restore_checkpoint(
-                    checkpoint='weights_step_{}'
+                    checkpoint=os.path.join(
+                        self.model_dir,
+                        'weights_step_{}'.format(resume_at_iteration))
                     .format(resume_at_iteration))
 
             done = self._run_training_loop()
