@@ -182,7 +182,7 @@ def main(_):
 
         inference_model = model_builder.prepare_model_for_export(executor.model)
 
-        frozen_concerete_fn, _ = convert_variables_to_constants_v2_as_graph(
+        frozen_serving_fn, _ = convert_variables_to_constants_v2_as_graph(
             serving_fn.get_concrete_function(serving_fn_input_signature),
             aggressive_inlining=True)
 
@@ -202,7 +202,7 @@ def main(_):
                     'valid_detections': outputs[4]
                 }
 
-        inference_module = InferenceModule(frozen_concerete_fn)
+        inference_module = InferenceModule(frozen_serving_fn)
 
         tf.saved_model.save(
             inference_module,
