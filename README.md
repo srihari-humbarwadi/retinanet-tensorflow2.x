@@ -13,11 +13,12 @@
  - [x] Batched inference
  - [x] Moving Average Optimizer
  - [x] FPN feature fusion modes `sum`, `fast_attention`, `fast_channel_attention`
- - [ ] Efficientnet family of backbones [WIP]
+ - [x] Efficientnet family of backbones
+ - [x] MobileDet family of backbones
  - [ ] Anchor optimization for custom datasets
  - [ ] Upload results to **sotabench**
- - [ ] Export TensorRT model
- - [ ] Export Onnx model
+ - [ ] Export TensorRT model [WIP]
+ - [ ] Export Onnx model [WIP]
  - [ ] Export TF-lite model
 
 
