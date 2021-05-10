@@ -1,14 +1,14 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-efficientnet-b2-768x768-30x-64",
+        "name": "mscoco-retinanet-mobiledet-gpu-320x320-30x-64",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
     },
     "input": {
         "input_shape": [
-            768,
-            768
+            320,
+            320
         ],
         "channels": 3
     },
@@ -26,23 +26,23 @@
             "epsilon": 0.001
         },
         "backbone": {
-            "type": "efficientnet-b2",
-            "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b2"
+            "type": "mobiledet_gpu",
+            "checkpoint": ""
         },
         "fpn": {
             "type": "default",
             "use_residual_connections": false,
             "fusion_mode": "sum",
-            "filters": 112,
+            "filters": 128,
             "min_level": 3,
             "max_level": 7,
             "backbone_max_level": 5
         },
         "head": {
-            "num_convs": 3,
-            "filters": 112,
+            "num_convs": 4,
+            "filters": 128,
             "num_classes": 91,
-            "num_anchors": 9
+            "num_anchors": 15
         }
     },
     "loss": {
@@ -62,7 +62,7 @@
     },
     "training": {
         "use_weight_decay": true,
-        "weight_decay_alpha": 0.00004,
+        "weight_decay_alpha": 0.00005,
         "batch_size": {
             "train": 64,
             "val": 8
@@ -116,8 +116,10 @@
         ],
         "aspect_ratios": [
             0.5,
+            0.33,
             1.0,
-            2.0
+            2.0,
+            3.0
         ],
         "scales": [
             1,

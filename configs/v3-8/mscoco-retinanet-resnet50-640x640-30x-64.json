@@ -168,7 +168,7 @@
                 0.225
             ]
         },
-        "shuffle_buffer_size": 1024
+        "shuffle_buffer_size": 10240
     },
     "inference": {
         "mode": "CombinedNMS",
