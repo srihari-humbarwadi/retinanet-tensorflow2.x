@@ -82,7 +82,7 @@ class FPN(tf.keras.layers.Layer):
                 filters=self.filters,
                 kernel_size=3,
                 padding='same',
-                strides=1 if int(level) < min_level + 3 else 2,
+                strides=2 if int(level) > backbone_max_level else 1,
                 use_bias=conv_2d_op_params.use_bias_before_bn,
                 name='p' + str(level) + '-conv2d',
                 **kernel_initializer_config)
