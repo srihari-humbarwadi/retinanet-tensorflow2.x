@@ -72,8 +72,6 @@ class InputPipeline:
                 num_parallel_calls=autotune)
             dataset = dataset.batch(
                 batch_size=self.num_replicas,
-                num_parallel_calls=autotune,
-                deterministic=False,
                 drop_remainder=False)
             dataset = dataset.prefetch(autotune)
             return dataset
@@ -85,9 +83,6 @@ class InputPipeline:
             encode_sample(parse_example(x)),
             num_parallel_calls=autotune)
 
-        dataset = dataset.batch(
-            batch_size=batch_size,
-            num_parallel_calls=autotune,
-            deterministic=False, drop_remainder=True)
+        dataset = dataset.batch(batch_size=batch_size, drop_remainder=True)
         dataset = dataset.prefetch(autotune)
         return dataset
