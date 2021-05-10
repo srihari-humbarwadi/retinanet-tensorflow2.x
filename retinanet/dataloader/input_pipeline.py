@@ -35,13 +35,10 @@ class InputPipeline:
             num_files, self.run_mode, self.tfrecord_files))
 
         dataset = tf.data.Dataset.from_tensor_slices(matched_tfrecord_files)
-
-        if not self.run_mode == 'val':
-            dataset = dataset.shuffle(
-                num_files,
-                seed=InputPipeline._RANDOM_SEED,
-                reshuffle_each_iteration=True)
-            dataset = dataset.repeat()
+        dataset = dataset.shuffle(
+            num_files,
+            seed=InputPipeline._RANDOM_SEED,
+            reshuffle_each_iteration=True)
 
         if self.is_multi_host and input_context is not None:
             batch_size = input_context.get_per_replica_batch_size(
@@ -50,13 +47,16 @@ class InputPipeline:
                                     input_context.input_pipeline_id)
 
             logging.info(
-                '[Worker ID {}] Using per_replica batch_size of {} for {}'
+                '[Worker ID {}/{}] Using {} tfrecords and per_replica batch_size of {} for {}'  # noqa: E501
                 .format(
                     input_context.input_pipeline_id,
+                    input_context.num_input_pipelines,
+                    len(dataset),
                     batch_size,
                     self.run_mode))
 
-        dataset = dataset.cache()
+        if self.run_mode == 'train':
+            dataset = dataset.repeat()
 
         dataset = dataset.interleave(
             map_func=tf.data.TFRecordDataset,
@@ -76,8 +76,8 @@ class InputPipeline:
             dataset = dataset.prefetch(autotune)
             return dataset
 
-        dataset = dataset.shuffle(self.shuffle_buffer_size)
-
+        dataset = dataset.shuffle(self.shuffle_buffer_size,
+                                  seed=InputPipeline._RANDOM_SEED)
         dataset = dataset.map(
             map_func=lambda x: self.label_encoder.
             encode_sample(parse_example(x)),
