@@ -20,6 +20,16 @@ flags.DEFINE_boolean(
     default=False,
     help='Print debugging info')
 
+flags.DEFINE_string(
+    name='annotation_file_path',
+    default='annotations/instances_val2017.json',
+    help='Path to annotations json')
+
+flags.DEFINE_string(
+    name='prediction_file_path',
+    default='predictions.json',
+    help='Path to predictions json')
+
 
 try:
     import tensorrt as trt
@@ -47,10 +57,11 @@ def main(_):
     serving_fn = model.signatures['serving_default']
 
     coco_parser = CocoParser('.', only_val=True)
-    coco_evaluator = COCOEvaluator(None, 'annotations/instances_val2017.json',
-                                   'test.json')
+    coco_evaluator = COCOEvaluator(None,
+                                   FLAGS.annotation_file_path,
+                                   FLAGS.prediction_file_path)
 
-    fps_meter = AverageMeter(name='fps', momentum=0.95)
+    fps_meter = AverageMeter(name='fps', momentum=0.975)
     num_samples = len(coco_parser.dataset['val'])
 
     for idx, sample in enumerate(coco_parser.dataset['val']):
