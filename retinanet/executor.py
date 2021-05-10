@@ -640,6 +640,9 @@ class Executor:
                         'weights_step_{}'.format(resume_at_iteration))
                     .format(resume_at_iteration))
 
+            if self.params.training.recovery.use_inflection_detector:
+                self._inflection_detector.reset()
+
             done = self._run_training_loop()
             num_trials += 1
 

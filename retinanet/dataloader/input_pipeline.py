@@ -59,7 +59,7 @@ class InputPipeline:
             dataset = dataset.repeat()
 
         dataset = dataset.interleave(
-            map_func=lambda x: tf.data.TFRecordDataset(x).prefetch(1),
+            map_func=tf.data.TFRecordDataset,
             cycle_length=None,
             block_length=None,
             num_parallel_calls=autotune,

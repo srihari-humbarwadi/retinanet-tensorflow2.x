@@ -21,6 +21,11 @@ class InflectionDetector:
 
         return result
 
+    def reset(self):
+        self._data = []
+        self._grads = None
+        self._diffs = None
+
     @property
     def data(self):
         return self._data
