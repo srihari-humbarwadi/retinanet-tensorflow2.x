@@ -14,10 +14,10 @@ class InflectionDetector:
         result = False
         self._data += [value]
 
-        if len(self._data) > 1:
+        if len(self._data) > 2:
             self._grads = np.gradient(np.gradient(self._data))
             self._diffs = np.round(np.abs(np.diff(self._grads)), 3)
-            result = self._diffs[-1] > self.threshold
+            result = self._diffs[-2] > self.threshold
 
         return result
 
