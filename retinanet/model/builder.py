@@ -54,6 +54,10 @@ class ModelBuilder:
 
         features = backbone(images)
         features = fpn(features)
+
+        for k, v in features.items():
+            print(k, ':', v)
+
         box_outputs = box_head(features)
         class_outputs = class_head(features)
 

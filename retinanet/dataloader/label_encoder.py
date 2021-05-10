@@ -10,6 +10,8 @@ class LabelEncoder:
         self.input_shape = params.input.input_shape
         self.encoder_params = params.encoder_params
         self.anchors = AnchorBoxGenerator(*self.input_shape,
+                                          params.architecture.fpn.min_level,
+                                          params.architecture.fpn.max_level,
                                           params.anchor_params)
         self.preprocessing_pipeline = PreprocessingPipeline(
             self.input_shape, params.dataloader_params)

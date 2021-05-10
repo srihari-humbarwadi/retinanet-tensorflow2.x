@@ -21,7 +21,7 @@ class AnchorBoxGenerator:
         map in the feature pyramid.
     '''
 
-    def __init__(self, img_h, img_w, params):
+    def __init__(self, img_h, img_w, min_level, max_level, params):
         self.image_height = img_h
         self.image_width = img_w
 
@@ -30,7 +30,10 @@ class AnchorBoxGenerator:
         self.scales = params.scales
 
         self._num_anchors = len(params.aspect_ratios) * len(params.scales)
-        self._strides = [2**i for i in range(3, 8)]
+        self._min_level = min_level
+        self._max_level = max_level
+
+        self._strides = [2**i for i in range(min_level, max_level+1)]
         self._anchor_dims = self._compute_dims()
 
         self._anchor_boundaries = self._compute_anchor_boundaries()
@@ -38,7 +41,7 @@ class AnchorBoxGenerator:
 
     def _compute_anchor_boundaries(self):
         boundaries = [0]
-        for i in range(3, 8):
+        for i in range(self._min_level, self._max_level + 1):
             num_anchors = int(
                 np.ceil(self.image_height / 2**i) *
                 np.ceil(self.image_width / 2**i) * self._num_anchors)
@@ -75,10 +78,10 @@ class AnchorBoxGenerator:
         rx = tf.range(feature_width, dtype=tf.float32) + 0.5
         ry = tf.range(feature_height, dtype=tf.float32) + 0.5
         centers = tf.stack(tf.meshgrid(rx, ry), axis=-1) * \
-            self._strides[level - 3]
+            self._strides[level - self._min_level]
         centers = tf.expand_dims(centers, axis=-2)
         centers = tf.tile(centers, [1, 1, self._num_anchors, 1])
-        wh = tf.tile(self._anchor_dims[level - 3],
+        wh = tf.tile(self._anchor_dims[level - self._min_level],
                      [feature_height, feature_width, 1, 1])
         anchors = tf.concat([centers, wh], axis=-1)
         return tf.reshape(
@@ -96,7 +99,7 @@ class AnchorBoxGenerator:
                 tf.math.ceil(self.image_height / 2**i),
                 tf.math.ceil(self.image_width / 2**i),
                 i,
-            ) for i in range(3, 8)
+            ) for i in range(self._min_level, self._max_level + 1)
         ]
         return tf.concat(anchors, axis=0)
 
