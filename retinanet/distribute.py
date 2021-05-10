@@ -44,7 +44,7 @@ def get_strategy(params):
                      .format(tpu_name))
 
         c = Client(tpu_name)
-        c.configure_tpu_version(tf.__version__, restart_type='ifNeeded')
+        c.configure_tpu_version(tf.__version__, restart_type='always')
 
         logging.info('Done Configuring TPU: {} with tensorflow version: {}'
                      .format(tpu_name, tf.__version__))
