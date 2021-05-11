@@ -26,7 +26,7 @@
             "epsilon": 0.001
         },
         "backbone": {
-            "type": "efficientnet-b2",
+            "type": "efficientnet-b3",
             "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b3"
         },
         "fpn": {
