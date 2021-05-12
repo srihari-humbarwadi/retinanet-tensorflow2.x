@@ -78,7 +78,7 @@
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 320,
-        "save_every": 10000,
+        "save_every": 16000,
         "recovery": {
             "use_inflection_detector": true,
             "metric_key": "l2-regularization",
