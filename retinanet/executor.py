@@ -320,7 +320,6 @@ class Executor:
 
         self._summary_writers['train'].flush()
 
-    @tf.function
     def _write_train_summaries(self, loss_dict, step):
         with self._summary_writers['train'].as_default():
             with tf.name_scope('losses'):
@@ -347,7 +346,6 @@ class Executor:
 
         self._summary_writers['train'].flush()
 
-    @tf.function
     def _write_eval_summaries(self, scores, step):
         with self._summary_writers['eval'].as_default():
             with tf.name_scope('evaluation'):
