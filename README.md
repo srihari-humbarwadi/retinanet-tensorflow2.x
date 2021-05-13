@@ -1,7 +1,6 @@
 # RetinaNet
 
 #### Supports
- - [x] Performs better than most of the implemetations
  - [x] Train on Single/ Multiple GPUs
  - [x] Stable training with Automatic Mixed Precision (~2.5x faster compared to fp32)
  - [x] Train on TPU/ TPU pods
