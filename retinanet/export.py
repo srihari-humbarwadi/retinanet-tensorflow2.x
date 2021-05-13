@@ -33,6 +33,11 @@ flags.DEFINE_boolean(
     default=False,
     help='Export weights as an h5 file (can be used for fine tuning)')
 
+flags.DEFINE_boolean(
+    name='export_checkpoint',
+    default=False,
+    help='Export weights in tensorflow object checkpoint format')
+
 flags.DEFINE_string(
     name='checkpoint_name',
     default='latest',
@@ -105,6 +110,13 @@ def main(_):
         val_input_fn=val_input_fn,
         resume_from=checkpoint_name
     )
+    export_dir = os.path.join(FLAGS.export_dir, params.experiment.name)
+
+    if not tf.io.gfile.exists(export_dir):
+        tf.io.gfile.makedirs(export_dir)
+
+    executor.dump_config(
+        os.path.normpath(os.path.join(export_dir, 'config.json')))
 
     executor.restore_status.assert_consumed()
 
@@ -116,20 +128,21 @@ def main(_):
             executor.model.set_weights(non_averaged_weights)
 
     if FLAGS.export_h5:
-        export_dir = os.path.join(FLAGS.export_dir, executor.name)
-
-        if not os.path.exists(export_dir):
-            os.makedirs(export_dir, exist_ok=True)
-
         latest_checkpoint = os.path.basename(
             tf.train.latest_checkpoint(executor.model_dir))
-
-        export_filename = os.path.join(export_dir, latest_checkpoint + '.h5')
-
+        export_file_path = os.path.join(export_dir, latest_checkpoint + '.h5')
         logging.info(
-            'Exporting `weights in h5 format` to {}'.format(export_filename))
+            'Exporting weights in h5 format to {}'.format(export_file_path))
+        executor.model.save_weights(export_file_path)
 
-        executor.model.save_weights(export_filename)
+    if FLAGS.export_checkpoint:
+        latest_checkpoint = os.path.basename(
+            tf.train.latest_checkpoint(executor.model_dir))
+        export_file_path = os.path.join(export_dir, latest_checkpoint)
+        logging.info(
+            'Exporting weights in tensorflow checkpoint format to {}'
+            .format(export_file_path))
+        executor.model.save_weights(export_file_path)
 
     if FLAGS.export_saved_model:
         logging.info('Exporting `saved_model` to {}'.format(FLAGS.export_dir))
@@ -206,7 +219,7 @@ def main(_):
 
         tf.saved_model.save(
             inference_module,
-            os.path.join(FLAGS.export_dir, params.experiment.name),
+            export_dir,
             signatures={
                 'serving_default':
                 inference_module.run_inference.get_concrete_function(
