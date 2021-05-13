@@ -14,3 +14,4 @@ repos:
     -   id: flake8
         args:
             - --max-line-length=85
+        exclude: sotabench.py
