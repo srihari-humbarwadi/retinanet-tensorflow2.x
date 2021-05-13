@@ -154,6 +154,7 @@ trt/
 outputs/
 
 # dataset files
+annotations
 /*.json
 /converted*
 

@@ -2,7 +2,6 @@ import os
 
 from absl import app, flags, logging
 from google.cloud import storage
-
 from retinanet.cfg import Config
 
 flags.DEFINE_string(
