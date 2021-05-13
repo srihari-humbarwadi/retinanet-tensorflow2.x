@@ -16,7 +16,7 @@
  - [x] Efficientnet family of backbones
  - [x] MobileDet family of backbones
  - [ ] Anchor optimization for custom datasets
- - [ ] Upload results to **sotabench**
+ - [ ] Upload results to **sotabench** [WIP]
  - [ ] Export TensorRT model [WIP]
  - [ ] Export Onnx model [WIP]
  - [ ] Export TF-lite model
