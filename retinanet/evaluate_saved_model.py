@@ -21,14 +21,14 @@ flags.DEFINE_boolean(
     help='Print debugging info')
 
 flags.DEFINE_string(
-    name='annotation_file_path',
-    default='annotations/instances_val2017.json',
+    name='coco_data_directory',
+    default='.',
     help='Path to annotations json')
 
 flags.DEFINE_string(
     name='prediction_file_path',
     default='predictions.json',
-    help='Path to predictions json')
+    help='Path to dump predictions json')
 
 
 try:
@@ -39,27 +39,20 @@ try:
 except ImportError:
     logging.warning('TensorRT not installed')
 
-
-gpus = tf.config.list_physical_devices('GPU')
-
-if gpus:
-    print('Found {} GPU(s)'.format(len(gpus)))
-    [tf.config.experimental.set_memory_growth(device, True) for device in gpus]
-else:
-    logging.warning('No GPU\'s found, running CPU')
-
 FLAGS = flags.FLAGS
 
 
-def main(_):
-    model = tf.saved_model.load(FLAGS.saved_model_path)
-    prepare_image_fn = model.signatures['prepare_image']
-    serving_fn = model.signatures['serving_default']
+def evaluate(
+        prepare_image_fn,
+        serving_fn,
+        coco_data_directory,
+        prediction_file_path,
+        return_predictions_only=False):
 
-    coco_parser = CocoParser('.', only_val=True)
+    coco_parser = CocoParser(coco_data_directory, only_val=True)
     coco_evaluator = COCOEvaluator(None,
-                                   FLAGS.annotation_file_path,
-                                   FLAGS.prediction_file_path)
+                                   coco_parser.val_annotations_path,
+                                   prediction_file_path)
 
     fps_meter = AverageMeter(name='fps', momentum=0.975)
     num_samples = len(coco_parser.dataset['val'])
@@ -100,8 +93,32 @@ def main(_):
                 int(np.round(1000 * (t2 - t1))),
                 int(np.round(1000 * (t3 - t2)))),
             end='')
+
+    if return_predictions_only:
+        return coco_evaluator.processed_detections
+
     print()
     coco_evaluator.evaluate()
+
+
+def main(_):
+    gpus = tf.config.list_physical_devices('GPU')
+
+    if gpus:
+        print('Found {} GPU(s)'.format(len(gpus)))
+        [tf.config.experimental.set_memory_growth(device, True) for device in gpus]
+    else:
+        logging.warning('No GPU\'s found, running CPU')
+
+    model = tf.saved_model.load(FLAGS.saved_model_path)
+    prepare_image_fn = model.signatures['prepare_image']
+    serving_fn = model.signatures['serving_default']
+
+    evaluate(
+        prepare_image_fn,
+        serving_fn,
+        FLAGS.coco_data_directory,
+        FLAGS.prediction_file_path)
 
 
 if __name__ == '__main__':
