@@ -28,11 +28,11 @@ class CocoParser(Parser):
         self._skip_crowd = skip_crowd
 
         if not only_val:
-            self._train_annotations_path = os.path.join(
+            self.train_annotations_path = os.path.join(
                 download_path,
                 train_annotations_path)
 
-        self._val_annotations_path = os.path.join(
+        self.val_annotations_path = os.path.join(
             download_path,
             val_annotations_path)
 
@@ -125,8 +125,8 @@ class CocoParser(Parser):
                 self._data[split_name].append(sample)
 
         if not self._only_val:
-            _build(self._train_annotations_path, 'train')
-        _build(self._val_annotations_path, 'val')
+            _build(self.train_annotations_path, 'train')
+        _build(self.val_annotations_path, 'val')
 
         for split_name in ['train', 'val']:
             logging.info(
