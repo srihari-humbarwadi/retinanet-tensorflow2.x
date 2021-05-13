@@ -85,3 +85,7 @@ class COCOEvaluator:
             'AR-(L)-IoU=0.50:0.95': cocoEval.stats[-1]
         }
         return scores
+
+    @property
+    def processed_detections(self):
+        return self._processed_detections
