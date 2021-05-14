@@ -1,14 +1,14 @@
 {
     "experiment": {
-        "name": "mscoco-retinanet-efficientnet-b3-896x896-62x-256",
+        "name": "mscoco-retinanet-efficientnet-b2-768x768-40x-256",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
     },
     "input": {
         "input_shape": [
-            896,
-            896
+            768,
+            768
         ],
         "channels": 3
     },
@@ -26,21 +26,21 @@
             "epsilon": 0.001
         },
         "backbone": {
-            "type": "efficientnet-b3",
-            "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b3"
+            "type": "efficientnet-b2",
+            "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b2"
         },
         "fpn": {
             "type": "default",
             "use_residual_connections": false,
             "fusion_mode": "sum",
-            "filters": 160,
+            "filters": 112,
             "min_level": 3,
             "max_level": 7,
             "backbone_max_level": 5
         },
         "head": {
-            "num_convs": 4,
-            "filters": 160,
+            "num_convs": 3,
+            "filters": 112,
             "num_classes": 91,
             "num_anchors": 9
         }
@@ -73,12 +73,12 @@
         },
         "restore_checkpoint": true,
         "freeze_variables": [],
-        "train_steps": 352000,
+        "train_steps": 234375,
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 320,
-        "save_every": 16000,
+        "save_every": 8000,
         "recovery": {
             "use_inflection_detector": true,
             "metric_key": "l2-regularization",
@@ -98,7 +98,7 @@
                 "warmup_learning_rate": 0.008,
                 "alpha": 0.0001,
                 "warmup_steps": 500,
-                "total_steps": 352000
+                "total_steps": 234375
             }
         }
     },
