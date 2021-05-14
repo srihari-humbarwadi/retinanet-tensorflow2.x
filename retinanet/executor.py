@@ -498,7 +498,7 @@ class Executor:
              .format(
                  current_step,
                  self.train_steps,
-                 {k: float(np.round(v, 2)) for k, v in scores.items()}))
+                 {k: float(np.round(v, 3)) for k, v in scores.items()}))
 
         logging.info(evaluation_log)
 
