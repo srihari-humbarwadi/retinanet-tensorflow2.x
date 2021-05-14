@@ -10,7 +10,7 @@ from tensorflow.python.profiler.option_builder import ProfileOptionBuilder
 
 from retinanet.eval import COCOEvaluator
 from retinanet.loss_diagnostics import InflectionDetector
-from retinanet.utils import AverageMeter, format_eta
+from retinanet.utils import AverageMeter, DiscordLogger, format_eta
 
 
 class Executor:
@@ -76,6 +76,11 @@ class Executor:
             raise AssertionError(
                 'Invalid run mode, aborting!\n Supported run models {}'
                 .format(Executor._RUN_MODES))
+
+        if 'DISCORD_WEB_HOOK' in os.environ:
+            self._discord_logger = DiscordLogger(self.name)
+            self._log_to_discord_server = True
+            logging.info('Logging evaluation results to discord server')
 
         self._setup()
 
@@ -488,12 +493,17 @@ class Executor:
             scores,
             current_step)
 
-        logging.info(
-            '[global_step {}/{}] evaluation results: {}'
-            .format(
-                current_step,
-                self.train_steps,
-                {k: np.round(v, 2) for k, v in scores.items()}))
+        evaluation_log = \
+            ('[global_step {}/{}] evaluation results: {}'
+             .format(
+                 current_step,
+                 self.train_steps,
+                 {k: float(np.round(v, 2)) for k, v in scores.items()}))
+
+        logging.info(evaluation_log)
+
+        if self._log_to_discord_server:
+            self._discord_logger.log(evaluation_log)
 
         if self.params.training.optimizer.use_moving_average:
             logging.info('Loading back non averaged weights into model')
