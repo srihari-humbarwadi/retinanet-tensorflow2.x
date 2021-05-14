@@ -1,9 +1,9 @@
 # RetinaNet
 
 #### Supports
- - [x] Train on Single/ Multiple GPUs
+ - [x] Distributed training on multiple GPUs
  - [x] Stable training with Automatic Mixed Precision (~2.5x faster compared to fp32)
- - [x] Train on TPU/ TPU pods
+ - [x] Training on TPU and TPU pods
  - [x] Export `saved_model`
  - [x] COCO mAP evaluation callback
  - [x] Fine tuning on custom datasets
@@ -15,7 +15,7 @@
  - [x] Efficientnet family of backbones
  - [x] MobileDet family of backbones
  - [ ] Anchor optimization for custom datasets
- - [ ] Upload results to **sotabench** [WIP]
+ - [x] Logging to Discord server
  - [ ] Export TensorRT model [WIP]
  - [ ] Export Onnx model [WIP]
  - [ ] Export TF-lite model
