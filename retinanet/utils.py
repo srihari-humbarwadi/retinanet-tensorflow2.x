@@ -1,3 +1,9 @@
+import json
+import os
+
+import requests
+
+
 class AverageMeter:
 
     def __init__(self, name=None, momentum=0.997):
@@ -34,3 +40,18 @@ def format_eta(secs):
         eta += ['{:02}{}'.format(int(secs // interval), unit)]
         secs %= interval
     return ' '.join(eta)
+
+
+class DiscordLogger:
+
+    def __init__(self, experiment_name):
+        self.experiment_name = experiment_name
+        self._web_hook = os.environ['DISCORD_WEB_HOOK']
+
+    def log(self, logs):
+        requests.post(self._web_hook, {
+            'content': json.dumps({
+                'experiment_name': self.experiment_name,
+                'logs': logs
+            }, indent=4)
+        })
