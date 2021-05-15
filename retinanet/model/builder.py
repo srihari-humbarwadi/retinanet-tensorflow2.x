@@ -3,13 +3,12 @@ import re
 
 import tensorflow as tf
 from absl import logging
-
 from retinanet.losses import RetinaNetLoss
 from retinanet.model.backbone import build_backbone
 from retinanet.model.fpn import build_fpn
 from retinanet.model.head import build_heads
-from retinanet.model.layers import (FilterTopKDetections, FuseDetections,
-                                    GenerateDetections,
+from retinanet.model.layers import (BalanceFeatures, FilterTopKDetections,
+                                    FuseDetections, GenerateDetections,
                                     TransformBoxesAndScores)
 from retinanet.optimizers import build_optimizer
 
@@ -33,27 +32,36 @@ class ModelBuilder:
         self.params = params
 
     def __call__(self):
-        input_shape = self.params.input.input_shape + [self.params.input.channels]
+        params = self.params
+        input_shape = params.input.input_shape + [params.input.channels]
         images = tf.keras.Input(shape=input_shape, name="images")
 
         backbone = build_backbone(
             input_shape=input_shape,
-            params=self.params.architecture.backbone,
-            normalization_op_params=self.params.architecture.batch_norm)
+            params=params.architecture.backbone,
+            normalization_op_params=params.architecture.batch_norm)
 
-        fpn = build_fpn(params=self.params.architecture.fpn,
-                        conv_2d_op_params=self.params.architecture.conv_2d,
-                        normalization_op_params=self.params.architecture.batch_norm)
+        fpn = build_fpn(
+            params=params.architecture.fpn,
+            conv_2d_op_params=params.architecture.conv_2d,
+            normalization_op_params=params.architecture.batch_norm)
 
         box_head, class_head = build_heads(
-            params=self.params.architecture.head,
-            min_level=self.params.architecture.fpn.min_level,
-            max_level=self.params.architecture.fpn.max_level,
-            conv_2d_op_params=self.params.architecture.conv_2d,
-            normalization_op_params=self.params.architecture.batch_norm)
+            params=params.architecture.head,
+            min_level=params.architecture.fpn.min_level,
+            max_level=params.architecture.fpn.max_level,
+            conv_2d_op_params=params.architecture.conv_2d,
+            normalization_op_params=params.architecture.batch_norm)
 
         features = backbone(images)
         features = fpn(features)
+
+        if params.architecture.fpn.use_balanced_features:
+            features = BalanceFeatures(
+                min_level=params.architecture.fpn.min_level,
+                max_level=params.architecture.fpn.max_level,
+                intermediate_level=params.architecture.fpn.min_level+1)(features)
+
         box_outputs = box_head(features)
         class_outputs = class_head(features)
 
@@ -67,12 +75,12 @@ class ModelBuilder:
         )
 
         optimizer = build_optimizer(
-            self.params.training.optimizer,
-            precision=self.params.floatx.precision)
+            params.training.optimizer,
+            precision=params.floatx.precision)
 
         _loss_fn = RetinaNetLoss(
-            self.params.architecture.head.num_classes,
-            self.params.loss)
+            params.architecture.head.num_classes,
+            params.loss)
 
         model.compile(optimizer=optimizer, loss=_loss_fn)
 
@@ -88,30 +96,31 @@ class ModelBuilder:
         return inference_model
 
     def add_post_processing_stage(self, model, skip_nms=False):
+        params = self.params
         logging.info('Postprocessing stage config:\n{}'
-                     .format(json.dumps(self.params.inference, indent=4)))
+                     .format(json.dumps(params.inference, indent=4)))
 
         x = FuseDetections(
-            min_level=self.params.architecture.fpn.min_level,
-            max_level=self.params.architecture.fpn.max_level)(model.output)
+            min_level=params.architecture.fpn.min_level,
+            max_level=params.architecture.fpn.max_level)(model.output)
 
-        x = TransformBoxesAndScores(params=self.params)(x)
+        x = TransformBoxesAndScores(params=params)(x)
 
         if not skip_nms:
 
-            if self.params.inference.pre_nms_top_k > 0:
+            if params.inference.pre_nms_top_k > 0:
 
                 x = FilterTopKDetections(
-                    top_k=self.params.inference.pre_nms_top_k,
-                    filter_per_class=self.params.inference.filter_per_class)(x)
+                    top_k=params.inference.pre_nms_top_k,
+                    filter_per_class=params.inference.filter_per_class)(x)
 
             x = GenerateDetections(
-                iou_threshold=self.params.inference.iou_threshold,
-                score_threshold=self.params.inference.score_threshold,
-                max_detections=self.params.inference.max_detections,
-                soft_nms_sigma=self.params.inference.soft_nms_sigma,
-                num_classes=self.params.architecture.head.num_classes,
-                mode=self.params.inference.mode)(x)
+                iou_threshold=params.inference.iou_threshold,
+                score_threshold=params.inference.score_threshold,
+                max_detections=params.inference.max_detections,
+                soft_nms_sigma=params.inference.soft_nms_sigma,
+                num_classes=params.architecture.head.num_classes,
+                mode=params.inference.mode)(x)
 
         model = tf.keras.Model(inputs=[model.input], outputs=x)
 
