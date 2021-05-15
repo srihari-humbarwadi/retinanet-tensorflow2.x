@@ -31,6 +31,7 @@
         },
         "fpn": {
             "type": "default",
+            "use_balanced_features": false,
             "use_residual_connections": false,
             "fusion_mode": "sum",
             "filters": 112,
