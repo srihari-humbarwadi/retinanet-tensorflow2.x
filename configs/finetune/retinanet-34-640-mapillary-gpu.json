@@ -62,7 +62,7 @@
             "use_inflection_detector": true,
             "metric_key": "l2-regularization",
             "threshold": 0.05,
-            "max_trials": 2
+            "max_trials": 10
         },
         "optimizer": {
             "name": "sgd",
