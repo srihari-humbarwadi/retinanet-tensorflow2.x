@@ -29,8 +29,8 @@
             "type": "efficientnet-b2",
             "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b2"
         },
-        "fpn": {
-            "type": "default",
+        "feature_fusion": {
+            "type": "fpn",
             "use_balanced_features": true,
             "use_residual_connections": false,
             "fusion_mode": "sum",

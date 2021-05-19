@@ -21,7 +21,7 @@
             "depth": 34,
             "checkpoint": ""
         },
-        "fpn": {
+        "feature_fusion": {
             "filters": 256
         },
         "num_head_convs": 4,

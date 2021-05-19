@@ -30,8 +30,8 @@
             "depth": 50,
             "checkpoint": ""
         },
-        "fpn": {
-            "type": "default",
+        "feature_fusion": {
+            "type": "fpn",
             "use_balanced_features": false,
             "use_residual_connections": false,
             "fusion_mode": "sum",
