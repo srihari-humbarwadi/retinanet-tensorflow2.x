@@ -70,8 +70,8 @@ class TransformBoxesAndScores(tf.keras.layers.Layer):
 
         self._anchors = AnchorBoxGenerator(
             *params.input.input_shape,
-            params.architecture.fpn.min_level,
-            params.architecture.fpn.max_level,
+            params.architecture.feature_fusion.min_level,
+            params.architecture.feature_fusion.max_level,
             params.anchor_params)
 
         self._box_variance = tf.convert_to_tensor(
