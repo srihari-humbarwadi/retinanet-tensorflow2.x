@@ -115,7 +115,8 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
                 x = intermediate_features[str(level)]
 
                 if level > current_level:
-                    x = NearestUpsampling2D(scale=2**(level - current_level))(x)
+                    x = NearestUpsampling2D(
+                        scale=2**(level - current_level))(x)
 
                 elif level < current_level:
                     x = tf.keras.layers.MaxPool2D(pool_size=2**(current_level -
