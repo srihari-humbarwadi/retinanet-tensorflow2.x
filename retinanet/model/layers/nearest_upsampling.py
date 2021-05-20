@@ -3,7 +3,7 @@ import tensorflow as tf
 
 class NearestUpsampling2D(tf.keras.layers.Layer):
 
-    def __init__(self, scale, use_native=False, **kwargs):
+    def __init__(self, scale, use_native=True, **kwargs):
         super(NearestUpsampling2D, self).__init__(**kwargs)
         self.scale = scale
         self.use_native = use_native
