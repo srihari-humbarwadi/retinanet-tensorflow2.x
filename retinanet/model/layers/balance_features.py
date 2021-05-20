@@ -8,7 +8,7 @@ class BalanceFeatures(tf.keras.layers.Layer):
     def __init__(self, min_level, max_level, intermediate_level, **kwargs):
 
         if intermediate_level < min_level or intermediate_level > max_level:
-            raise AssertionError('Invalide intermedite level passed')
+            raise AssertionError('Invalid intermediate level passed')
 
         super(BalanceFeatures, self).__init__(**kwargs)
 
