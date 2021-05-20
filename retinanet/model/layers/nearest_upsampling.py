@@ -1,5 +1,4 @@
 import tensorflow as tf
-from absl import logging
 
 
 class NearestUpsampling2D(tf.keras.layers.Layer):
@@ -10,14 +9,8 @@ class NearestUpsampling2D(tf.keras.layers.Layer):
         self.use_native = use_native
 
         if use_native:
-            logging.debug(
-                'Using `tf.keras.layers.UpSampling2D` for nearest upsampling')
-
             self._native_upscaling_op = tf.keras.layers.UpSampling2D(
                 size=scale, interpolation='nearest', name=self.name)
-
-        else:
-            logging.debug('Using custom op for upsampling')
 
     def call(self, images):
         if self.use_native:
