@@ -59,9 +59,10 @@ class Executor:
         self.num_replicas = self.distribute_strategy.num_replicas_in_sync
         self.restore_status = None
         self.use_float16 = False
-        self._summary_writers = {}
+        self._log_to_discord_server = False
         self._save_during_training = params.training.save_every > 0
         self._run_evaluation_at_end = params.training.validation_freq < 1
+        self._summary_writers = {}
 
         if params.training.recovery.use_inflection_detector:
             self._inflection_detector = InflectionDetector(
