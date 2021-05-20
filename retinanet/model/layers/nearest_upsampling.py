@@ -1,13 +1,28 @@
 import tensorflow as tf
+from absl import logging
 
 
 class NearestUpsampling2D(tf.keras.layers.Layer):
 
-    def __init__(self, scale, **kwargs):
+    def __init__(self, scale, use_native=False, **kwargs):
         super(NearestUpsampling2D, self).__init__(**kwargs)
         self.scale = scale
+        self.use_native = use_native
+
+        if use_native:
+            logging.debug(
+                'Using `tf.keras.layers.UpSampling2D` for nearest upsampling')
+
+            self._native_upscaling_op = tf.keras.layers.UpSampling2D(
+                size=scale, interpolation='nearest', name=self.name)
+
+        else:
+            logging.debug('Using custom op for upsampling')
 
     def call(self, images):
+        if self.use_native:
+            return self._native_upscaling_op(images)
+
         scale = self.scale
         size = tf.shape(images)
         batch_size, height, width, channels = size[0], size[1], size[2], size[3]
