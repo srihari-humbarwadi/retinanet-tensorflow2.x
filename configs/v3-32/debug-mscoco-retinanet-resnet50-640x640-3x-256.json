@@ -17,8 +17,8 @@
     },
     "architecture": {
         "conv_2d": {
-            "use_seperable_conv": false,
-            "use_bias_before_bn": true
+            "use_seperable_conv": true,
+            "use_bias_before_bn": false
         },
         "batch_norm": {
             "use_sync": true,
@@ -31,7 +31,8 @@
             "checkpoint": "gs://tfrc_datasets/resnet50"
         },
         "feature_fusion": {
-            "type": "multi_level_attention",
+            "type": "stacked_multi_level_attention",
+            "num_repeats": 2,
             "projection_dim": 64,
             "use_balanced_features": false,
             "use_residual_connections": false,
