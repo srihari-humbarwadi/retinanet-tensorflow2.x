@@ -35,7 +35,7 @@
             "num_repeats": 2,
             "projection_dim": 128,
             "use_channel_attention": true,
-            "use_balanced_features": true,
+            "use_balanced_features": false,
             "filters": 256,
             "min_level": 3,
             "max_level": 7,
