@@ -32,7 +32,7 @@
         },
         "feature_fusion": {
             "type": "stacked_multi_level_attention",
-            "num_repeats": 6,
+            "num_repeats": 2,
             "projection_dim": 128,
             "use_balanced_features": false,
             "use_residual_connections": false,
