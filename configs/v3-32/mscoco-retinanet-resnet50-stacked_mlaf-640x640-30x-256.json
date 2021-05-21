@@ -32,12 +32,11 @@
         },
         "feature_fusion": {
             "type": "stacked_multi_level_attention",
-            "num_repeats": 3,
+            "num_repeats": 2,
             "projection_dim": 128,
+            "use_channel_attention": true,
             "use_balanced_features": false,
-            "use_residual_connections": false,
-            "fusion_mode": "sum",
-            "filters": 160,
+            "filters": 256,
             "min_level": 3,
             "max_level": 7,
             "backbone_max_level": 5
