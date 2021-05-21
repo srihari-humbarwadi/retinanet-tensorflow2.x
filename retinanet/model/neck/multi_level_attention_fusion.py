@@ -79,18 +79,20 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
             self.projection_norms[level] = normalization_op(
                 name='l' + str(level) + '-projection-batch_normalization')
 
-        for level in range(min_level, max_level + 1):
-            level = str(level)
-            self.output_norms[level] = normalization_op(name='p' + str(level) +
-                                                        '-batch_normalization')
-            self.output_convs[level] = conv_2d_op(
-                filters=self.filters,
-                kernel_size=3,
-                padding='same',
-                strides=2 if int(level) > backbone_max_level else 1,
-                use_bias=conv_2d_op_params.use_bias_before_bn,
-                name='p' + str(level) + '-conv2d',
-                **kernel_initializer_config)
+        if not max_level == backbone_max_level:
+            
+            for level in range(min_level, max_level + 1):
+                level = str(level)
+                self.output_norms[level] = normalization_op(name='p' + str(level) +
+                                                            '-batch_normalization')
+                self.output_convs[level] = conv_2d_op(
+                    filters=self.filters,
+                    kernel_size=3,
+                    padding='same',
+                    strides=2 if int(level) > backbone_max_level else 1,
+                    use_bias=conv_2d_op_params.use_bias_before_bn,
+                    name='p' + str(level) + '-conv2d',
+                    **kernel_initializer_config)
 
     def call(self, features, training=False):
         intermediate_features = {}
@@ -140,24 +142,27 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
             fused_features = tf.reduce_sum(fused_features * x, axis=0)
             outputs[str(current_level)] = fused_features
 
-        for level in range(self.min_level, self.max_level + 1):
-            level = str(level)
-            if int(level) <= self.backbone_max_level:
-                outputs[level] = self.output_convs[level](outputs[level])
+        if not self.max_level == self.backbone_max_level:
 
-            elif int(level) == self.backbone_max_level + 1:
-                outputs[level] = self.output_convs[level](
-                    outputs[str(int(level) - 1)])
+            for level in range(self.min_level, self.max_level + 1):
+                level = str(level)
+                if int(level) <= self.backbone_max_level:
+                    outputs[level] = self.output_convs[level](outputs[level])
 
-            else:
-                prev_level_output = \
-                    tf.nn.relu(outputs[str(int(level) - 1)])
+                elif int(level) == self.backbone_max_level + 1:
+                    outputs[level] = self.output_convs[level](
+                        outputs[str(int(level) - 1)])
 
-                outputs[level] = self.output_convs[level](prev_level_output)
+                else:
+                    prev_level_output = \
+                        tf.nn.relu(outputs[str(int(level) - 1)])
 
-        for level in range(self.min_level, self.max_level + 1):
-            level = str(level)
-            outputs[level] = self.output_norms[level](
-                outputs[level], training=training)
+                    outputs[level] = self.output_convs[level](
+                        prev_level_output)
+
+            for level in range(self.min_level, self.max_level + 1):
+                level = str(level)
+                outputs[level] = self.output_norms[level](
+                    outputs[level], training=training)
 
         return outputs
