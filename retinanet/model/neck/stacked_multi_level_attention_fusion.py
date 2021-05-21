@@ -17,6 +17,7 @@ class StackedMultiLevelAttentionFusion(tf.keras.layers.Layer):
                  backbone_max_level=5,
                  conv_2d_op_params=None,
                  normalization_op_params=None,
+                 use_channel_attention=True,
                  **kwargs):
         super(StackedMultiLevelAttentionFusion, self).__init__(**kwargs)
 
@@ -29,6 +30,7 @@ class StackedMultiLevelAttentionFusion(tf.keras.layers.Layer):
             backbone_max_level=backbone_max_level,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
+            use_channel_attention=use_channel_attention,
             **kwargs)
 
         self._blocks = {}

@@ -14,6 +14,7 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
                  conv_2d_op_params=None,
                  normalization_op_params=None,
                  use_lateral_conv=True,
+                 use_channel_attention=True,
                  **kwargs):
         super(MultiLevelAttentionFusion, self).__init__(**kwargs)
 
@@ -22,6 +23,7 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
         self.max_level = max_level
         self.backbone_max_level = backbone_max_level
         self.use_lateral_conv = use_lateral_conv
+        self.use_channel_attention = use_channel_attention
 
         self.projection_convs = {}
         self.attention_convs = {}
@@ -71,7 +73,7 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
 
             self.attention_convs[level] = conv_2d_op(
                 filters=self.num_features *
-                filters,
+                (filters if use_channel_attention else 1),
                 kernel_size=1,
                 name='l' + str(level) + '-attention-conv2d')
 

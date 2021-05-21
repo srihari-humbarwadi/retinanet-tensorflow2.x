@@ -27,6 +27,7 @@ def build_neck(params, conv_2d_op_params=None, normalization_op_params=None):
             backbone_max_level=params.backbone_max_level,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
+            use_channel_attention=params.use_channel_attention,
             name='mlaf')
 
     elif params.type == 'stacked_multi_level_attention':
@@ -39,6 +40,7 @@ def build_neck(params, conv_2d_op_params=None, normalization_op_params=None):
             backbone_max_level=params.backbone_max_level,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
+            use_channel_attention=params.use_channel_attention,
             name='stacked_mlaf')
     else:
         raise ValueError('{} FPN not implemented'.format(params.type))
