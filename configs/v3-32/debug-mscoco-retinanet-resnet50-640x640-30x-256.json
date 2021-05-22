@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "name": "debug-mscoco-retinanet-resnet50-640x640-3x-256",
+        "name": "debug-mscoco-retinanet-resnet50-640x640-30x-256",
         "run_mode": "train",
         "model_dir": "gs://tfrc_datasets/model_files",
         "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -78,12 +78,12 @@
         "freeze_variables": [
             "resnet_initial"
         ],
-        "train_steps": 16875,
+        "train_steps": 168750,
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 200,
-        "save_every": 10000,
+        "save_every": 5000,
         "recovery": {
             "use_inflection_detector": true,
             "metric_key": "l2-regularization",
@@ -102,7 +102,7 @@
                 "warmup_learning_rate": 0.008,
                 "alpha": 0.0001,
                 "warmup_steps": 500,
-                "total_steps": 16875
+                "total_steps": 168750
             }
         }
     },
