@@ -75,9 +75,7 @@
             "name": "v3-32"
         },
         "restore_checkpoint": true,
-        "freeze_variables": [
-            "resnet_initial"
-        ],
+        "freeze_variables": [],
         "train_steps": 168750,
         "validation_samples": 4952,
         "validation_freq": -1,
