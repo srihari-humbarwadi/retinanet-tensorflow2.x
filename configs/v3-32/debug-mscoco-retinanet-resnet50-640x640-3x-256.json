@@ -149,8 +149,8 @@
             "use_augmentation": true,
             "horizontal_flip": true,
             "scale_jitter": {
-                "min_scale": 0.5,
-                "max_scale": 2.0
+                "min_scale": 0.8,
+                "max_scale": 1.2
             }
         },
         "preprocessing": {
