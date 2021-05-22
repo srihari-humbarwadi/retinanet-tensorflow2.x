@@ -82,7 +82,7 @@
         "validation_samples": 4952,
         "validation_freq": -1,
         "annotation_file_path": "./instances_val2017.json",
-        "steps_per_execution": 200,
+        "steps_per_execution": 500,
         "save_every": 5000,
         "recovery": {
             "use_inflection_detector": true,
@@ -101,7 +101,7 @@
                 "initial_learning_rate": 0.32,
                 "warmup_learning_rate": 0.008,
                 "alpha": 0.0001,
-                "warmup_steps": 500,
+                "warmup_steps": 1000,
                 "total_steps": 168750
             }
         }
