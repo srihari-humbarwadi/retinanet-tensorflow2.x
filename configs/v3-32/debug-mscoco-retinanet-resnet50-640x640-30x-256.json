@@ -92,15 +92,22 @@
             "name": "sgd",
             "momentum": 0.9,
             "nesterov": true,
+            "global_clipnorm": 16.0,
             "use_moving_average": true,
             "moving_average_decay": 0.9998,
             "lr_params": {
-                "schedule_type": "cosine_decay",
-                "initial_learning_rate": 0.32,
-                "warmup_learning_rate": 0.008,
-                "alpha": 0.0001,
-                "warmup_steps": 1000,
-                "total_steps": 168750
+                "schedule_type": "piecewise_constant_decay",
+                "warmup_learning_rate": 0.0067,
+                "warmup_steps": 500,
+                "values": [
+                    0.32,
+                    0.032,
+                    0.0032
+                ],
+                "boundaries": [
+                    148160,
+                    157420
+                ]
             }
         }
     },
