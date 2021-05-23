@@ -3,6 +3,13 @@ from retinanet.model.layers import NearestUpsampling2D
 from retinanet.model.utils import get_normalization_op
 
 
+def add_n(tensor_list):
+    result = tensor_list[0]
+    for i in range(1, len(tensor_list)):
+        result += tensor_list[i]
+    return result
+
+
 class MultiLevelAttentionFusion(tf.keras.layers.Layer):
 
     def __init__(self,
@@ -128,9 +135,9 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
 
                 fused_features.append(x)
 
+            x = add_n(fused_features)
             fused_features = tf.stack(fused_features)
 
-            x = tf.reduce_sum(fused_features, axis=0)
             x = tf.reduce_mean(x, axis=[1, 2], keepdims=True)
             x = self.projection_convs[str(current_level)](x)
             x = self.projection_norms[str(current_level)](x, training=training)
