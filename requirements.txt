@@ -3,4 +3,5 @@ matplotlib==3.3.2
 pycocotools==2.0.2
 sotabencheval==0.0.38
 # tensorflow==2.5.0
+tensorflow_addons
 tqdm==4.51.0
