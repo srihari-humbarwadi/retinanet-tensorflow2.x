@@ -2,6 +2,5 @@ easydict==1.9
 matplotlib==3.3.2
 pycocotools==2.0.2
 sotabencheval==0.0.38
-# tensorflow==2.4.0
-tf-nightly==2.6.0.dev20210510
+# tensorflow==2.5.0
 tqdm==4.51.0
