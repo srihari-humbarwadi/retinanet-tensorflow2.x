@@ -40,14 +40,15 @@ def get_strategy(params):
                     'Changed TPU name from {} to {} (overided with ENV VAR `TPU_NAME`)'  # noqa: E501
                     .format(params.name, tpu_name))
 
-        logging.info('Configuring TPU: {} with correct tensorflow version'
-                     .format(tpu_name))
+        if tpu_name not in {'', 'local'}:
+            logging.info('Configuring TPU: {} with correct tensorflow version'
+                         .format(tpu_name))
 
-        c = Client(tpu_name)
-        c.configure_tpu_version(tf.__version__, restart_type='always')
+            c = Client(tpu_name)
+            c.configure_tpu_version(tf.__version__, restart_type='always')
 
-        logging.info('Done Configuring TPU: {} with tensorflow version: {}'
-                     .format(tpu_name, tf.__version__))
+            logging.info('Done Configuring TPU: {} with tensorflow version: {}'
+                         .format(tpu_name, tf.__version__))
 
         resolver = tf.distribute.cluster_resolver.TPUClusterResolver.connect(
             tpu_name)
