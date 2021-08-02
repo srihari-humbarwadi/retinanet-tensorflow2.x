@@ -108,7 +108,7 @@ def main(_):
         print('Found {} GPU(s)'.format(len(gpus)))
         [tf.config.experimental.set_memory_growth(device, True) for device in gpus]
     else:
-        logging.warning('No GPU\'s found, running CPU')
+        logging.warning('No GPU\'s found, running on CPU')
 
     model = tf.saved_model.load(FLAGS.saved_model_path)
     prepare_image_fn = model.signatures['prepare_image']

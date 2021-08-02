@@ -1,3 +1,4 @@
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
@@ -77,3 +78,36 @@ def visualize_detections(image,
     if save:
         plt.savefig(filename, bbox_inches='tight')
         plt.close()
+
+
+def visualize_detections_cv2(image, boxes, classes, scores, score_threshold,
+                             save=False, filename='output.png'):
+    image = np.uint8(image)
+    boxes = np.array(boxes, dtype=np.int32)
+    for _box, _cls, _score in zip(boxes, classes, scores):
+
+        if _score < score_threshold:
+            continue
+
+        text = '{} | {:.2f}'.format(_cls, _score)
+        text_orig = (_box[0] + 5, _box[1] - 6)
+        image = cv2.putText(image,
+                            text,
+                            text_orig,
+                            cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                            .35, [0, 0, 0],
+                            4,
+                            lineType=cv2.LINE_AA)
+        image = cv2.putText(image,
+                            text,
+                            text_orig,
+                            cv2.FONT_HERSHEY_COMPLEX_SMALL,
+                            .35, [255, 255, 255],
+                            1,
+                            lineType=cv2.LINE_AA)
+        image = cv2.rectangle(image, (_box[0], _box[1]), (_box[2], _box[3]),
+                              [0, 0, 255], 1)
+
+        if save:
+            cv2.imwrite(filename, image[:, :, ::-1])
+    return image
