@@ -1,4 +1,5 @@
 # RetinaNet
+### This work is supported by Cloud TPUs from Google's TPU Research Cloud (TRC)
 
 #### Supports
  - [x] Distributed training on multiple GPUs
