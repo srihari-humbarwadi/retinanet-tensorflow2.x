@@ -1,3 +1,4 @@
+import logging
 import tensorflow as tf
 
 from retinanet.dataloader.anchor_generator import AnchorBoxGenerator
@@ -194,11 +195,13 @@ class GenerateDetections(tf.keras.layers.Layer):
         self._running_on_tpu = isinstance(
             tf.distribute.get_strategy(), tf.distribute.TPUStrategy)
 
-        if (self._running_on_tpu and
-           mode != 'GlobalHardNMS' and mode != 'PerClassHardNMS'):
-            raise AssertionError(
-                'Requested mode not supported on Cloud TPUs.'
-                ' Please use `GlobalHardNMS` or `PerClassHardNMS`')
+        if self._running_on_tpu:
+            if mode != 'GlobalHardNMS' and mode != 'PerClassHardNMS':
+                raise AssertionError(
+                    'Requested mode not supported on Cloud TPUs.'
+                    ' Please use `GlobalHardNMS` or `PerClassHardNMS`')
+
+            logging.warn('Running on NMS op on TPU')
 
         super(GenerateDetections, self).__init__(**kwargs)
 
@@ -278,7 +281,6 @@ class GenerateDetections(tf.keras.layers.Layer):
         }
 
     def _tpu_global_hard_nms(self, predictions):
-        print('tracing tpu function')
         scores = tf.reduce_max(predictions['scores'], axis=-1)
         classes = tf.argmax(predictions['scores'], axis=-1)
         boxes = predictions['boxes']
