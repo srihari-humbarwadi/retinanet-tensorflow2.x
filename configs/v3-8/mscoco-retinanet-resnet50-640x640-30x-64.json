@@ -172,12 +172,12 @@
         "shuffle_buffer_size": 10240
     },
     "inference": {
-        "mode": "CombinedNMS",
+        "mode": "GlobalHardNMS",
         "iou_threshold": 0.5,
         "score_threshold": 0.05,
         "soft_nms_sigma": 0.5,
         "pre_nms_top_k": 5000,
-        "filter_per_class": true,
+        "filter_per_class": false,
         "max_detections": 100
     }
 }
