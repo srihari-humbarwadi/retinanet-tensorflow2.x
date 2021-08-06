@@ -67,7 +67,7 @@
         "weight_decay_alpha": 0.0001,
         "batch_size": {
             "train": 64,
-            "val": 8
+            "val": 64
         },
         "strategy": {
             "type": "tpu",

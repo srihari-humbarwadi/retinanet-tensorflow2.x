@@ -73,7 +73,7 @@ class InputPipeline:
                     parse_example(x)),
                 num_parallel_calls=autotune)
             dataset = dataset.batch(
-                batch_size=self.num_replicas,
+                batch_size=batch_size,
                 drop_remainder=False)
             dataset = dataset.prefetch(autotune)
             return dataset
