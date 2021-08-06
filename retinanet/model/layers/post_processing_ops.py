@@ -191,6 +191,15 @@ class GenerateDetections(tf.keras.layers.Layer):
                 'Requested unsupported mode: {}, available modes are: {}'
                 .format(mode, GenerateDetections._SUPPORTED_NMS_MODES))
 
+        self._running_on_tpu = isinstance(
+            tf.distribute.get_strategy(), tf.distribute.TPUStrategy)
+
+        if (self._running_on_tpu and
+           mode != 'GlobalHardNMS' and mode != 'PerClassHardNMS'):
+            raise AssertionError(
+                'Requested mode not supported on Cloud TPUs.'
+                ' Please use `GlobalHardNMS` or `PerClassHardNMS`')
+
         super(GenerateDetections, self).__init__(**kwargs)
 
         self.iou_threshold = iou_threshold
@@ -266,6 +275,59 @@ class GenerateDetections(tf.keras.layers.Layer):
             'boxes': detections[1],
             'classes': detections[2],
             'valid_detections': detections[3]
+        }
+
+    def _tpu_global_hard_nms(self, predictions):
+        print('tracing tpu function')
+        scores = tf.reduce_max(predictions['scores'], axis=-1)
+        classes = tf.argmax(predictions['scores'], axis=-1)
+        boxes = predictions['boxes']
+
+        batch_size, num_anchors, _ = boxes.get_shape().as_list()
+
+        if batch_size is None:
+            batch_size = tf.shape(batch_size)[0]
+
+        indices, valid_detections = \
+            tf.image.non_max_suppression_padded(
+                boxes=boxes,
+                scores=scores,
+                max_output_size=self.max_detections,
+                iou_threshold=self.iou_threshold,
+                score_threshold=self.score_threshold,
+                canonicalized_coordinates=True,
+                pad_to_max_output_size=True)
+
+        idx = tf.expand_dims(tf.range(self.max_detections), axis=0)
+        idx = tf.tile(idx, [batch_size, 1])
+
+        valid_detection_mask = tf.less(idx, tf.expand_dims(valid_detections,
+                                                           axis=-1))
+        valid_detection_mask = tf.reshape(valid_detection_mask,
+                                          [batch_size, self.max_detections, 1])
+
+        scores = tf.expand_dims(scores, axis=-1)
+        classes = tf.expand_dims(tf.cast(classes, dtype=tf.float32), axis=-1)
+
+        boxes_classes_scores = tf.concat([boxes, classes, scores], axis=-1)
+        selected_boxes_classes_scores = tf.gather(boxes_classes_scores,
+                                                  indices,
+                                                  batch_dims=1)
+
+        selected_boxes_classes_scores = tf.where(
+            valid_detection_mask, selected_boxes_classes_scores,
+            tf.ones_like(selected_boxes_classes_scores) * -1.0)
+
+        selected_scores = selected_boxes_classes_scores[:, :, 5]
+        selected_boxes = selected_boxes_classes_scores[:, :, :4]
+        selected_classes = tf.cast(selected_boxes_classes_scores[:, :, 4],
+                                   dtype=tf.int32)
+
+        return {
+            'scores': selected_scores,
+            'boxes': selected_boxes,
+            'classes': selected_classes,
+            'valid_detections': valid_detections
         }
 
     def _per_class_nms(self, predictions, sigma):
@@ -382,6 +444,9 @@ class GenerateDetections(tf.keras.layers.Layer):
             return self._global_nms(predictions, sigma=self.soft_nms_sigma)
 
         if self.mode == 'GlobalHardNMS':
+            if self._running_on_tpu:
+                return self._tpu_global_hard_nms(predictions)
+
             return self._global_nms(predictions, sigma=0.0)
 
         if self.mode == 'PerClassSoftNMS':
