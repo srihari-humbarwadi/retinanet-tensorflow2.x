@@ -47,7 +47,7 @@ class Executor:
         self.validation_samples = params.training.validation_samples
         self.val_freq = params.training.validation_freq
         self.steps_per_execution = params.training.steps_per_execution
-        self.batch_size = params.training.batch_size['train']
+        self.batch_size = params.training.batch_size
         self.model_dir = os.path.join(
             params.experiment.model_dir, params.experiment.name)
         self.save_every = params.training.save_every
@@ -472,7 +472,7 @@ class Executor:
             steps_per_second_average_meter.accumulate(
                 1 / execution_time)
             steps_per_second = steps_per_second_average_meter.averaged_value
-            images_per_second = steps_per_second * self.num_replicas
+            images_per_second = steps_per_second * self.batch_size['val']
 
             eta = format_eta((total_steps - (i + 1)) / steps_per_second)
 
@@ -571,7 +571,7 @@ class Executor:
                 self.steps_per_execution / loss_dict['execution-time'])
             steps_per_second = steps_per_second_average_meter.averaged_value
 
-            images_per_second = steps_per_second * self.batch_size
+            images_per_second = steps_per_second * self.batch_size['train']
 
             eta = format_eta(
                 (self.train_steps - current_step) / steps_per_second)
