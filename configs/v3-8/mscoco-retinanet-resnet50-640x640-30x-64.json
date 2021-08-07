@@ -77,7 +77,7 @@
         "freeze_variables": [],
         "train_steps": 648200,
         "validation_samples": 4952,
-        "validation_freq": -1,
+        "validation_freq": 1792,
         "annotation_file_path": "./instances_val2017.json",
         "steps_per_execution": 128,
         "save_every": 6400,
