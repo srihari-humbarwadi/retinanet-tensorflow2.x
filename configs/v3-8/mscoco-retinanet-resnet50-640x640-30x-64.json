@@ -92,7 +92,7 @@
             "momentum": 0.9,
             "nesterov": false,
             "global_clipnorm": 16.0,
-            "use_moving_average": true,
+            "use_moving_average": false,
             "moving_average_decay": 0.9998,
             "lr_params": {
                 "schedule_type": "piecewise_constant_decay",
