@@ -280,6 +280,98 @@ class GenerateDetections(tf.keras.layers.Layer):
             'valid_detections': detections[3]
         }
 
+    def _tpu_per_class_hard_nms(self, predictions):
+        scores = predictions['scores']
+        boxes = predictions['boxes']
+
+        boxes_shape = boxes.get_shape().as_list()
+        batch_size = boxes_shape[0]
+        num_anchors = boxes_shape[1]
+
+        if batch_size is None:
+            batch_size = tf.shape(boxes)[0]
+
+        if num_anchors is None:
+            num_anchors = tf.shape(boxes)[1]
+
+        if len(boxes_shape) == 3:
+            boxes = tf.expand_dims(boxes, axis=2)
+            class_agnostic_boxes = True
+            boxes_idx = 0
+        else:
+            class_agnostic_boxes = False
+
+        per_class_scores = []
+        per_class_boxes = []
+        classes = []
+        for class_id in range(self.num_classes):
+            # boxes_idx = 0 if boxes are class agnostic
+            # boxes_idx = class_id if boxes are class specific.
+            # boxes are class specific when inference.filter_per_class = True
+            if not class_agnostic_boxes:
+                boxes_idx = class_id
+
+            boxes_for_class_id = boxes[:, :, boxes_idx, :]
+            scores_for_class_id = scores[:, :, class_id]
+
+            indices, valid_detections = \
+                tf.image.non_max_suppression_padded(
+                    boxes=boxes_for_class_id,
+                    scores=scores_for_class_id,
+                    max_output_size=self.max_detections,
+                    iou_threshold=self.iou_threshold,
+                    canonicalized_coordinates=True,
+                    pad_to_max_output_size=True)
+
+            per_class_boxes.append(
+                tf.gather(boxes_for_class_id, indices, batch_dims=1))
+            per_class_scores.append(
+                tf.gather(scores_for_class_id, indices, batch_dims=1))
+            classes.append(
+                tf.fill([batch_size, self.max_detections], class_id))
+
+        all_class_boxes = tf.concat(per_class_boxes, axis=1)
+        all_class_scores = tf.concat(per_class_scores, axis=1)
+        classes = tf.concat(classes, axis=1)
+        classes = tf.cast(classes, dtype=tf.float32)
+
+        boxes_classes_scores = tf.concat([
+            all_class_boxes,
+            tf.expand_dims(classes, axis=-1),
+            tf.expand_dims(all_class_scores, axis=-1)
+        ], axis=-1)
+
+        _, selected_indices = tf.nn.top_k(input=all_class_scores,
+                                          k=self.max_detections)
+
+        selected_boxes_classes_scores = tf.gather(boxes_classes_scores,
+                                                  selected_indices,
+                                                  batch_dims=1)
+
+        #  set low confidence anchors to -1.0
+        valid_detections_mask = tf.greater(selected_boxes_classes_scores[:, :, 5],
+                                           self.score_threshold)
+
+        valid_detections = tf.reduce_sum(tf.cast(valid_detections_mask,
+                                                 dtype=tf.float32),
+                                         axis=-1)
+
+        selected_boxes_classes_scores = tf.where(
+            tf.expand_dims(valid_detections_mask, axis=-1),
+            selected_boxes_classes_scores,
+            tf.ones_like(selected_boxes_classes_scores) * -1.0)
+
+        selected_boxes = selected_boxes_classes_scores[:, :, :4]
+        selected_scores = selected_boxes_classes_scores[:, :, 5]
+        selected_classes = selected_boxes_classes_scores[:, :, 4]
+
+        return {
+            'scores': selected_scores,
+            'boxes': selected_boxes,
+            'classes': tf.cast(selected_classes, dtype=tf.int32),
+            'valid_detections': tf.cast(valid_detections, dtype=tf.int32)
+        }
+
     def _tpu_global_hard_nms(self, predictions):
         scores = tf.reduce_max(predictions['scores'], axis=-1)
         classes = tf.argmax(predictions['scores'], axis=-1)
@@ -288,7 +380,7 @@ class GenerateDetections(tf.keras.layers.Layer):
         batch_size, num_anchors, _ = boxes.get_shape().as_list()
 
         if batch_size is None:
-            batch_size = tf.shape(batch_size)[0]
+            batch_size = tf.shape(boxes)[0]
 
         indices, valid_detections = \
             tf.image.non_max_suppression_padded(
@@ -455,4 +547,7 @@ class GenerateDetections(tf.keras.layers.Layer):
             return self._per_class_nms(predictions, sigma=self.soft_nms_sigma)
 
         if self.mode == 'PerClassHardNMS':
+            if self._running_on_tpu:
+                return self._tpu_per_class_hard_nms(predictions)
+
             return self._per_class_nms(predictions, sigma=0.0)
