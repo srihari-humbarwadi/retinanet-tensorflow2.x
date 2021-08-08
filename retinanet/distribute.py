@@ -40,7 +40,8 @@ def get_strategy(params):
                     'Changed TPU name from {} to {} (overided with ENV VAR `TPU_NAME`)'  # noqa: E501
                     .format(params.name, tpu_name))
 
-        if tpu_name not in {'', 'local'}:
+        if tpu_name not in {'', 'local'} and 'pod' not in tpu_name:
+            # skip configuring TPU when TPU VM is detected
             logging.info('Configuring TPU: {} with correct tensorflow version'
                          .format(tpu_name))
 
