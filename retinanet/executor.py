@@ -596,7 +596,7 @@ class Executor:
                     write_histogram=write_histogram)
 
             logging.info(
-                'trial: {}/{}][global_step {}/{}][ETA: {}][{: .2f} imgs/s] {}'
+                '[trial: {}/{}][global_step {}/{}][ETA: {}][{: .2f} imgs/s] {}'
                 .format(
                     current_trial,
                     self._max_trials,
@@ -632,10 +632,10 @@ class Executor:
         return True
 
     def train(self):
-        done = self._run_training_loop()
-        num_trials = 1
+        current_trial = 1
+        done = self._run_training_loop(current_trial=current_trial)
 
-        while not done and num_trials < self._max_trials:
+        while not done and current_trial < self._max_trials:
             latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
 
             if latest_checkpoint is not None:
@@ -657,11 +657,12 @@ class Executor:
             if self.params.training.recovery.use_inflection_detector:
                 self._inflection_detector.reset()
 
-            done = self._run_training_loop(current_trial=num_trials)
-            num_trials += 1
+            done = self._run_training_loop(current_trial=current_trial)
+            current_trial += 1
 
         if not done:
-            logging.warning('Training failed after {} tries'.format(num_trials))
+            logging.warning(
+              'Training failed after {} tries'.format(current_trial))
 
     def _add_graph_trace(self):
         if self._trace_written:
