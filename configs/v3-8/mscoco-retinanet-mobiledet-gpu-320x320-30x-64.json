@@ -1,7 +1,7 @@
 {
   "experiment": {
     "name": "mscoco-retinanet-mobiledet-gpu-320x320-30x-64",
-    "run_mode": "train",
+    "run_mode": "train_val",
     "model_dir": "gs://tfrc_datasets/model_files",
     "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
   },
