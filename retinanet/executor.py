@@ -513,7 +513,7 @@ class Executor:
 
         return scores
 
-    def _run_training_loop(self):
+    def _run_training_loop(self, current_trial=0):
         if self.restore_checkpoint and self.restore_status is not None:
             self.restore_status.assert_consumed()
 
@@ -595,14 +595,17 @@ class Executor:
                     step=tf.convert_to_tensor(current_step, dtype=tf.int64),
                     write_histogram=write_histogram)
 
-            logging.info('[global_step {}/{}] [ETA: {}] [{:.2f} imgs/s] {}'
-                         .format(
-                             current_step,
-                             self.train_steps,
-                             eta,
-                             images_per_second,
-                             {k: np.round(v, 4)
-                              for k, v in loss_dict.items()}))
+            logging.info(
+                'trial: {}/{}][global_step {}/{}][ETA: {}][{: .2f} imgs/s] {}'
+                .format(
+                    current_trial,
+                    self._max_trials,
+                    current_step,
+                    self.train_steps,
+                    eta,
+                    images_per_second,
+                    {k: np.round(v, 4)
+                     for k, v in loss_dict.items()}))
 
             if self.params.training.recovery.use_inflection_detector:
                 value = loss_dict[self.params.training.recovery.metric_key].numpy()
@@ -654,7 +657,7 @@ class Executor:
             if self.params.training.recovery.use_inflection_detector:
                 self._inflection_detector.reset()
 
-            done = self._run_training_loop()
+            done = self._run_training_loop(current_trial=num_trials)
             num_trials += 1
 
         if not done:
