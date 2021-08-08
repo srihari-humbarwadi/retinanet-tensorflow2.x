@@ -32,7 +32,7 @@
     },
     "feature_fusion": {
       "type": "fpn",
-      "use_balanced_features": true,
+      "use_balanced_features": false,
       "use_residual_connections": false,
       "fusion_mode": "sum",
       "filters": 256,
@@ -67,7 +67,7 @@
     "weight_decay_alpha": 0.0001,
     "batch_size": {
       "train": 256,
-      "val": 8
+      "val": 64
     },
     "strategy": {
       "type": "tpu",
@@ -92,7 +92,7 @@
       "momentum": 0.9,
       "nesterov": false,
       "global_clipnorm": 16.0,
-      "use_moving_average": true,
+      "use_moving_average": false,
       "moving_average_decay": 0.9998,
       "lr_params": {
         "schedule_type": "piecewise_constant_decay",
