@@ -63,7 +63,7 @@ class InputPipeline:
             cycle_length=None,
             block_length=None,
             num_parallel_calls=autotune,
-            deterministic=False)
+            deterministic=True)
 
         if self.run_mode == 'val':
             preprocess_fn = \

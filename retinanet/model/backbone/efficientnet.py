@@ -21,7 +21,6 @@ import numpy as np
 import six
 import tensorflow as tf
 from absl import logging
-from six.moves import xrange
 
 from retinanet.model.utils import get_normalization_op
 
@@ -95,7 +94,7 @@ _EFFICIENTNET_LITE_DEFAULT_BLOCKS_ARGS = [
 ]
 
 
-def drop_connect(inputs, is_training, survival_prob):
+def drop_connect(inputs, is_training, survival_prob, seed=0):
     """Drop the entire conv with given survival probability."""
     # "Deep Networks with Stochastic Depth", https://arxiv.org/pdf/1603.09382.pdf
     if not is_training:
@@ -104,7 +103,8 @@ def drop_connect(inputs, is_training, survival_prob):
     # Compute tensor.
     batch_size = tf.shape(inputs)[0]
     random_tensor = survival_prob
-    random_tensor += tf.random.uniform([batch_size, 1, 1, 1], dtype=inputs.dtype)
+    random_tensor += tf.random.uniform(
+      [batch_size, 1, 1, 1], dtype=inputs.dtype, seed=seed)
     binary_tensor = tf.floor(random_tensor)
     # Unlike conventional way that multiply survival_prob at test time, here we
     # divide survival_prob at training time, such that no addition compute is
@@ -113,7 +113,7 @@ def drop_connect(inputs, is_training, survival_prob):
     return output
 
 
-def conv_kernel_initializer(shape, dtype=None, partition_info=None):
+def conv_kernel_initializer(shape, dtype=None, partition_info=None, seed=0):
     """Initialization for convolutional kernels.
 
   The main difference with tf.variance_scaling_initializer is that
@@ -136,10 +136,11 @@ def conv_kernel_initializer(shape, dtype=None, partition_info=None):
     return tf.random.normal(shape,
                             mean=0.0,
                             stddev=np.sqrt(2.0 / fan_out),
-                            dtype=dtype)
+                            dtype=dtype,
+                            seed=seed)
 
 
-def dense_kernel_initializer(shape, dtype=None, partition_info=None):
+def dense_kernel_initializer(shape, dtype=None, partition_info=None, seed=0):
     """Initialization for dense kernels.
 
   This initialization is equal to
@@ -157,7 +158,8 @@ def dense_kernel_initializer(shape, dtype=None, partition_info=None):
   """
     del partition_info
     init_range = 1.0 / np.sqrt(shape[1])
-    return tf.random.uniform(shape, -init_range, init_range, dtype=dtype)
+    return tf.random.uniform(
+      shape, -init_range, init_range, dtype=dtype, seed=seed)
 
 
 def superpixel_kernel_initializer(shape, dtype='float32', partition_info=None):
@@ -769,7 +771,7 @@ class Model(tf.keras.Model):
                 block_args = block_args._replace(
                     input_filters=block_args.output_filters, strides=[1, 1])
                 # pylint: enable=protected-access
-            for _ in xrange(block_args.num_repeat - 1):
+            for _ in range(block_args.num_repeat - 1):
                 self._blocks.append(
                     conv_block(block_args,
                                self._global_params,

@@ -12,6 +12,11 @@ from retinanet import Executor
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
 
+flags.DEFINE_integer(
+  name='global_seed',
+  default=1337,
+  help='Sets global seed for all tensorflow random ops')
+
 flags.DEFINE_string(
     name='config_path',
     default=None,
@@ -76,6 +81,8 @@ def set_precision(precision):
 
 
 def main(_):
+    tf.random.set_seed(FLAGS.global_seed)
+
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
 
     params = Config(FLAGS.config_path).params
@@ -84,6 +91,8 @@ def main(_):
         os.makedirs(FLAGS.log_dir, exist_ok=True)
 
     logging.get_absl_handler().use_absl_log_file(params.experiment.name)
+
+    logging.warning('Using {} as global seed'.format(FLAGS.global_seed))
 
     if FLAGS.is_multi_host:
         logging.warning('Running in multi_host mode')

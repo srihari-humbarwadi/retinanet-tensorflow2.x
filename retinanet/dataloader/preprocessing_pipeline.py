@@ -10,7 +10,7 @@ class PreprocessingPipeline:
         self.preprocessing_params = params.preprocessing
         self.augmentation_params = params.augmentations
 
-    def _prepare_image(self, image, jitter=[None, None]):
+    def _prepare_image(self, image, jitter=[None, None], seed=0):
         target_shape = self.input_shape
         image_shape = tf.cast(tf.shape(image)[:2], dtype=tf.float32)
         scaled_shape = target_shape
@@ -22,7 +22,8 @@ class PreprocessingPipeline:
             ]
 
         if jitter[0]:
-            random_scale = tf.random.uniform([], jitter[0], jitter[1])
+            random_scale = tf.random.uniform(
+              [], jitter[0], jitter[1], seed=seed)
             scaled_shape = random_scale * target_shape
 
         scale = tf.minimum(scaled_shape[0] / image_shape[0],
@@ -35,7 +36,7 @@ class PreprocessingPipeline:
         if jitter[0]:
             max_offset = scaled_shape - target_shape
             max_offset = tf.where(tf.less(max_offset, 0.), 0., max_offset)
-            offset = max_offset * tf.random.uniform([2], 0, 1)
+            offset = max_offset * tf.random.uniform([2], 0, 1, seed=seed)
             offset = tf.cast(offset, tf.int32)
 
         scaled_shape = tf.cast(scaled_shape, dtype=tf.int32)

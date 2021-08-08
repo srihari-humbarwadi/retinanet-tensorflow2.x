@@ -38,8 +38,8 @@ def compute_iou(boxes1, boxes2):
     return tf.clip_by_value(intersection_area / union_area, 0.0, 1.0)
 
 
-def random_flip_horizontal(image, boxes):
-    if tf.random.uniform(()) > 0.5:
+def random_flip_horizontal(image, boxes, seed=0):
+    if tf.random.uniform((), seed=seed) > 0.5:
         image = tf.image.flip_left_right(image)
         boxes = tf.stack(
             [1 - boxes[:, 2], boxes[:, 1], 1 - boxes[:, 0], boxes[:, 3]],
