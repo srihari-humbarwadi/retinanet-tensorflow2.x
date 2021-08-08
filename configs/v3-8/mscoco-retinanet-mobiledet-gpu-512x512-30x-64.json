@@ -1,14 +1,14 @@
 {
   "experiment": {
-    "name": "mscoco-retinanet-mobiledet-gpu-320x320-30x-64",
+    "name": "mscoco-retinanet-mobiledet-gpu-512x512-30x-64",
     "run_mode": "train_val",
     "model_dir": "gs://tfrc_datasets/model_files",
     "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
   },
   "input": {
     "input_shape": [
-      320,
-      320
+      512,
+      512
     ],
     "channels": 3
   },
@@ -34,16 +34,16 @@
       "use_balanced_features": false,
       "use_residual_connections": false,
       "fusion_mode": "sum",
-      "filters": 128,
+      "filters": 96,
       "min_level": 3,
       "max_level": 7,
       "backbone_max_level": 5
     },
     "head": {
-      "num_convs": 4,
-      "filters": 128,
+      "num_convs": 3,
+      "filters": 96,
       "num_classes": 91,
-      "num_anchors": 15
+      "num_anchors": 9
     }
   },
   "loss": {
@@ -74,7 +74,7 @@
     },
     "restore_checkpoint": true,
     "freeze_variables": [],
-    "train_steps": 675000,
+    "train_steps": 648200,
     "validation_samples": 4952,
     "validation_freq": 1792,
     "annotation_file_path": "./instances_val2017.json",
@@ -89,17 +89,23 @@
     "optimizer": {
       "name": "sgd",
       "momentum": 0.9,
-      "nesterov": true,
+      "nesterov": false,
       "global_clipnorm": 16.0,
-      "use_moving_average": true,
+      "use_moving_average": false,
       "moving_average_decay": 0.9998,
       "lr_params": {
-        "schedule_type": "cosine_decay",
-        "initial_learning_rate": 0.08,
-        "warmup_learning_rate": 0.008,
-        "alpha": 0.0001,
+        "schedule_type": "piecewise_constant_decay",
+        "warmup_learning_rate": 0.0067,
         "warmup_steps": 500,
-        "total_steps": 675000
+        "values": [
+          0.08,
+          0.008,
+          0.0008
+        ],
+        "boundaries": [
+          592640,
+          629680
+        ]
       }
     }
   },
@@ -117,10 +123,8 @@
     ],
     "aspect_ratios": [
       0.5,
-      0.33,
       1.0,
-      2.0,
-      3.0
+      2.0
     ],
     "scales": [
       1,
@@ -148,7 +152,7 @@
       "use_augmentation": true,
       "horizontal_flip": true,
       "scale_jitter": {
-        "min_scale": 0.1,
+        "min_scale": 0.5,
         "max_scale": 2.0
       }
     },
