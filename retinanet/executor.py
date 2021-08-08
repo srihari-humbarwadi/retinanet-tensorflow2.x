@@ -60,6 +60,7 @@ class Executor:
         self.restore_status = None
         self.use_float16 = False
         self._log_to_discord_server = False
+        self._trace_written = False
         self._save_during_training = params.training.save_every > 0
         self._run_evaluation_at_end = params.training.validation_freq < 1
         self._summary_writers = {}
@@ -660,6 +661,9 @@ class Executor:
             logging.warning('Training failed after {} tries'.format(num_trials))
 
     def _add_graph_trace(self):
+        if self._trace_written:
+            return
+
         @tf.function(input_signature=[
             tf.TensorSpec(shape=[1, *self._model.input_shape[1:]],
                           dtype=tf.float32, name='image')])
@@ -671,7 +675,7 @@ class Executor:
 
         with self._summary_writers['train'].as_default():
             tf.summary.graph(concrete_fn.graph)
-
+        self._trace_written = True
         logging.warning('Successfully wrote model graph summary')
 
     def get_flops(self):
