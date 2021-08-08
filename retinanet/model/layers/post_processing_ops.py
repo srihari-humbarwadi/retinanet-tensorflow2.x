@@ -438,7 +438,7 @@ class GenerateDetections(tf.keras.layers.Layer):
                         boxes=boxes_for_class_id,
                         scores=scores_for_class_id,
                         max_output_size=self.max_detections,
-                        iou_threshold=1.0 if not sigma else self.iou_threshold,
+                        iou_threshold=1.0 if sigma else self.iou_threshold,
                         score_threshold=self.score_threshold,
                         soft_nms_sigma=sigma / 2,
                         pad_to_max_output_size=True)
