@@ -1,157 +1,157 @@
 {
-    "experiment": {
-        "name": "retinanet-34-640-mapillary-gpu",
-        "run_mode": "train_val",
-        "model_dir": "model_files/finetune",
-        "tensorboard_dir": "tensorboard/finetune"
+  "experiment": {
+    "name": "retinanet-34-640-mapillary-gpu",
+    "run_mode": "train_val",
+    "model_dir": "model_files/finetune",
+    "tensorboard_dir": "tensorboard/finetune"
+  },
+  "input": {
+    "input_shape": [
+      640,
+      640
+    ],
+    "channels": 3
+  },
+  "floatx": {
+    "precision": "float32"
+  },
+  "architecture": {
+    "backbone": {
+      "type": "resnet",
+      "depth": 34,
+      "checkpoint": ""
     },
-    "input": {
-        "input_shape": [
-            640,
-            640
+    "feature_fusion": {
+      "filters": 256
+    },
+    "num_head_convs": 4,
+    "num_classes": 2,
+    "num_anchors": 9,
+    "weight_decay_alpha": 0.0001,
+    "freeze_initial_layers": false
+  },
+  "loss": {
+    "focal_loss": {
+      "alpha": 0.25,
+      "gamma": 1.5
+    },
+    "smooth_l1_loss": {
+      "delta": 0.1
+    },
+    "class_loss_weight": 1.0,
+    "box_loss_weight": 50.0
+  },
+  "training": {
+    "use_weight_decay": true,
+    "batch_size": {
+      "train": 1,
+      "val": 1
+    },
+    "strategy": {
+      "type": "gpu",
+      "name": ""
+    },
+    "restore_checkpoint": true,
+    "train_steps": 500000,
+    "validation_samples": 5308,
+    "validation_freq": 5000,
+    "annotation_file_path": "./converted_mapillary/instances_val.json",
+    "steps_per_execution": 50,
+    "save_every": 10000,
+    "recovery": {
+      "use_inflection_detector": true,
+      "metric_key": "l2-regularization",
+      "threshold": 0.05,
+      "max_trials": 10
+    },
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "nesterov": true,
+      "global_clipnorm": 50.0,
+      "lr_params": {
+        "warmup_learning_rate": 0.0002,
+        "warmup_steps": 1000,
+        "values": [
+          1e-3,
+          1e-4,
+          1e-5
         ],
-        "channels": 3
-    },
-    "floatx": {
-        "precision": "float32"
-    },
-    "architecture": {
-        "backbone": {
-            "type": "resnet",
-            "depth": 34,
-            "checkpoint": ""
-        },
-        "feature_fusion": {
-            "filters": 256
-        },
-        "num_head_convs": 4,
-        "num_classes": 2,
-        "num_anchors": 9,
-        "weight_decay_alpha": 0.0001,
-        "freeze_initial_layers": false
-    },
-    "loss": {
-        "focal_loss": {
-            "alpha": 0.25,
-            "gamma": 1.5
-        },
-        "smooth_l1_loss": {
-            "delta": 0.1
-        },
-        "class_loss_weight": 1.0,
-        "box_loss_weight": 50.0
-    },
-    "training": {
-        "use_weight_decay": true,
-        "batch_size": {
-            "train": 1,
-            "val": 1
-        },
-        "strategy": {
-            "type": "gpu",
-            "name": ""
-        },
-        "restore_checkpoint": true,
-        "train_steps": 500000,
-        "validation_samples": 5308,
-        "validation_freq": 5000,
-        "annotation_file_path": "./converted_mapillary/instances_val.json",
-        "steps_per_execution": 50,
-        "save_every": 10000,
-        "recovery": {
-            "use_inflection_detector": true,
-            "metric_key": "l2-regularization",
-            "threshold": 0.05,
-            "max_trials": 10
-        },
-        "optimizer": {
-            "name": "sgd",
-            "momentum": 0.9,
-            "nesterov": true,
-            "global_clipnorm": 50.0,
-            "lr_params": {
-                "warmup_learning_rate": 0.0002,
-                "warmup_steps": 1000,
-                "values": [
-                    1e-3,
-                    1e-4,
-                    1e-5
-                ],
-                "boundaries": [
-                    100000,
-                    350000
-                ]
-            }
-        }
-    },
-    "fine_tuning": {
-        "fine_tune": true,
-        "pretrained_checkpoint": "model_files/retinanet-34-640-30x-64-tpu/final_weights_step_656400.h5",
-        "freeze_backbone": false,
-        "freeze_batch_normalization": false
-    },
-    "anchor_params": {
-        "areas": [
-            1024.0,
-            4096.0,
-            16384.0,
-            65536.0,
-            262144.0
-        ],
-        "aspect_ratios": [
-            0.5,
-            1.0,
-            2.0
-        ],
-        "scales": [
-            1,
-            1.2599210498948732,
-            1.5874010519681994
+        "boundaries": [
+          100000,
+          350000
         ]
-    },
-    "encoder_params": {
-        "match_iou": 0.5,
-        "ignore_iou": 0.5,
-        "box_variance": [
-            0.1,
-            0.1,
-            0.2,
-            0.2
-        ],
-        "scale_box_targets": false
-    },
-    "dataloader_params": {
-        "tfrecords": {
-            "train": "../../datasets/mapillary_traffic_sign/tfrecords/train*",
-            "val": "../../datasets/mapillary_traffic_sign/tfrecords/val*"
-        },
-        "augmentations": {
-            "use_augmentation": true,
-            "horizontal_flip": true,
-            "scale_jitter": {
-                "min_scale": 0.5,
-                "max_scale": 2.0
-            }
-        },
-        "preprocessing": {
-            "offset": [
-                0.5,
-                0.5,
-                0.5
-            ],
-            "scale": [
-                0.5,
-                0.5,
-                0.5
-            ]
-        },
-        "shuffle_buffer_size": 256
-    },
-    "inference": {
-        "nms_iou_threshold": 0.5,
-        "confidence_threshold": 0.05,
-        "pre_nms_top_k": 5000,
-        "max_detections_per_class": 100,
-        "max_detections": 100
+      }
     }
+  },
+  "fine_tuning": {
+    "fine_tune": true,
+    "pretrained_checkpoint": "model_files/retinanet-34-640-30x-64-tpu/final_weights_step_656400.h5",
+    "freeze_backbone": false,
+    "freeze_batch_normalization": false
+  },
+  "anchor_params": {
+    "areas": [
+      1024.0,
+      4096.0,
+      16384.0,
+      65536.0,
+      262144.0
+    ],
+    "aspect_ratios": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "scales": [
+      1,
+      1.2599210498948732,
+      1.5874010519681994
+    ]
+  },
+  "encoder_params": {
+    "match_iou": 0.5,
+    "ignore_iou": 0.5,
+    "box_variance": [
+      0.1,
+      0.1,
+      0.2,
+      0.2
+    ],
+    "scale_box_targets": false
+  },
+  "dataloader_params": {
+    "tfrecords": {
+      "train": "../../datasets/mapillary_traffic_sign/tfrecords/train*",
+      "val": "../../datasets/mapillary_traffic_sign/tfrecords/val*"
+    },
+    "augmentations": {
+      "use_augmentation": true,
+      "horizontal_flip": true,
+      "scale_jitter": {
+        "min_scale": 0.5,
+        "max_scale": 2.0
+      }
+    },
+    "preprocessing": {
+      "offset": [
+        0.5,
+        0.5,
+        0.5
+      ],
+      "scale": [
+        0.5,
+        0.5,
+        0.5
+      ]
+    },
+    "shuffle_buffer_size": 256
+  },
+  "inference": {
+    "nms_iou_threshold": 0.5,
+    "confidence_threshold": 0.05,
+    "pre_nms_top_k": 5000,
+    "max_detections_per_class": 100,
+    "max_detections": 100
+  }
 }

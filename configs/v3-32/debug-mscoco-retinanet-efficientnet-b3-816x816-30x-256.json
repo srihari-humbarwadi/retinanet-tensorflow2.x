@@ -1,183 +1,183 @@
 {
-    "experiment": {
-        "name": "debug-mscoco-retinanet-efficientnet-b3-816x816-30x-256",
-        "run_mode": "train",
-        "model_dir": "gs://tfrc_datasets/model_files",
-        "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
+  "experiment": {
+    "name": "debug-mscoco-retinanet-efficientnet-b3-816x816-30x-256",
+    "run_mode": "train",
+    "model_dir": "gs://tfrc_datasets/model_files",
+    "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
+  },
+  "input": {
+    "input_shape": [
+      896,
+      896
+    ],
+    "channels": 3
+  },
+  "floatx": {
+    "precision": "mixed_bfloat16"
+  },
+  "architecture": {
+    "conv_2d": {
+      "use_seperable_conv": true,
+      "use_bias_before_bn": false
     },
-    "input": {
-        "input_shape": [
-            896,
-            896
-        ],
-        "channels": 3
+    "batch_norm": {
+      "use_sync": true,
+      "momentum": 0.99,
+      "epsilon": 0.001
     },
-    "floatx": {
-        "precision": "mixed_bfloat16"
+    "backbone": {
+      "type": "efficientnet-b3",
+      "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b3"
     },
-    "architecture": {
-        "conv_2d": {
-            "use_seperable_conv": true,
-            "use_bias_before_bn": false
-        },
-        "batch_norm": {
-            "use_sync": true,
-            "momentum": 0.99,
-            "epsilon": 0.001
-        },
-        "backbone": {
-            "type": "efficientnet-b3",
-            "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b3"
-        },
-        "feature_fusion": {
-            "type": "stacked_multi_level_attention",
-            "num_repeats": 2,
-            "projection_dim": 128,
-            "use_channel_attention": true,
-            "use_balanced_features": false,
-            "filters": 160,
-            "min_level": 3,
-            "max_level": 7,
-            "backbone_max_level": 5
-        },
-        "head": {
-            "num_convs": 4,
-            "filters": 160,
-            "num_classes": 91,
-            "num_anchors": 9
-        }
+    "feature_fusion": {
+      "type": "stacked_multi_level_attention",
+      "num_repeats": 2,
+      "projection_dim": 128,
+      "use_channel_attention": true,
+      "use_balanced_features": false,
+      "filters": 160,
+      "min_level": 3,
+      "max_level": 7,
+      "backbone_max_level": 5
     },
-    "loss": {
-        "focal_loss": {
-            "alpha": 0.25,
-            "gamma": 1.5
-        },
-        "smooth_l1_loss": {
-            "delta": 0.1
-        },
-        "normalizer": {
-            "use_moving_average": false,
-            "momentum": 0.99
-        },
-        "class_loss_weight": 1.0,
-        "box_loss_weight": 50.0
-    },
-    "training": {
-        "use_weight_decay": true,
-        "weight_decay_alpha": 0.00004,
-        "batch_size": {
-            "train": 256,
-            "val": 8
-        },
-        "strategy": {
-            "type": "tpu",
-            "name": "v3-32"
-        },
-        "restore_checkpoint": true,
-        "freeze_variables": [],
-        "train_steps": 168750,
-        "validation_samples": 4952,
-        "validation_freq": -1,
-        "annotation_file_path": "./instances_val2017.json",
-        "steps_per_execution": 500,
-        "save_every": 5000,
-        "recovery": {
-            "use_inflection_detector": true,
-            "metric_key": "l2-regularization",
-            "threshold": 0.05,
-            "max_trials": 10
-        },
-        "optimizer": {
-            "name": "sgd",
-            "momentum": 0.9,
-            "nesterov": true,
-            "global_clipnorm": 16.0,
-            "use_moving_average": true,
-            "moving_average_decay": 0.9998,
-            "lr_params": {
-                "schedule_type": "piecewise_constant_decay",
-                "warmup_learning_rate": 0.0067,
-                "warmup_steps": 500,
-                "values": [
-                    0.32,
-                    0.032,
-                    0.0032
-                ],
-                "boundaries": [
-                    148160,
-                    157420
-                ]
-            }
-        }
-    },
-    "fine_tuning": {
-        "fine_tune": false,
-        "pretrained_checkpoint": ""
-    },
-    "anchor_params": {
-        "areas": [
-            1024.0,
-            4096.0,
-            16384.0,
-            65536.0,
-            262144.0
-        ],
-        "aspect_ratios": [
-            0.5,
-            1.0,
-            2.0
-        ],
-        "scales": [
-            1,
-            1.2599210498948732,
-            1.5874010519681994
-        ]
-    },
-    "encoder_params": {
-        "match_iou": 0.5,
-        "ignore_iou": 0.5,
-        "box_variance": [
-            0.1,
-            0.1,
-            0.2,
-            0.2
-        ],
-        "scale_box_targets": false
-    },
-    "dataloader_params": {
-        "tfrecords": {
-            "train": "gs://tfrc_datasets/coco_tfrecords/train*",
-            "val": "gs://tfrc_datasets/coco_tfrecords/val*"
-        },
-        "augmentations": {
-            "use_augmentation": true,
-            "horizontal_flip": true,
-            "scale_jitter": {
-                "min_scale": 0.1,
-                "max_scale": 2.0
-            }
-        },
-        "preprocessing": {
-            "offset": [
-                0.485,
-                0.456,
-                0.406
-            ],
-            "scale": [
-                0.229,
-                0.224,
-                0.225
-            ]
-        },
-        "shuffle_buffer_size": 10240
-    },
-    "inference": {
-        "mode": "CombinedNMS",
-        "iou_threshold": 0.5,
-        "score_threshold": 0.05,
-        "soft_nms_sigma": 0.5,
-        "pre_nms_top_k": 5000,
-        "filter_per_class": true,
-        "max_detections": 100
+    "head": {
+      "num_convs": 4,
+      "filters": 160,
+      "num_classes": 91,
+      "num_anchors": 9
     }
+  },
+  "loss": {
+    "focal_loss": {
+      "alpha": 0.25,
+      "gamma": 1.5
+    },
+    "smooth_l1_loss": {
+      "delta": 0.1
+    },
+    "normalizer": {
+      "use_moving_average": false,
+      "momentum": 0.99
+    },
+    "class_loss_weight": 1.0,
+    "box_loss_weight": 50.0
+  },
+  "training": {
+    "use_weight_decay": true,
+    "weight_decay_alpha": 0.00004,
+    "batch_size": {
+      "train": 256,
+      "val": 8
+    },
+    "strategy": {
+      "type": "tpu",
+      "name": "v3-32"
+    },
+    "restore_checkpoint": true,
+    "freeze_variables": [],
+    "train_steps": 168750,
+    "validation_samples": 4952,
+    "validation_freq": -1,
+    "annotation_file_path": "./instances_val2017.json",
+    "steps_per_execution": 500,
+    "save_every": 5000,
+    "recovery": {
+      "use_inflection_detector": true,
+      "metric_key": "l2-regularization",
+      "threshold": 0.05,
+      "max_trials": 10
+    },
+    "optimizer": {
+      "name": "sgd",
+      "momentum": 0.9,
+      "nesterov": true,
+      "global_clipnorm": 16.0,
+      "use_moving_average": true,
+      "moving_average_decay": 0.9998,
+      "lr_params": {
+        "schedule_type": "piecewise_constant_decay",
+        "warmup_learning_rate": 0.0067,
+        "warmup_steps": 500,
+        "values": [
+          0.32,
+          0.032,
+          0.0032
+        ],
+        "boundaries": [
+          148160,
+          157420
+        ]
+      }
+    }
+  },
+  "fine_tuning": {
+    "fine_tune": false,
+    "pretrained_checkpoint": ""
+  },
+  "anchor_params": {
+    "areas": [
+      1024.0,
+      4096.0,
+      16384.0,
+      65536.0,
+      262144.0
+    ],
+    "aspect_ratios": [
+      0.5,
+      1.0,
+      2.0
+    ],
+    "scales": [
+      1,
+      1.2599210498948732,
+      1.5874010519681994
+    ]
+  },
+  "encoder_params": {
+    "match_iou": 0.5,
+    "ignore_iou": 0.5,
+    "box_variance": [
+      0.1,
+      0.1,
+      0.2,
+      0.2
+    ],
+    "scale_box_targets": false
+  },
+  "dataloader_params": {
+    "tfrecords": {
+      "train": "gs://tfrc_datasets/coco_tfrecords/train*",
+      "val": "gs://tfrc_datasets/coco_tfrecords/val*"
+    },
+    "augmentations": {
+      "use_augmentation": true,
+      "horizontal_flip": true,
+      "scale_jitter": {
+        "min_scale": 0.1,
+        "max_scale": 2.0
+      }
+    },
+    "preprocessing": {
+      "offset": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "scale": [
+        0.229,
+        0.224,
+        0.225
+      ]
+    },
+    "shuffle_buffer_size": 10240
+  },
+  "inference": {
+    "mode": "CombinedNMS",
+    "iou_threshold": 0.5,
+    "score_threshold": 0.05,
+    "soft_nms_sigma": 0.5,
+    "pre_nms_top_k": 5000,
+    "filter_per_class": true,
+    "max_detections": 100
+  }
 }
