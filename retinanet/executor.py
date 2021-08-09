@@ -65,6 +65,7 @@ class Executor:
         self._run_evaluation_at_end = params.training.validation_freq < 1
         self._summary_writers = {}
 
+        self._current_trial = 0
         if params.training.recovery.use_inflection_detector:
             self._inflection_detector = InflectionDetector(
                 name=params.training.recovery.metric_key,
@@ -496,8 +497,10 @@ class Executor:
             current_step)
 
         evaluation_log = \
-            ('[global_step {}/{}] evaluation results: {}'
+            ('[trial {}/{}][global_step {}/{}] evaluation results: {}'
              .format(
+                 self._current_trial,
+                 self._max_trials,
                  current_step,
                  self.train_steps,
                  {k: float(np.round(v, 3)) for k, v in scores.items()}))
@@ -513,7 +516,7 @@ class Executor:
 
         return scores
 
-    def _run_training_loop(self, current_trial=0):
+    def _run_training_loop(self):
         if self.restore_checkpoint and self.restore_status is not None:
             self.restore_status.assert_consumed()
 
@@ -598,7 +601,7 @@ class Executor:
             logging.info(
                 '[trial: {}/{}][global_step {}/{}][ETA: {}][{: .2f} imgs/s] {}'
                 .format(
-                    current_trial,
+                    self._current_trial,
                     self._max_trials,
                     current_step,
                     self.train_steps,
@@ -632,10 +635,9 @@ class Executor:
         return True
 
     def train(self):
-        current_trial = 1
-        done = self._run_training_loop(current_trial=current_trial)
+        done = self._run_training_loop()
 
-        while not done and current_trial < self._max_trials:
+        while not done and self._current_trial < self._max_trials:
             latest_checkpoint = tf.train.latest_checkpoint(self.model_dir)
 
             if latest_checkpoint is not None:
@@ -657,12 +659,12 @@ class Executor:
             if self.params.training.recovery.use_inflection_detector:
                 self._inflection_detector.reset()
 
-            done = self._run_training_loop(current_trial=current_trial)
-            current_trial += 1
+            done = self._run_training_loop()
+            self._current_trial += 1
 
         if not done:
             logging.warning(
-              'Training failed after {} tries'.format(current_trial))
+                'Training failed after {} tries'.format(self._current_trial))
 
     def _add_graph_trace(self):
         if self._trace_written:
