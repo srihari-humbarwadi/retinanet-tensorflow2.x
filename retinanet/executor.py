@@ -425,7 +425,7 @@ class Executor:
                 tf.distribute.ReduceOp.MEAN, x, axis=None), loss_dict)
         return loss_dict
 
-    def continuous_evaluate(self, sleep_time=250):
+    def continuous_evaluate(self, sleep_time=60):
         current_checkpoint = None
 
         while True:
@@ -440,7 +440,7 @@ class Executor:
             logging.info(
                 'Sleeping for {} secs before checking for new checkpoint'
                 .format(sleep_time))
-            sleep(sleep_time // 4)
+            sleep(sleep_time)
 
     def evaluate(self):
 
