@@ -97,7 +97,7 @@ class LabelEncoder:
         targets = {'class-targets': {}, 'box-targets': {}}
 
         # TODO(srihari): use pyramid levels for indexing
-        for level in range(self._min_level, self._max_level):
+        for level in range(self._min_level, self._max_level + 1):
             i = level - 3
             fh = tf.math.ceil(self.input_shape[0] / (2**(i + 3)))
             fw = tf.math.ceil(self.input_shape[1] / (2**(i + 3)))
