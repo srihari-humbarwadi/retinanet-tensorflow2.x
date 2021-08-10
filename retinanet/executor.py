@@ -310,7 +310,6 @@ class Executor:
 
         return weight_decay_vars
 
-    @tf.function
     def _write_weights_info(self, step, write_histogram=False):
         with self._summary_writers['train'].as_default():
             with tf.name_scope('weights'):
@@ -530,6 +529,8 @@ class Executor:
             logging.info('Training completed at step {}'.format(current_step))
             return True
 
+        self._current_trial += 1
+
         logging.info(
             'Starting training from step {} for {} steps with {} steps per execution'  # noqa: E501
             .format(start_step, self.train_steps, self.steps_per_execution))
@@ -660,7 +661,6 @@ class Executor:
                 self._inflection_detector.reset()
 
             done = self._run_training_loop()
-            self._current_trial += 1
 
         if not done:
             logging.warning(
