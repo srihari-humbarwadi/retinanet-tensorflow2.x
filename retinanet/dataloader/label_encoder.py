@@ -101,10 +101,10 @@ class LabelEncoder:
             i = level - 3
             fh = tf.math.ceil(self.input_shape[0] / (2**(i + 3)))
             fw = tf.math.ceil(self.input_shape[1] / (2**(i + 3)))
-            targets['class-targets'][i + 3] = tf.reshape(
+            targets['class-targets'][str(i + 3)] = tf.reshape(
                 cls_target[boundaries[i]:boundaries[i + 1]],
                 shape=[fh, fw, self.anchors._num_anchors])
-            targets['box-targets'][i + 3] = tf.reshape(
+            targets['box-targets'][str(i + 3)] = tf.reshape(
                 box_target[boundaries[i]:boundaries[i + 1]],
                 shape=[fh, fw, 4 * self.anchors._num_anchors])
 

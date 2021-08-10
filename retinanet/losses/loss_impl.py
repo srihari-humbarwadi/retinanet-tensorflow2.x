@@ -37,10 +37,9 @@ class BoxLoss:
 
     def __call__(self, targets, predictions, normalizer):
         loss = []
-        for i in range(3, 8):
-            predictions_key = str(i)
+        for key in targets.keys():
             loss.append(self.box_loss(
-                targets[i], predictions[predictions_key], normalizer))
+                targets[key], predictions[key], normalizer))
         return tf.math.add_n(loss)
 
 
@@ -51,16 +50,15 @@ class ClassLoss:
 
     def __call__(self, targets, predictions, normalizer):
         loss = []
-        for i in range(3, 8):
-            predictions_key = str(i)
-            n, h, w, c = targets[i].get_shape().as_list()
+        for key in targets.keys():
+            n, h, w, c = targets[key].get_shape().as_list()
             per_level_loss = self.class_loss(
                 tf.reshape(
-                    tf.one_hot(tf.cast(targets[i], dtype=tf.int32),
+                    tf.one_hot(tf.cast(targets[key], dtype=tf.int32),
                                depth=self._num_classes),
-                    [n, h, w, c * self._num_classes]), predictions[predictions_key],
+                    [n, h, w, c * self._num_classes]), predictions[key],
                 normalizer)
-            ignore_mask = tf.expand_dims(tf.where(tf.equal(targets[i], -2.0),
+            ignore_mask = tf.expand_dims(tf.where(tf.equal(targets[key], -2.0),
                                                   0.0, 1.0),
                                          axis=-1)
             ignore_mask = tf.tile(ignore_mask,
