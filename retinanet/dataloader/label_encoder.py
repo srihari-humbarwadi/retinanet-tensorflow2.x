@@ -20,6 +20,9 @@ class LabelEncoder:
         self._all_unmatched = -1 * tf.ones(
             [self.anchors.boxes.get_shape().as_list()[0]], dtype=tf.int32)
 
+        self._min_level = params.architecture.feature_fusion.min_level
+        self._max_level = params.architecture.feature_fusion.max_level
+
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
         if tf.shape(gt_boxes)[0] == 0:
             return self._all_unmatched
@@ -93,7 +96,9 @@ class LabelEncoder:
         boundaries = self.anchors.anchor_boundaries
         targets = {'class-targets': {}, 'box-targets': {}}
 
-        for i in range(5):
+        # TODO(srihari): use pyramid levels for indexing
+        for level in range(self._min_level, self._max_level):
+            i = level - 3
             fh = tf.math.ceil(self.input_shape[0] / (2**(i + 3)))
             fw = tf.math.ceil(self.input_shape[1] / (2**(i + 3)))
             targets['class-targets'][i + 3] = tf.reshape(
