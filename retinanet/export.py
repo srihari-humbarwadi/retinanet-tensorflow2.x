@@ -220,6 +220,8 @@ def main(_):
         tf.saved_model.save(
             inference_module,
             export_dir,
+            options=tf.saved_model.SaveOptions(
+                experimental_custom_gradients=False),
             signatures={
                 'serving_default':
                 inference_module.run_inference.get_concrete_function(
