@@ -63,14 +63,15 @@ class MultiLevelAttentionFusion(tf.keras.layers.Layer):
             level = str(level)
 
             if self.use_lateral_conv:
-                self.lateral_convs[level] = conv_2d_op(filters=self.filters,
-                                                       kernel_size=1,
-                                                       strides=1,
-                                                       padding='same',
-                                                       use_bias=conv_2d_op_params.use_bias_before_bn,
-                                                       name='l' + str(level) +
-                                                       '-conv2d',
-                                                       **kernel_initializer_config)
+                self.lateral_convs[level] = conv_2d_op(
+                    filters=self.filters,
+                    kernel_size=1,
+                    strides=1,
+                    padding='same',
+                    use_bias=conv_2d_op_params.use_bias_before_bn,
+                    name='l' + str(level) +
+                    '-conv2d',
+                    **kernel_initializer_config)
 
             self.projection_convs[level] = conv_2d_op(
                 filters=projection_dim,
