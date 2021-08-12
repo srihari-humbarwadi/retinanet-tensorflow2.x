@@ -98,6 +98,7 @@ def main(_):
         logging.warning('Running in multi_host mode')
 
     if FLAGS.xla:
+        os.environ['TF_XLA_FLAGS'] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit"
         tf.config.optimizer.set_jit(True)
 
     if FLAGS.gpu_memory_allow_growth:

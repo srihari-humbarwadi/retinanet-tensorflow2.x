@@ -10,6 +10,9 @@ from retinanet.eval import COCOEvaluator
 from retinanet.image_utils import read_image
 from retinanet.utils import AverageMeter, format_eta
 
+os.environ['TF_XLA_FLAGS'] = "--tf_xla_auto_jit=2 --tf_xla_cpu_global_jit"
+tf.config.optimizer.set_jit(True)
+
 flags.DEFINE_string(
     name='saved_model_path',
     default=None,
