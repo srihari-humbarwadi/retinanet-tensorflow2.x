@@ -42,7 +42,7 @@
     "head": {
       "num_convs": 3,
       "filters": 112,
-      "num_classes": 91,
+      "num_classes": 80,
       "num_anchors": 9
     }
   },

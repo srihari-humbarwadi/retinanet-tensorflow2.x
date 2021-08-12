@@ -1,6 +1,6 @@
 {
   "experiment": {
-    "name": "mscoco-retinanet-mobiledet-gpu-512x512-30x-64",
+    "name": "mscoco-retinanet-mobiledet-gpu-lite-512x512-30x-64",
     "run_mode": "train_val",
     "model_dir": "gs://tfrc_datasets/model_files",
     "tensorboard_dir": "gs://tfrc_datasets/tensorboard"
@@ -34,15 +34,15 @@
       "use_balanced_features": true,
       "use_residual_connections": false,
       "fusion_mode": "sum",
-      "filters": 96,
+      "filters": 64,
       "min_level": 3,
       "max_level": 7,
       "backbone_max_level": 5
     },
     "head": {
-      "num_convs": 3,
-      "filters": 96,
-      "num_classes": 91,
+      "num_convs": 2,
+      "filters": 64,
+      "num_classes": 80,
       "num_anchors": 9
     }
   },
