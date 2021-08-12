@@ -1,4 +1,5 @@
-sudo apt install aria2
+sudo apt update
+sudo apt install aria2 -y
 mkdir -p $1
 
 aria2c -j 48 -Z \
