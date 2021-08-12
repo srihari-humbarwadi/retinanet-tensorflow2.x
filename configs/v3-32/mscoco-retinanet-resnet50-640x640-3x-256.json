@@ -94,6 +94,7 @@
       "name": "sgd",
       "momentum": 0.9,
       "nesterov": true,
+      "global_clipnorm": 10.0,
       "use_moving_average": true,
       "moving_average_decay": 0.9998,
       "lr_params": {
@@ -168,7 +169,7 @@
     "shuffle_buffer_size": 10240
   },
   "inference": {
-    "mode": "PerClassHardNMS",
+    "mode": "CombinedNMS",
     "iou_threshold": 0.5,
     "score_threshold": 0.05,
     "soft_nms_sigma": 0.5,

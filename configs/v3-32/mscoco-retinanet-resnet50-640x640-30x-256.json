@@ -79,6 +79,7 @@
     "validation_samples": 4952,
     "validation_freq": -1,
     "annotation_file_path": "./instances_val2017.json",
+    "remap_class_ids": true,
     "steps_per_execution": 128,
     "save_every": 2560,
     "recovery": {
@@ -90,7 +91,7 @@
     "optimizer": {
       "name": "sgd",
       "momentum": 0.9,
-      "nesterov": false,
+      "nesterov": true,
       "global_clipnorm": 10.0,
       "use_moving_average": false,
       "moving_average_decay": 0.9998,
@@ -146,8 +147,8 @@
   },
   "dataloader_params": {
     "tfrecords": {
-      "train": "gs://tfrc_datasets/coco_tfrecords/train*",
-      "val": "gs://tfrc_datasets/coco_tfrecords/val*"
+      "train": "gs://tfrc_datasets/coco_remapped_tfrecords/train*",
+      "val": "gs://tfrc_datasets/coco_remapped_tfrecords/val*"
     },
     "augmentations": {
       "use_augmentation": true,
