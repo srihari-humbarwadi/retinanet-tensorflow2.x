@@ -7,27 +7,32 @@ from absl import app, flags, logging
 from retinanet.dataset_utils.coco_parser import CocoParser
 from retinanet.dataset_utils.tfrecord_writer import TFrecordWriter
 
-flags.DEFINE_string('download_path',
-                    default=None,
-                    help='Path to the downloaded and unzipped COCO files.')
+flags.DEFINE_string(
+    name='download_path',
+    default=None,
+    help='Path to the downloaded and unzipped COCO files.')
 
-flags.DEFINE_integer('num_shards',
-                     default=256,
-                     help='Number of tfrecord files required.')
+flags.DEFINE_integer(
+    name='num_shards',
+    default=256,
+    help='Number of tfrecord files required.')
 
-flags.DEFINE_string('output_dir',
-                    default='./coco_tfrecords',
-                    help='Path to store the generated tfrecords in.')
+flags.DEFINE_string(
+    name='output_dir',
+    default='./coco_tfrecords',
+    help='Path to store the generated tfrecords in.')
 
-flags.DEFINE_boolean('remap_class_ids',
-                     default=False,
-                     help='Remap class ids to make sure they are continuous. '
-                     'MSCOCO dataset has 80 classes but the class ids range '
-                     'from [1, 90], this flag remaps them to [0, 79]')
+flags.DEFINE_boolean(
+    name='remap_class_ids',
+    default=False,
+    help='Remap class ids to make sure they are continuous. '
+    'MSCOCO dataset has 80 classes but the class ids range '
+    'from [1, 90], this flag remaps them to [0, 79]')
 
-flags.DEFINE_boolean('only_dump_parsed_dataset',
-                     default=False,
-                     help='Skip creating tfrecords, dump parsed dataset only')
+flags.DEFINE_boolean(
+    name='only_dump_parsed_dataset',
+    default=False,
+    help='Skip creating tfrecords, dump parsed dataset only')
 
 
 FLAGS = flags.FLAGS
