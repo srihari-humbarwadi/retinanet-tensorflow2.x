@@ -33,6 +33,12 @@ flags.DEFINE_string(
     default='predictions.json',
     help='Path to dump predictions json')
 
+flags.DEFINE_boolean(
+    name='remap_class_ids',
+    default=False,
+    help='Enables remapping of class ids. Use only if the model was trained '
+    'with `remap_class_ids=True` in dataset parser')
+
 
 try:
     import tensorrt as trt
@@ -53,9 +59,11 @@ def evaluate(
         return_predictions_only=False):
 
     coco_parser = CocoParser(coco_data_directory, only_val=True)
-    coco_evaluator = COCOEvaluator(None,
-                                   coco_parser.val_annotations_path,
-                                   prediction_file_path)
+    coco_evaluator = COCOEvaluator(
+        input_shape=None,
+        annotation_file_path=coco_parser.val_annotations_path,
+        prediction_file_path=prediction_file_path,
+        remap_class_ids=FLAGS.remap_class_ids)
 
     fps_meter = AverageMeter(name='fps', momentum=0.975)
     num_samples = len(coco_parser.dataset['val'])
