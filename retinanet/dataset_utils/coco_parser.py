@@ -12,6 +12,7 @@ class CocoParser(Parser):
 
     def __init__(self,
                  download_path,
+                 remap_class_ids=False,
                  only_mappings=False,
                  only_val=False,
                  skip_crowd=True,
@@ -19,7 +20,10 @@ class CocoParser(Parser):
                  val_annotations_path='annotations/instances_val2017.json',
                  name='COCO',
                  year='2017'):
-        super(CocoParser, self).__init__(download_path, name=name)
+        super(CocoParser, self).__init__(
+            download_path,
+            name=name,
+            remap_class_ids=remap_class_ids)
 
         self._year = year
 
@@ -41,6 +45,9 @@ class CocoParser(Parser):
         self._skipped_annotations = {'train': 0, 'val': 0}
         self._annotation = {}
         self._build_dataset()
+
+        if remap_class_ids:
+            self._remap()
 
     def _build_dataset(self):
 

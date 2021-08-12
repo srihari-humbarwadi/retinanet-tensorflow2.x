@@ -19,6 +19,12 @@ flags.DEFINE_string('output_dir',
                     default='./coco_tfrecords',
                     help='Path to store the generated tfrecords in.')
 
+flags.DEFINE_boolean('remap_class_ids',
+                     default=False,
+                     help='Remap class ids to make sure they are continuous. '
+                     'MSCOCO dataset has 80 classes but the class ids range '
+                     'from [1, 90], this flag remaps them to [0, 79]')
+
 flags.DEFINE_boolean('only_dump_parsed_dataset',
                      default=False,
                      help='Skip creating tfrecords, dump parsed dataset only')
@@ -57,7 +63,10 @@ def main(_):
     if not os.path.exists(FLAGS.output_dir):
         os.mkdir(FLAGS.output_dir)
 
-    coco_parser = CocoParser(FLAGS.download_path)
+    coco_parser = CocoParser(
+      FLAGS.download_path,
+      remap_class_ids=FLAGS.remap_class_ids)
+
     coco_parser.dump_parsed_dataset()
 
     if FLAGS.only_dump_parsed_dataset:
