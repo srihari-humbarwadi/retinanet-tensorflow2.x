@@ -81,6 +81,7 @@
     "validation_samples": 4952,
     "validation_freq": -1,
     "annotation_file_path": "./instances_val2017.json",
+    "remap_class_ids": true,
     "steps_per_execution": 128,
     "save_every": 2560,
     "recovery": {

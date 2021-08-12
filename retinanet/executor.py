@@ -457,7 +457,8 @@ class Executor:
         evaluator = COCOEvaluator(
             input_shape=self.params.input.input_shape,
             annotation_file_path=self.params.training.annotation_file_path,
-            prediction_file_path=self.name + '.json')
+            prediction_file_path=self.name + '.json',
+            remap_class_ids=self.params.training.remap_class_ids)
 
         logging.info('Evaluating at step {} for {} steps'
                      .format(current_step.numpy(), total_steps))
