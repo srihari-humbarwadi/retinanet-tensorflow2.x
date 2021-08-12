@@ -43,7 +43,7 @@ class Parser(ABC):
         self.dump_remapping_info()
 
     def _remap(self):
-        old_ids = list(self._class_id_to_class_name.keys())
+        orig_ids = list(self._class_id_to_class_name.keys())
         logging.info('Remapping class ids')
 
         sorted_classes = sorted(self._classes)
@@ -84,14 +84,15 @@ class Parser(ABC):
             'orig_class_id_to_remapped_class_id': orig_class_id_to_remapped_class_id,
             'remapped_class_id_to_orig_class_id': remapped_class_id_to_orig_class_id
         }
+        remapped_ids = list(self._class_id_to_class_name.keys())
         logging.info(
             'Successfully remapped {} classes with class ids ranging from '
             '[{}-{}] to [{}-{}]'.format(
                 len(self._classes),
-                min(old_ids),
-                max(old_ids),
-                0,
-                len(self._classes) - 1))
+                min(orig_ids),
+                max(orig_ids),
+                min(remapped_ids),
+                max(remapped_ids)))
 
     @abstractmethod
     def _build_dataset(self):

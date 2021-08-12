@@ -11,4 +11,4 @@ http://images.cocodataset.org/zips/val2017.zip \
 unzip $1/"*".zip -d $1
 mkdir $1/zips && mv $1/*.zip $1/zips
 
-python3 -m retinanet.dataset_utils.create_coco_tfrecords --download_path=$1
+python3 -m retinanet.dataset_utils.create_coco_tfrecords --download_path=$1 --remap_class_ids
