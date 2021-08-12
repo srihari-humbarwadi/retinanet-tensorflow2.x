@@ -530,8 +530,6 @@ class Executor:
             logging.info('Training completed at step {}'.format(current_step))
             return True
 
-        self._current_trial += 1
-
         logging.info(
             'Starting training from step {} for {} steps with {} steps per execution'  # noqa: E501
             .format(start_step, self.train_steps, self.steps_per_execution))
@@ -619,6 +617,7 @@ class Executor:
                         'Found inflection in {} values!, recent values: {}'.format(
                             self._inflection_detector.name,
                             self._inflection_detector.data[-5:]))
+                    self._current_trial += 1
                     return False
 
             if (current_step % self.val_freq == 0) \
@@ -634,6 +633,7 @@ class Executor:
         if self._run_evaluation_at_end and 'val' in self.run_mode:
             self.evaluate()
 
+        self._current_trial += 1
         return True
 
     def train(self):
