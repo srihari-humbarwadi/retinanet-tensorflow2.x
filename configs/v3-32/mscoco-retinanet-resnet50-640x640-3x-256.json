@@ -43,7 +43,7 @@
     "head": {
       "num_convs": 4,
       "filters": 256,
-      "num_classes": 91,
+      "num_classes": 80,
       "num_anchors": 9
     }
   },
@@ -141,8 +141,8 @@
   },
   "dataloader_params": {
     "tfrecords": {
-      "train": "gs://tfrc_datasets/coco_tfrecords/train*",
-      "val": "gs://tfrc_datasets/coco_tfrecords/val*"
+      "train": "gs://tfrc_datasets/coco_remapped_tfrecords/train*",
+      "val": "gs://tfrc_datasets/coco_remapped_tfrecords/val*"
     },
     "augmentations": {
       "use_augmentation": true,
