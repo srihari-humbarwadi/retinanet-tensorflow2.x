@@ -145,7 +145,8 @@ saved_model/
 trt/
 *.pb
 *.h5
-
+*.onnx
+*.tflite
 
 # logs
 *logs
