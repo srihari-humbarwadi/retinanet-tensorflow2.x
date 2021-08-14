@@ -40,11 +40,16 @@ class RetinaNetLoss(tf.Module):
                 normalizer,
                 self.normalizer_momentum)
 
-        class_loss = self.class_loss(targets['class-targets'],
-                                     predictions['class-predictions'],
-                                     normalizer)
-        box_loss = self.box_loss(targets['box-targets'],
-                                 predictions['box-predictions'], normalizer)
+        class_loss = self.class_loss(
+            targets=targets['class-targets'],
+            predictions=predictions['class-predictions'])
+
+        box_loss = self.box_loss(
+            targets=targets['box-targets'],
+            predictions=predictions['box-predictions'])
+
+        class_loss /= normalizer
+        box_loss /= normalizer
 
         weighted_loss = self._box_loss_weight * box_loss + \
             self._class_loss_weight * class_loss
