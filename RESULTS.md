@@ -47,3 +47,21 @@
  Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets=100 ] = 0.731
 </pre>
 ___
+
+
+#### Training schedules for COCO2017
+`batch_size=64` (v2-8/v3-8)
+| name | training steps | ~epochs |
+|:----:|:--------------:|:-------:|
+|  1x  |      22500     |    12   |
+|  3x  |      67500     |    36   |
+|  30x |     675000     |   360   |
+|  50x |     1125000    |   600   |
+
+`batch_size=256` (v3-32 pod sclice)
+| name | training steps | ~epochs |
+|:----:|:--------------:|:-------:|
+|  1x  |      5625     |    12   |
+|  3x  |      16875    |    36   |
+|  30x |     168750    |   360   |
+|  50x |     281250    |   600   |
