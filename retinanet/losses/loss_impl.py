@@ -1,69 +1,95 @@
 import tensorflow as tf
 
 
-class SmoothL1Loss:
-    def __init__(self, delta):
-        self._loss_fn = tf.losses.Huber(delta=delta, reduction='sum')
+class FocalLoss(tf.losses.Loss):
 
-    def __call__(self, y_true, y_pred, normalizer):
-        positive_mask = tf.not_equal(y_true, 0.0)
-        loss = self._loss_fn(y_true[..., None],
-                             y_pred[..., None],
-                             sample_weight=positive_mask)
-        loss /= 4.0 * normalizer
-        return loss
-
-
-class FocalLoss:
     def __init__(self, alpha, gamma):
         self._alpha = alpha
         self._gamma = gamma
+        super(FocalLoss, self).__init__(
+            name='focal_loss',
+            reduction='sum')
 
-    def __call__(self, y_true, y_pred, normalizer):
-        cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(labels=y_true,
-                                                                logits=y_pred)
+    def call(self, y_true, y_pred):
+        cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(
+            labels=y_true,
+            logits=y_pred)
         probs = tf.nn.sigmoid(y_pred)
         alpha = tf.where(tf.equal(y_true, 1.0), self._alpha,
                          (1.0 - self._alpha))
         pt = tf.where(tf.equal(y_true, 1.0), probs, 1.0 - probs)
         loss = alpha * tf.pow(1.0 - pt, self._gamma) * cross_entropy
-        loss /= normalizer
         return loss
 
 
-class BoxLoss:
-    def __init__(self, params):
-        self.box_loss = SmoothL1Loss(params.delta)
-
-    def __call__(self, targets, predictions, normalizer):
-        loss = []
-        for key in targets.keys():
-            loss.append(self.box_loss(
-                targets[key], predictions[key], normalizer))
-        return tf.math.add_n(loss)
-
-
 class ClassLoss:
+
     def __init__(self, num_classes, params):
-        self.class_loss = FocalLoss(params.alpha, params.gamma)
+        self._focal_loss = FocalLoss(params.alpha, params.gamma)
         self._num_classes = num_classes
 
-    def __call__(self, targets, predictions, normalizer):
+    def __call__(self, targets, predictions):
         loss = []
         for key in targets.keys():
-            n, h, w, c = targets[key].get_shape().as_list()
-            per_level_loss = self.class_loss(
-                tf.reshape(
-                    tf.one_hot(tf.cast(targets[key], dtype=tf.int32),
-                               depth=self._num_classes),
-                    [n, h, w, c * self._num_classes]), predictions[key],
-                normalizer)
-            ignore_mask = tf.expand_dims(tf.where(tf.equal(targets[key], -2.0),
-                                                  0.0, 1.0),
-                                         axis=-1)
+            N, H, W, num_anchors = \
+                targets[key].get_shape().as_list()
+            one_hot_shape = [N, H, W, num_anchors * self._num_classes]
+
+            # targets[key].shape  (N, H, W, num_anchors)
+            # y_true.shape == (N, H, W, num_anchors * num_classes)
+            # y_pred.shape == (N, H, W, num_anchors * num_classes)
+            # sample_weight.shape == (N, H, W, num_anchors * num_classes)
+            y_true = tf.one_hot(
+                tf.cast(targets[key], dtype=tf.int32),
+                depth=self._num_classes)
+            y_true = tf.reshape(y_true,
+                                shape=one_hot_shape)
+            y_pred = predictions[key]
+
+            # ignore_mask.shape == (N, H, W, num_anchors)
+            ignore_mask = tf.cast(
+                tf.not_equal(targets[key], -2.0),
+                dtype=tf.float32)
+            # ignore_mask.shape == (N, H, W, num_anchors, 1)
+            ignore_mask = tf.expand_dims(ignore_mask, axis=-1)
+
+            # ignore_mask.shape == (N, H, W, num_anchors, self._num_classes)
             ignore_mask = tf.tile(ignore_mask,
                                   multiples=[1, 1, 1, 1, self._num_classes])
-            ignore_mask = tf.reshape(ignore_mask, tf.shape(per_level_loss))
-            per_level_loss = per_level_loss * ignore_mask
-            loss.append(tf.reduce_sum(per_level_loss))
+            # ignore_mask.shape == (N, H, W, num_anchors * self._num_classes)
+            ignore_mask = tf.reshape(ignore_mask, shape=one_hot_shape)
+
+            current_level_loss = self._focal_loss(
+                y_true=y_true,
+                y_pred=y_pred,
+                sample_weight=ignore_mask)
+            loss.append(current_level_loss)
         return tf.math.add_n(loss)
+
+
+class BoxLoss:
+
+    def __init__(self, params):
+        self._smooth_l1_loss = tf.losses.Huber(
+            delta=params.delta,
+            name='smooth_l1_loss',
+            reduction='sum')
+
+    def __call__(self, targets, predictions):
+        loss = []
+        for key in targets.keys():
+            # y_true.shape == (N, H, W, num_anchors * 4, 1)
+            # y_pred.shape == (N, H, W, num_anchors * 4, 1)
+            # sample_weight.shape == (N, H, W, num_anchors * 4, 1)
+            y_true = tf.expand_dims(targets[key], axis=-1)
+            y_pred = tf.expand_dims(predictions[key], axis=-1)
+            sample_weight = tf.not_equal(y_true, 0.0)
+
+            current_level_loss = self._smooth_l1_loss(
+                y_true=y_true,
+                y_pred=y_pred,
+                sample_weight=sample_weight)
+            loss.append(current_level_loss)
+
+        # averged loss across (4) box coordinates
+        return tf.math.add_n(loss) / 4.0
