@@ -48,26 +48,19 @@
     }
   },
   "loss": {
-    "box_loss": {
-      "smooth_l1_loss": {
-          "weight": 50.0,
-          "delta": 0.1
-      },
-      "giou_loss": {
-        "weight": 1.0
-      }
+    "focal_loss": {
+      "alpha": 0.25,
+      "gamma": 1.5
     },
-    "class_loss": {
-      "focal_loss": {
-        "weight": 1.0,
-        "alpha": 0.25,
-        "gamma": 1.5
-      }
+    "smooth_l1_loss": {
+      "delta": 0.1
     },
     "normalizer": {
       "use_moving_average": false,
       "momentum": 0.99
-    }
+    },
+    "class_loss_weight": 1.0,
+    "box_loss_weight": 50.0
   },
   "training": {
     "use_weight_decay": true,
