@@ -39,6 +39,11 @@ class RetinaNetLoss(tf.Module):
                 self.moving_average_normalizer,
                 normalizer,
                 self.normalizer_momentum)
+        else:
+            replica_context = tf.distribute.get_replica_context()
+            normalizer = replica_context.all_reduce(
+                tf.distribute.ReduceOp.SUM,
+                normalizer) / replica_context.num_replicas_in_sync
 
         class_loss = self.class_loss(
             targets=targets['class-targets'],
