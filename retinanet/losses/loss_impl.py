@@ -3,17 +3,23 @@ import tensorflow as tf
 
 class FocalLoss(tf.losses.Loss):
 
-    def __init__(self, alpha, gamma):
+    def __init__(self, alpha, gamma, label_smoothing):
         self._alpha = alpha
         self._gamma = gamma
+        self._label_smoothing = label_smoothing
+
         super(FocalLoss, self).__init__(
             name='focal_loss',
             reduction='sum')
 
     def call(self, y_true, y_pred):
+        y_true_smoothened = (
+            y_true * (1.0 - self._label_smoothing) +
+            0.5 * self._label_smoothing)
         cross_entropy = tf.nn.sigmoid_cross_entropy_with_logits(
-            labels=y_true,
+            labels=y_true_smoothened,
             logits=y_pred)
+
         probs = tf.nn.sigmoid(y_pred)
         alpha = tf.where(tf.equal(y_true, 1.0), self._alpha,
                          (1.0 - self._alpha))
@@ -25,7 +31,11 @@ class FocalLoss(tf.losses.Loss):
 class ClassLoss:
 
     def __init__(self, num_classes, params):
-        self._focal_loss = FocalLoss(params.alpha, params.gamma)
+        self._focal_loss = FocalLoss(
+            params.alpha,
+            params.gamma,
+            params.label_smoothing)
+
         self._num_classes = num_classes
 
     def __call__(self, targets, predictions):
