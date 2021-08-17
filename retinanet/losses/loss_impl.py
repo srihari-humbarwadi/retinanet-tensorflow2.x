@@ -103,3 +103,30 @@ class BoxLoss:
 
         # averged loss across (4) box coordinates
         return tf.math.add_n(loss) / 4.0
+
+
+class IouPredictionLoss:
+
+    def __init__(self):
+        self._crossentropy_loss = tf.losses.BinaryCrossentropy(
+            from_logits=True,
+            name='iou_prediction_loss',
+            reduction='sum')
+
+    def __call__(self, targets, predictions):
+        loss = []
+        for key in targets.keys():
+            # y_true.shape == (N, H, W, num_anchors, 1)
+            # y_pred.shape == (N, H, W, num_anchors, 1)
+            # sample_weight.shape == (N, H, W, num_anchors, 1)
+            y_true = tf.expand_dims(targets[key], axis=-1)
+            y_pred = tf.expand_dims(predictions[key], axis=-1)
+            sample_weight = tf.greater(y_true, -1.0)
+
+            current_level_loss = self._crossentropy_loss(
+                y_true=y_true,
+                y_pred=y_pred,
+                sample_weight=sample_weight)
+            loss.append(current_level_loss)
+
+        return tf.math.add_n(loss)
