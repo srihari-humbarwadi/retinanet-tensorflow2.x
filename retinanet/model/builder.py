@@ -6,7 +6,7 @@ from absl import logging
 from retinanet.losses import RetinaNetLoss
 from retinanet.model.backbone import build_backbone
 from retinanet.model.neck import build_neck
-from retinanet.model.head import build_heads
+from retinanet.model.head import build_detection_heads, build_auxillary_head
 from retinanet.model.layers import (BalanceFeatures, FilterTopKDetections,
                                     FuseDetections, GenerateDetections,
                                     TransformBoxesAndScores)
@@ -46,12 +46,23 @@ class ModelBuilder:
             conv_2d_op_params=params.architecture.conv_2d,
             normalization_op_params=params.architecture.batch_norm)
 
-        box_head, class_head = build_heads(
+        box_head, class_head = build_detection_heads(
             params=params.architecture.head,
             min_level=params.architecture.feature_fusion.min_level,
             max_level=params.architecture.feature_fusion.max_level,
             conv_2d_op_params=params.architecture.conv_2d,
             normalization_op_params=params.architecture.batch_norm)
+
+        auxillary_head = None
+        if params.architecture.auxillary_head.use_auxillary_head:
+            auxillary_head = build_auxillary_head(
+                num_convs=params.architecture.auxillary_head.num_convs,
+                filters=params.architecture.auxillary_head.filters,
+                num_anchors=params.architecture.head.num_anchors,
+                min_level=params.architecture.feature_fusion.min_level,
+                max_level=params.architecture.feature_fusion.max_level,
+                conv_2d_op_params=params.architecture.conv_2d,
+                normalization_op_params=params.architecture.batch_norm)
 
         features = backbone(images)
         features = neck(features)
@@ -65,14 +76,19 @@ class ModelBuilder:
         box_outputs = box_head(features)
         class_outputs = class_head(features)
 
+        outputs = {
+            'class-predictions': class_outputs,
+            'box-predictions': box_outputs
+            }
+
+        if auxillary_head is not None:
+            auxillary_outputs = auxillary_head(features)
+            outputs['iou-predictions'] = auxillary_outputs
+
         model = tf.keras.Model(
             inputs=[images],
-            outputs={
-                'class-predictions': class_outputs,
-                'box-predictions': box_outputs
-            },
-            name='retinanet'
-        )
+            outputs=outputs,
+            name='retinanet')
 
         optimizer = build_optimizer(
             params.training.optimizer,
