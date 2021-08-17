@@ -24,17 +24,25 @@ def convert_to_corners(boxes):
     )
 
 
-def compute_iou(boxes1, boxes2):
+def compute_iou(boxes1, boxes2, pair_wise=True):
     boxes1_corners = convert_to_corners(boxes1)
     boxes2_corners = convert_to_corners(boxes2)
-    lu = tf.maximum(boxes1_corners[:, None, :2], boxes2_corners[:, :2])
-    rd = tf.minimum(boxes1_corners[:, None, 2:], boxes2_corners[:, 2:])
+
+    if pair_wise:
+        boxes1_corners = tf.expand_dims(boxes1_corners, axis=1)
+
+    lu = tf.maximum(boxes1_corners[..., :2], boxes2_corners[:, :2])
+    rd = tf.minimum(boxes1_corners[...,  2:], boxes2_corners[:, 2:])
     intersection = tf.maximum(0.0, rd - lu)
-    intersection_area = intersection[:, :, 0] * intersection[:, :, 1]
+    intersection_area = intersection[..., 0] * intersection[..., 1]
     boxes1_area = boxes1[:, 2] * boxes1[:, 3]
     boxes2_area = boxes2[:, 2] * boxes2[:, 3]
+
+    if pair_wise:
+        boxes1_area = tf.expand_dims(boxes1_area, axis=1)
+
     union_area = tf.maximum(
-        boxes1_area[:, None] + boxes2_area - intersection_area, 1e-8)
+        boxes1_area + boxes2_area - intersection_area, 1e-8)
     return tf.clip_by_value(intersection_area / union_area, 0.0, 1.0)
 
 

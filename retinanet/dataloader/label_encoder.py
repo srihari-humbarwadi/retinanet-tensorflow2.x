@@ -27,7 +27,7 @@ class LabelEncoder:
         if tf.shape(gt_boxes)[0] == 0:
             return self._all_unmatched
 
-        iou_matrix = compute_iou(gt_boxes, anchor_boxes)
+        iou_matrix = compute_iou(gt_boxes, anchor_boxes, pair_wise=True)
 
         max_ious = tf.reduce_max(iou_matrix, axis=0)
         matched_gt_idx = tf.argmax(iou_matrix, axis=0, output_type=tf.int32)
@@ -92,9 +92,10 @@ class LabelEncoder:
         gt_boxes = tf.gather(gt_boxes, matches + 2)
         cls_target = tf.gather(cls_ids, matches + 2)
         box_target = self._compute_box_target(gt_boxes, matches)
+        iou_target = compute_iou(self.anchors.boxes, gt_boxes, pair_wise=False)
 
         boundaries = self.anchors.anchor_boundaries
-        targets = {'class-targets': {}, 'box-targets': {}}
+        targets = {'class-targets': {}, 'box-targets': {}, 'iou-targets': {}}
 
         # TODO(srihari): use pyramid levels for indexing
         for level in range(self._min_level, self._max_level + 1):
@@ -107,6 +108,9 @@ class LabelEncoder:
             targets['box-targets'][str(i + 3)] = tf.reshape(
                 box_target[boundaries[i]:boundaries[i + 1]],
                 shape=[fh, fw, 4 * self.anchors._num_anchors])
+            targets['iou-targets'][str(i + 3)] = tf.reshape(
+                iou_target[boundaries[i]:boundaries[i + 1]],
+                shape=[fh, fw, self.anchors._num_anchors])
 
         num_positives = tf.reduce_sum(
             tf.cast(tf.greater(matches, -1), dtype=tf.float32))
