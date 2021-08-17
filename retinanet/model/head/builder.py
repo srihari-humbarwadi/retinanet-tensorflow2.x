@@ -4,8 +4,9 @@ import tensorflow as tf
 from retinanet.model.head.detection_head import DetectionHead
 
 
-def build_heads(
-        params, min_level,
+def build_detection_heads(
+        params,
+        min_level,
         max_level,
         conv_2d_op_params=None,
         normalization_op_params=None):
@@ -34,3 +35,26 @@ def build_heads(
         name='class-head')
 
     return box_head, class_head
+
+
+def build_auxillary_head(
+        num_convs,
+        filters,
+        num_anchors,
+        min_level,
+        max_level,
+        conv_2d_op_params=None,
+        normalization_op_params=None):
+    prior_prob_init = tf.constant_initializer(-np.log((1 - 0.5) / 0.5))
+    auxillary_head = DetectionHead(
+        num_convs=num_convs,
+        filters=filters,
+        output_filters=num_anchors,
+        min_level=min_level,
+        max_level=max_level,
+        prediction_bias_initializer=prior_prob_init,
+        conv_2d_op_params=conv_2d_op_params,
+        normalization_op_params=normalization_op_params,
+        name='auxillary-head')
+
+    return auxillary_head
