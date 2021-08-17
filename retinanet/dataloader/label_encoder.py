@@ -93,6 +93,7 @@ class LabelEncoder:
         cls_target = tf.gather(cls_ids, matches + 2)
         box_target = self._compute_box_target(gt_boxes, matches)
         iou_target = compute_iou(self.anchors.boxes, gt_boxes, pair_wise=False)
+        iou_target = tf.where(tf.greater(matches, -1), iou_target, -1.0)
 
         boundaries = self.anchors.anchor_boundaries
         targets = {'class-targets': {}, 'box-targets': {}, 'iou-targets': {}}
