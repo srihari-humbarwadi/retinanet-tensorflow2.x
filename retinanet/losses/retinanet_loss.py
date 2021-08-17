@@ -1,17 +1,20 @@
 import tensorflow as tf
 from absl import logging
 
-from retinanet.losses.loss_impl import BoxLoss, ClassLoss
+from retinanet.losses.loss_impl import BoxLoss, ClassLoss, IouPredictionLoss
 
 
 class RetinaNetLoss(tf.Module):
     def __init__(self, num_classes, params):
         self.box_loss = BoxLoss(params.smooth_l1_loss)
         self.class_loss = ClassLoss(num_classes, params.focal_loss)
+        self.iou_prediction_loss = IouPredictionLoss()
 
         self._box_loss_weight = tf.convert_to_tensor(params.box_loss_weight)
         self._class_loss_weight = tf.convert_to_tensor(
             params.class_loss_weight)
+        self._auxillary_loss_weight = tf.convert_to_tensor(
+            params.auxillary_loss_weight)
 
         self._use_moving_average_normalizer = False
 
@@ -59,9 +62,21 @@ class RetinaNetLoss(tf.Module):
         weighted_loss = self._box_loss_weight * box_loss + \
             self._class_loss_weight * class_loss
 
-        return {
+        losses = {
             'box-loss': box_loss,
             'class-loss': class_loss,
             'weighted-loss': weighted_loss,
             'num-anchors-matched': normalizer
         }
+
+        if self._auxillary_loss_weight > 0:
+            iou_prediction_loss = self.iou_prediction_loss(
+                targets=targets['iou-targets'],
+                predictions=predictions['iou-predictions'])
+            iou_prediction_loss /= normalizer
+
+            losses['weighted-loss'] += (self._auxillary_loss_weight *
+                                        iou_prediction_loss)
+            losses['iou-prediction-loss'] = iou_prediction_loss
+
+        return losses
