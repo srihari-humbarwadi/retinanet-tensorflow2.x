@@ -44,6 +44,11 @@
       "filters": 160,
       "num_classes": 80,
       "num_anchors": 9
+    },
+    "auxillary_head": {
+      "use_auxillary_head": false,
+      "num_convs": 2,
+      "filters": 256
     }
   },
   "loss": {
@@ -60,7 +65,8 @@
       "momentum": 0.99
     },
     "class_loss_weight": 1.0,
-    "box_loss_weight": 50.0
+    "box_loss_weight": 50.0,
+    "auxillary_loss_weight": 0.0
   },
   "training": {
     "use_weight_decay": true,
