@@ -22,6 +22,7 @@ class LabelEncoder:
 
         self._min_level = params.architecture.feature_fusion.min_level
         self._max_level = params.architecture.feature_fusion.max_level
+        self._params = params
 
     def _match_anchor_boxes(self, anchor_boxes, gt_boxes):
         if tf.shape(gt_boxes)[0] == 0:
@@ -96,7 +97,10 @@ class LabelEncoder:
         iou_target = tf.where(tf.greater(matches, -1), iou_target, -1.0)
 
         boundaries = self.anchors.anchor_boundaries
-        targets = {'class-targets': {}, 'box-targets': {}, 'iou-targets': {}}
+        targets = {'class-targets': {}, 'box-targets': {}}
+
+        if self._params.architecture.auxillary_head.use_auxillary_head:
+            targets['iou-targets'] = {}
 
         # TODO(srihari): use pyramid levels for indexing
         for level in range(self._min_level, self._max_level + 1):
@@ -109,9 +113,11 @@ class LabelEncoder:
             targets['box-targets'][str(i + 3)] = tf.reshape(
                 box_target[boundaries[i]:boundaries[i + 1]],
                 shape=[fh, fw, 4 * self.anchors._num_anchors])
-            targets['iou-targets'][str(i + 3)] = tf.reshape(
-                iou_target[boundaries[i]:boundaries[i + 1]],
-                shape=[fh, fw, self.anchors._num_anchors])
+
+            if 'iou-targets' in targets:
+                targets['iou-targets'][str(i + 3)] = tf.reshape(
+                    iou_target[boundaries[i]:boundaries[i + 1]],
+                    shape=[fh, fw, self.anchors._num_anchors])
 
         num_positives = tf.reduce_sum(
             tf.cast(tf.greater(matches, -1), dtype=tf.float32))
