@@ -69,7 +69,7 @@ class RetinaNetLoss(tf.Module):
             'num-anchors-matched': normalizer
         }
 
-        if self._auxillary_loss_weight > 0:
+        if 'iou-predictions' in predictions:
             iou_prediction_loss = self.iou_prediction_loss(
                 targets=targets['iou-targets'],
                 predictions=predictions['iou-predictions'])

@@ -108,8 +108,7 @@ class BoxLoss:
 class IouPredictionLoss:
 
     def __init__(self):
-        self._crossentropy_loss = tf.losses.BinaryCrossentropy(
-            from_logits=True,
+        self._loss = tf.keras.losses.MeanSquaredError(
             name='iou_prediction_loss',
             reduction='sum')
 
@@ -123,7 +122,7 @@ class IouPredictionLoss:
             y_pred = tf.expand_dims(predictions[key], axis=-1)
             sample_weight = tf.greater(y_true, -1.0)
 
-            current_level_loss = self._crossentropy_loss(
+            current_level_loss = self._loss(
                 y_true=y_true,
                 y_pred=y_pred,
                 sample_weight=sample_weight)
