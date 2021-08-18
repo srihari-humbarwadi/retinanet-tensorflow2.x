@@ -18,7 +18,7 @@
   "architecture": {
     "conv_2d": {
       "use_seperable_conv": false,
-      "use_bias_before_bn": true
+      "use_bias_before_bn": false
     },
     "batch_norm": {
       "use_sync": true,
@@ -47,7 +47,7 @@
       "num_anchors": 9
     },
     "auxillary_head": {
-      "use_auxillary_head": true,
+      "use_auxillary_head": false,
       "num_convs": 2,
       "filters": 256
     }
@@ -67,7 +67,7 @@
     },
     "class_loss_weight": 1.0,
     "box_loss_weight": 50.0,
-    "auxillary_loss_weight": 1.5
+    "auxillary_loss_weight": 0.0
   },
   "training": {
     "use_weight_decay": true,
