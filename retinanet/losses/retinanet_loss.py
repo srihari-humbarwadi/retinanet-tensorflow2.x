@@ -78,5 +78,6 @@ class RetinaNetLoss(tf.Module):
             losses['weighted-loss'] += (self._auxillary_loss_weight *
                                         iou_prediction_loss)
             losses['iou-prediction-loss'] = iou_prediction_loss
-
+        else:
+            losses['iou-prediction-loss'] = 0.0
         return losses
