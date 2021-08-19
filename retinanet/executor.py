@@ -104,8 +104,8 @@ class Executor:
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
 
-        if ('global_clipnorm' in self.params.optimizer or
-                'clipnorm' in self.params.optimizer):
+        if ('global_clipnorm' in self.params.training.optimizer or
+                'clipnorm' in self.params.training.optimizer):
             self._clip_gradients = True
             logging.warning('Training with `clip_gradients=True`')
 
