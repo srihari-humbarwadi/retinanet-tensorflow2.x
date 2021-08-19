@@ -390,7 +390,7 @@ class Executor:
 
     @staticmethod
     def _clip_gradients_by_norm(gradients, threshold):
-        clipped_gradients = tf.clip_by_norm(gradients, threshold)
+        clipped_gradients = [tf.clip_by_norm(x, threshold) for x in gradients]
         clipped_gradients, _ = tf.clip_by_global_norm(
             clipped_gradients, threshold)
 
