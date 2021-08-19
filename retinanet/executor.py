@@ -420,7 +420,7 @@ class Executor:
             gradients = self.optimizer.get_unscaled_gradients(gradients)
 
         if self._clip_gradients:
-            threshold = self.params.optimizer.clipnorm
+            threshold = self.params.training.optimizer.clipnorm
             gradients = Executor._clip_gradients_by_norm(gradients, threshold)
 
         self.optimizer.apply_gradients(
