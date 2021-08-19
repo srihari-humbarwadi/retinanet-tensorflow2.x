@@ -25,7 +25,9 @@ def get_learning_rate_schedule(params):
 
 
 def build_optimizer(params, precision):
-    _params = deepcopy(params)
+    # workaround for bug in easydict `pop` method
+    _params = dict(deepcopy(params))
+
     lr_params = _params.pop('lr_params', None)
     use_moving_average = _params.pop('use_moving_average', None)
     moving_average_decay = _params.pop('moving_average_decay', None)
