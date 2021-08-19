@@ -104,8 +104,8 @@ class Executor:
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
 
-        if ('global_clipnorm' in self._params.optimizer or
-                'clipnorm' in self._params.optimizer):
+        if ('global_clipnorm' in self.params.optimizer or
+                'clipnorm' in self.params.optimizer):
             self._clip_gradients = True
             logging.warning('Training with `clip_gradients=True`')
 
@@ -389,7 +389,7 @@ class Executor:
         return results
 
     @staticmethod
-    def _clip_gradients(gradients, threshold):
+    def _clip_gradients_by_norm(gradients, threshold):
         clipped_gradients = tf.clip_by_norm(gradients, threshold)
         clipped_gradients, _ = tf.clip_by_global_norm(
             clipped_gradients, threshold)
@@ -420,8 +420,8 @@ class Executor:
             gradients = self.optimizer.get_unscaled_gradients(gradients)
 
         if self._clip_gradients:
-            threshold = self._params.optimizer.clipnorm
-            gradients = Executor._clip_gradients(gradients, threshold)
+            threshold = self.params.optimizer.clipnorm
+            gradients = Executor._clip_gradients_by_norm(gradients, threshold)
 
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))
