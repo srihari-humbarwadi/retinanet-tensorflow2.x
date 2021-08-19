@@ -58,6 +58,7 @@ class Executor:
 
         self.num_replicas = self.distribute_strategy.num_replicas_in_sync
         self.restore_status = None
+        self._clip_gradients = True
         self.use_float16 = False
         self._log_to_discord_server = False
         self._trace_written = False
@@ -102,6 +103,11 @@ class Executor:
         self._model = self.model_builder()
         self.optimizer = self._model.optimizer
         self._created_optimizer_weights = False
+
+        if ('global_clipnorm' in self._params.optimizer or
+                'clipnorm' in self._params.optimizer):
+            self._clip_gradients = True
+            logging.warning('Training with `clip_gradients=True`')
 
         if self.params.fine_tuning.fine_tune:
             logging.info(
@@ -382,6 +388,14 @@ class Executor:
             lambda x: self.distribute_strategy.gather(x, axis=0), results)
         return results
 
+    @staticmethod
+    def _clip_gradients(gradients, threshold):
+        clipped_gradients = tf.clip_by_norm(gradients, threshold)
+        clipped_gradients, _ = tf.clip_by_global_norm(
+            clipped_gradients, threshold)
+
+        return clipped_gradients
+
     def _train_step(self, data):
         images, targets = data
 
@@ -404,6 +418,10 @@ class Executor:
                                   self._model.trainable_variables)
         if self.use_float16:
             gradients = self.optimizer.get_unscaled_gradients(gradients)
+
+        if self._clip_gradients:
+            threshold = self._params.optimizer.clipnorm
+            gradients = Executor._clip_gradients(gradients, threshold)
 
         self.optimizer.apply_gradients(
             zip(gradients, self._model.trainable_variables))

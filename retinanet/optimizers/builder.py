@@ -30,6 +30,9 @@ def build_optimizer(params, precision):
     use_moving_average = _params.pop('use_moving_average', None)
     moving_average_decay = _params.pop('moving_average_decay', None)
 
+    _ = _params.pop('global_clipnorm', None)
+    _ = _params.pop('clipnorm', None)
+
     _params['learning_rate'] = get_learning_rate_schedule(lr_params)
 
     config = {
