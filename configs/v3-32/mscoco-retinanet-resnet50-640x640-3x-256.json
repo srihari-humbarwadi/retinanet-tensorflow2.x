@@ -101,7 +101,7 @@
       "name": "sgd",
       "momentum": 0.9,
       "nesterov": true,
-      "clipnorm": 12.0,
+      "clipnorm": 10.0,
       "use_moving_average": true,
       "moving_average_decay": 0.9998,
       "lr_params": {
