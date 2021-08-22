@@ -23,7 +23,7 @@
     "batch_norm": {
       "use_sync": true,
       "momentum": 0.99,
-      "epsilon": 0.001
+      "epsilon": 0.00001
     },
     "backbone": {
       "type": "mobiledet_edge_tpu",
