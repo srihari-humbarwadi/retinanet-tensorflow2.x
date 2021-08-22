@@ -81,7 +81,7 @@
     },
     "restore_checkpoint": true,
     "freeze_variables": [],
-    "train_steps": 648200,
+    "train_steps": 675000,
     "validation_samples": 4952,
     "validation_freq": 1792,
     "annotation_file_path": "./instances_val2017.json",
@@ -111,8 +111,8 @@
           0.0008
         ],
         "boundaries": [
-          592640,
-          629680
+          617144,
+          655712
         ]
       }
     }
