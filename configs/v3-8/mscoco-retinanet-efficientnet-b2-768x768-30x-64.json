@@ -97,7 +97,7 @@
     "optimizer": {
       "name": "sgd",
       "momentum": 0.9,
-      "nesterov": true,
+      "nesterov": false,
       "clipnorm": 10.0,
       "use_moving_average": false,
       "moving_average_decay": 0.9998,

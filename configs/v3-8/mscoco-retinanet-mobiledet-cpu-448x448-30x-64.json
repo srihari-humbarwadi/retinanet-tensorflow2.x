@@ -23,7 +23,7 @@
     "batch_norm": {
       "use_sync": true,
       "momentum": 0.99,
-      "epsilon": 0.00001
+      "epsilon": 0.001
     },
     "backbone": {
       "type": "mobiledet_cpu",
@@ -97,7 +97,7 @@
     "optimizer": {
       "name": "sgd",
       "momentum": 0.9,
-      "nesterov": true,
+      "nesterov": false,
       "clipnorm": 10.0,
       "use_moving_average": false,
       "moving_average_decay": 0.9998,
@@ -160,7 +160,7 @@
       "use_augmentation": true,
       "horizontal_flip": true,
       "scale_jitter": {
-        "min_scale": 0.5,
+        "min_scale": 0.1,
         "max_scale": 2.0
       }
     },
