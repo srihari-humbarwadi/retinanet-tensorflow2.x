@@ -136,6 +136,9 @@ class CocoParser(Parser):
         _build(self.val_annotations_path, 'val')
 
         for split_name in ['train', 'val']:
+            if not self._data[split_name]:
+                continue
+
             logging.info(
                 'Successfully parsed {} {} samples from {} dataset'.format(
                     len(self._data[split_name]), split_name, self._name))

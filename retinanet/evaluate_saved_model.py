@@ -40,14 +40,6 @@ flags.DEFINE_boolean(
     'with `remap_class_ids=True` in dataset parser')
 
 
-try:
-    import tensorrt as trt
-    trt.init_libnvinfer_plugins(None, '')
-    os.environ['TF_TRT_ALLOW_NMS_TOPK_OVERRIDE'] = '1'
-
-except ImportError:
-    logging.warning('TensorRT not installed')
-
 FLAGS = flags.FLAGS
 
 
@@ -116,14 +108,25 @@ def main(_):
     gpus = tf.config.list_physical_devices('GPU')
 
     if gpus:
-        print('Found {} GPU(s)'.format(len(gpus)))
+        logging.info('Found {} GPU(s)'.format(len(gpus)))
         [tf.config.experimental.set_memory_growth(device, True) for device in gpus]
+        try:
+            import tensorrt as trt
+            trt.init_libnvinfer_plugins(None, '')
+            os.environ['TF_TRT_ALLOW_NMS_TOPK_OVERRIDE'] = '1'
+            logging.info('Successfully loaded TensorRT!!!')
+
+        except ImportError:
+            logging.warning('TensorRT not installed')
     else:
         logging.warning('No GPU\'s found, running on CPU')
 
     model = tf.saved_model.load(FLAGS.saved_model_path)
     prepare_image_fn = model.signatures['prepare_image']
     serving_fn = model.signatures['serving_default']
+
+    logging.info('Successfully loaded `saved_model` from: {}'.format(
+        FLAGS.saved_model_path))
 
     evaluate(
         prepare_image_fn,
