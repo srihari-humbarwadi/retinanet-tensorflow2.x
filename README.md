@@ -22,9 +22,9 @@
  - [ ] Export TF-lite model
 
 ## Results
-| config | coco2017 mAP[IoU=0.50:0.95] | FP32 | FP32-TensorRT | FP16-TensorRT |
-|:----:|:----:|:--------------:|:-------:|:-------:|
-|  [mscoco-retinanet-resnet50-640x640-30x-256](configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json)  | 0.403 |    24.0 ms (41.5 FPS)     |    19.3 ms (51.6 FPS)   |    11.4 ms (87.1 FPS)   |
+| config | schedule | coco2017 mAP[IoU=0.50:0.95] | FP32 | FP32-TensorRT | FP16-TensorRT |
+|:----:|:----:|:----:|:----:|:----:|:----:|
+| [resnet50-640x640](configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json) | 30x | 0.403 | 24.0 ms (41.5 FPS) | 19.3 ms (51.6 FPS) | 11.4 ms (87.1 FPS) |
 
 
 ## Getting Started
