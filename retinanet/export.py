@@ -59,6 +59,11 @@ flags.DEFINE_boolean(
     help='Skip top k filtering before applying nms')
 
 flags.DEFINE_boolean(
+    name='skip_nms',
+    default=False,
+    help='Skip applying nms')
+
+flags.DEFINE_boolean(
     name='debug',
     default=False,
     help='Print debugging info')
@@ -77,7 +82,7 @@ def main(_):
     logging.get_absl_handler().use_absl_log_file(
         'export_' + params.experiment.name)
 
-    if not FLAGS.model_dir == 'null':
+    if FLAGS.model_dir:
         params.experiment.model_dir = FLAGS.model_dir
         logging.warning('Using local path {} as `model_dir`'.format(
             params.experiment.model_dir))
@@ -153,82 +158,102 @@ def main(_):
                     shape=[None] + params.input.input_shape + [params.input.channels],  # noqa: E501
                     name='image',
                     dtype=tf.float32),
-            'image_id':
-                tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32),
             'resize_scale':
-                tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32),
-        }
+                tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32)}
 
         preprocessing_fn_input_signature = {
             'image':
-                tf.TensorSpec(shape=[None, None, 3], name='image', dtype=tf.float32),
-            'image_id':
-                tf.TensorSpec(shape=[], name='image_id', dtype=tf.int32)
+                tf.TensorSpec(shape=[None, None, 3], name='image', dtype=tf.float32)
         }
+
         preprocessing_pipeling = PreprocessingPipeline(
-            params.input.input_shape, params.dataloader_params)
+            params.input.input_shape,
+            params.dataloader_params)
+
+        inference_model = model_builder.prepare_model_for_export(
+            executor.model, skip_nms=FLAGS.skip_nms)
 
         @tf.function
         def prepare_image(sample):
-            image_dict = preprocessing_pipeling.preprocess_val_sample(sample)
+            image_dict = preprocessing_pipeling.normalize_and_resize_with_pad(
+                image=sample['image'])
             input_shape = tf.constant(params.input.input_shape, dtype=tf.float32)
             resize_scale = image_dict['resize_scale'] / input_shape
             resize_scale = tf.tile(tf.expand_dims(resize_scale, axis=0),
                                    multiples=[1, 2])
             return {
                 'image': tf.expand_dims(image_dict['image'], axis=0),
-                'image_id': sample['image_id'],
                 'resize_scale': resize_scale
             }
 
-        @tf.function()
+        @tf.function
         def serving_fn(sample):
             detections = inference_model.call(sample['image'], training=False)
-
-            return {
-                'image_id': sample['image_id'],
-                'boxes': detections['boxes'] / sample['resize_scale'],
-                'scores': detections['scores'],
-                'classes': tf.cast(detections['classes'], dtype=tf.int32),
-                'valid_detections': detections['valid_detections']
-            }
-
-        inference_model = model_builder.prepare_model_for_export(executor.model)
+            if not FLAGS.skip_nms:
+                detections['boxes'] /= sample['resize_scale']
+                detections['classes'] = tf.cast(
+                    detections['classes'], dtype=tf.int32)
+            else:
+                #  Since we are not applying NMS operation inside tensorflow
+                #  graph, both onnx NMS and tensorrt `BatchedNMS_TRT` require
+                #  boxes to be of shape (batch_size, num_anchors, 1, 4)
+                detections['boxes'] = tf.expand_dims(detections['boxes'], axis=2)
+            return detections
 
         frozen_serving_fn, _ = convert_variables_to_constants_v2_as_graph(
             serving_fn.get_concrete_function(serving_fn_input_signature),
             aggressive_inlining=True)
 
         class InferenceModule(tf.Module):
-            def __init__(self, inference_function):
+            def __init__(self, inference_function, skip_nms):
                 super(InferenceModule, self).__init__(name='inference_module')
                 self.inference_function = inference_function
+                self.skip_nms = skip_nms
 
             @tf.function
             def run_inference(self, sample):
-                outputs = self.inference_function(**sample)
-                return {
-                    'image_id': outputs[2],
-                    'boxes': outputs[0],
-                    'scores': outputs[3],
-                    'classes': outputs[1],
-                    'valid_detections': outputs[4]
-                }
+                raw_outputs = self.inference_function(**sample)
+                outputs = {}
+                if not self.skip_nms:
+                    outputs.update({
+                        'boxes': raw_outputs[0],
+                        'scores': raw_outputs[2],
+                        'classes': raw_outputs[1],
+                        'valid_detections': raw_outputs[3]})
+                else:
+                    outputs.update({
+                        'boxes': raw_outputs[0],
+                        'scores': raw_outputs[1]})
+                return outputs
 
-        inference_module = InferenceModule(frozen_serving_fn)
+        inference_module = InferenceModule(
+            frozen_serving_fn, skip_nms=FLAGS.skip_nms)
+
+        signatures = {
+            'serving_default': inference_module.run_inference.get_concrete_function(
+                serving_fn_input_signature),
+            'prepare_image': prepare_image.get_concrete_function(
+                preprocessing_fn_input_signature)
+        }
+
+        for _signature_name, _concrete_fn in signatures.items():
+            input_shapes = {x.name.split(':')[0]: x.shape.as_list()
+                            for x in _concrete_fn.inputs}
+
+            output_shapes = {k: v.as_list()
+                             for k, v in _concrete_fn.output_shapes.items()}
+            logging.info(
+                '\nSignature: {}\n Input Shapes:\n {}\nOutput Shapes:\n{}'.format(
+                    _signature_name,
+                    input_shapes,
+                    output_shapes))
 
         tf.saved_model.save(
-            inference_module,
-            export_dir,
+            obj=inference_module,
+            export_dir=export_dir,
+            signatures=signatures,
             options=tf.saved_model.SaveOptions(
-                experimental_custom_gradients=False),
-            signatures={
-                'serving_default':
-                inference_module.run_inference.get_concrete_function(
-                    serving_fn_input_signature),
-                'prepare_image': prepare_image.get_concrete_function(
-                    preprocessing_fn_input_signature)
-            })
+                experimental_custom_gradients=False))
 
 
 if __name__ == '__main__':

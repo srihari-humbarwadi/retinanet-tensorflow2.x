@@ -102,13 +102,14 @@ class ModelBuilder:
 
         return model
 
-    def prepare_model_for_export(self, model):
+    def prepare_model_for_export(self, model, skip_nms=False):
         model.optimizer = None
         model.compiled_loss = None
         model.compiled_metrics = None
         model._metrics = []
 
-        inference_model = self.add_post_processing_stage(model)
+        inference_model = self.add_post_processing_stage(
+            model=model, skip_nms=skip_nms)
         return inference_model
 
     def add_post_processing_stage(self, model, skip_nms=False):
@@ -122,14 +123,14 @@ class ModelBuilder:
 
         x = TransformBoxesAndScores(params=params)(x)
 
+        if params.inference.pre_nms_top_k > 0 and not skip_nms:
+            x = FilterTopKDetections(
+                top_k=params.inference.pre_nms_top_k,
+                filter_per_class=params.inference.filter_per_class)(x)
+        else:
+            logging.warning('Skipping top-k filtering !!!')
+
         if not skip_nms:
-
-            if params.inference.pre_nms_top_k > 0:
-
-                x = FilterTopKDetections(
-                    top_k=params.inference.pre_nms_top_k,
-                    filter_per_class=params.inference.filter_per_class)(x)
-
             x = GenerateDetections(
                 iou_threshold=params.inference.iou_threshold,
                 score_threshold=params.inference.score_threshold,
@@ -137,9 +138,10 @@ class ModelBuilder:
                 soft_nms_sigma=params.inference.soft_nms_sigma,
                 num_classes=params.architecture.head.num_classes,
                 mode=params.inference.mode)(x)
+        else:
+            logging.warning('Skipping NMS filtering !!!')
 
         model = tf.keras.Model(inputs=[model.input], outputs=x)
-
         for layer in model.layers:
             logging.debug('Layer Name: {} | Output Shape: {}'
                           .format(layer.name, layer.output_shape))

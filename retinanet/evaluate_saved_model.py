@@ -64,11 +64,11 @@ def evaluate(
         t1 = time()
         image = read_image(tf.constant(sample['image']))
         t2 = time()
-        serving_input = prepare_image_fn(image=image,
-                                         image_id=tf.constant(sample['image_id'],
-                                                              dtype=tf.int32))
+        serving_input = prepare_image_fn(image=image)
         t3 = time()
-        detections = serving_fn(**serving_input)
+        detections = serving_fn(
+            image=serving_input['image'],
+            resize_scale=serving_input['resize_scale'])
         t4 = time()
         fps_meter.accumulate(1 / (t4 - t3))
         fps = fps_meter.averaged_value
