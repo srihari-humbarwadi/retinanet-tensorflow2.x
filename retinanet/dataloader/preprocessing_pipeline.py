@@ -91,7 +91,7 @@ class PreprocessingPipeline:
         bbox, class_ids = self._prepare_labels(bbox, class_ids)
         return image, bbox, class_ids
 
-    def resize_val_image(self, image):
+    def _resize_with_pad(self, image):
         target_shape = self.input_shape
         image_shape = tf.cast(tf.shape(image)[:2], dtype=tf.float32)
         scaled_shape = tf.round(image_shape * tf.minimum(
@@ -106,15 +106,21 @@ class PreprocessingPipeline:
                                                      target_shape[1])
         return resized_image, image_scale
 
-    def preprocess_val_sample(self, sample):
+    def normalize_and_resize_with_pad(self, image):
         image = normalize_image(
-            sample["image"],
+            image,
             offset=self.preprocessing_params.offset,
             scale=self.preprocessing_params.scale)
-
-        image, scale = self.resize_val_image(image)
+        image, scale = self._resize_with_pad(image)
         return {
             'image': image,
-            'image_id': sample['image_id'],
             'resize_scale': scale
+        }
+
+    def preprocess_val_sample(self, sample):
+        processed_sample = self.normalize_and_resize_with_pad(sample['image'])
+        return {
+            'image': processed_sample['image'],
+            'image_id': sample['image_id'],
+            'resize_scale': processed_sample['resize_scale']
         }
