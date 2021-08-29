@@ -17,7 +17,7 @@
  - [x] MobileDet family of backbones
  - [ ] Anchor optimization for custom datasets
  - [x] Logging to Discord server
- - [ ] Export TensorRT model
+ - [x] Export TF-TensorRT model
  - [ ] Export Onnx model [WIP]
  - [ ] Export TF-lite model [WIP]
  - [ ] INT8 Quantization
