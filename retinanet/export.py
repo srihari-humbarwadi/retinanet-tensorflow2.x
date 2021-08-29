@@ -12,6 +12,7 @@ from retinanet.model import ModelBuilder
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
+tf.config.optimizer.set_jit(True)
 
 flags.DEFINE_string(
     name='config_path',
@@ -157,9 +158,8 @@ def main(_):
                 tf.TensorSpec(
                     shape=[None] + params.input.input_shape + [params.input.channels],  # noqa: E501
                     name='image',
-                    dtype=tf.float32),
-            'resize_scale':
-                tf.TensorSpec(shape=[1, 4], name='resize_scale', dtype=tf.float32)}
+                    dtype=tf.float32)
+            }
 
         preprocessing_fn_input_signature = {
             'image':
@@ -177,26 +177,19 @@ def main(_):
         def prepare_image(sample):
             image_dict = preprocessing_pipeling.normalize_and_resize_with_pad(
                 image=sample['image'])
-            input_shape = tf.constant(params.input.input_shape, dtype=tf.float32)
-            resize_scale = image_dict['resize_scale'] / input_shape
-            resize_scale = tf.tile(tf.expand_dims(resize_scale, axis=0),
-                                   multiples=[1, 2])
             return {
-                'image': tf.expand_dims(image_dict['image'], axis=0),
-                'resize_scale': resize_scale
-            }
+              'image': tf.expand_dims(image_dict['image'], axis=0),
+              'resize_scale': image_dict['resize_scale']
+              }
 
         @tf.function
         def serving_fn(sample):
             detections = inference_model.call(sample['image'], training=False)
-            if not FLAGS.skip_nms:
-                detections['boxes'] /= sample['resize_scale']
-                detections['classes'] = tf.cast(
-                    detections['classes'], dtype=tf.int32)
-            else:
+            if FLAGS.skip_nms:
                 #  Since we are not applying NMS operation inside tensorflow
-                #  graph, both onnx NMS and tensorrt `BatchedNMS_TRT` require
-                #  boxes to be of shape (batch_size, num_anchors, 1, 4)
+                #  graph, both onnx NMS and tensorrt `BatchedNMS_TRT` plugin
+                #  requires  boxes to be of shape
+                #  (batch_size, num_anchors, 1, 4)
                 detections['boxes'] = tf.expand_dims(detections['boxes'], axis=2)
             return detections
 
@@ -227,7 +220,8 @@ def main(_):
                 return outputs
 
         inference_module = InferenceModule(
-            frozen_serving_fn, skip_nms=FLAGS.skip_nms)
+            inference_function=frozen_serving_fn,
+            skip_nms=FLAGS.skip_nms)
 
         signatures = {
             'serving_default': inference_module.run_inference.get_concrete_function(

@@ -67,11 +67,12 @@ def evaluate(
         serving_input = prepare_image_fn(image=image)
         t3 = time()
         detections = serving_fn(
-            image=serving_input['image'],
-            resize_scale=serving_input['resize_scale'])
+            image=serving_input['image'])
         t4 = time()
         fps_meter.accumulate(1 / (t4 - t3))
         fps = fps_meter.averaged_value
+
+        detections['boxes'] *= tf.cast(tf.reduce_max(image.shape), dtype=tf.float32)
 
         coco_evaluator.accumulate_results(
             {
@@ -111,8 +112,17 @@ def main(_):
         logging.info('Found {} GPU(s)'.format(len(gpus)))
         [tf.config.experimental.set_memory_growth(device, True) for device in gpus]
         try:
+            # Attempt to load tensorrt, only used if the saved_model contains
+            # TensorRT engines.
             import tensorrt as trt
             trt.init_libnvinfer_plugins(None, '')
+
+            # Starting from tensorflow==2.5.0, TensorRT ignores the conversion
+            # of combined_nms op if number of anchors is more than 4096.
+            # Setting`TF_TRT_ALLOW_NMS_TOPK_OVERRIDE=1` will allow TensorRT to run
+            # top_k filtering with k=4096 prior to running NMS.
+            # refer https://github.com/tensorflow/tensorflow/issues/46453
+            # and https://github.com/tensorflow/tensorflow/pull/47698
             os.environ['TF_TRT_ALLOW_NMS_TOPK_OVERRIDE'] = '1'
             logging.info('Successfully loaded TensorRT!!!')
 
