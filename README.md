@@ -17,9 +17,10 @@
  - [x] MobileDet family of backbones
  - [ ] Anchor optimization for custom datasets
  - [x] Logging to Discord server
- - [ ] Export TensorRT model [WIP]
+ - [ ] Export TensorRT model
  - [ ] Export Onnx model [WIP]
- - [ ] Export TF-lite model
+ - [ ] Export TF-lite model [WIP]
+ - [ ] INT8 Quantization
 
 ## Results
 | config | schedule | coco2017 mAP[IoU=0.50:0.95] | FP32 | FP32-TensorRT | FP16-TensorRT |
