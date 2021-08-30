@@ -18,9 +18,10 @@
  - [ ] Anchor optimization for custom datasets
  - [x] Logging to Discord server
  - [x] Export TF-TensorRT model
- - [ ] Export Onnx model [WIP]
- - [ ] Export TF-lite model [WIP]
- - [ ] INT8 Quantization
+ - [ ] 8bit Quantization Aware Training [WIP]
+ - [ ] Export Onnx model
+ - [ ] Export TF-lite model
+
 
 ## Results
 | config | schedule | coco2017 mAP[IoU=0.50:0.95] | FP32 | FP32-TensorRT | FP16-TensorRT |
