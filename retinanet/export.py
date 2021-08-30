@@ -55,6 +55,11 @@ flags.DEFINE_string(
     help='Overides `model_dir` specified in the config')
 
 flags.DEFINE_boolean(
+    name='skip_prepare_image_fn',
+    default=False,
+    help='Skip exporting `prepare_image` signature')
+
+flags.DEFINE_boolean(
     name='disable_pre_nms_top_k',
     default=False,
     help='Skip top k filtering before applying nms')
@@ -178,9 +183,8 @@ def main(_):
             image_dict = preprocessing_pipeling.normalize_and_resize_with_pad(
                 image=sample['image'])
             return {
-              'image': tf.expand_dims(image_dict['image'], axis=0),
-              'resize_scale': image_dict['resize_scale']
-              }
+                'image': tf.expand_dims(image_dict['image'], axis=0)
+            }
 
         @tf.function
         def serving_fn(sample):
@@ -225,10 +229,14 @@ def main(_):
 
         signatures = {
             'serving_default': inference_module.run_inference.get_concrete_function(
-                serving_fn_input_signature),
-            'prepare_image': prepare_image.get_concrete_function(
-                preprocessing_fn_input_signature)
+                serving_fn_input_signature)
         }
+
+        if not FLAGS.skip_prepare_image_fn:
+            signatures['prepare_image'] = prepare_image.get_concrete_function(
+                preprocessing_fn_input_signature)
+        else:
+            logging.warning('Skipping `prepare_image` signature in `saved_model`')
 
         for _signature_name, _concrete_fn in signatures.items():
             input_shapes = {x.name.split(':')[0]: x.shape.as_list()
