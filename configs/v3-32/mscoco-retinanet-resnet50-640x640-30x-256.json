@@ -33,7 +33,6 @@
     "feature_fusion": {
       "type": "fpn",
       "use_balanced_features": true,
-      "use_residual_connections": false,
       "fusion_mode": "sum",
       "filters": 256,
       "min_level": 3,
@@ -180,7 +179,7 @@
     "shuffle_buffer_size": 1024
   },
   "inference": {
-    "mode": "PerClassHardNMS",
+    "mode": "CombinedNMS",
     "iou_threshold": 0.5,
     "score_threshold": 0.05,
     "soft_nms_sigma": 0.5,

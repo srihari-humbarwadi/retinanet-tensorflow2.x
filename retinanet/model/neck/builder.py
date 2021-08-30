@@ -13,7 +13,6 @@ def build_neck(params, conv_2d_op_params=None, normalization_op_params=None):
             max_level=params.max_level,
             backbone_max_level=params.backbone_max_level,
             fusion_mode=params.fusion_mode,
-            use_residual_connections=params.use_residual_connections,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
             name='fpn')
