@@ -84,6 +84,8 @@ def main(_):
     params = Config(FLAGS.config_path).params
     export_dir = os.path.join(FLAGS.export_dir, params.experiment.name)
 
+    logging.info('Using `saved_model` from: {}'.format(FLAGS.saved_model_path))
+
     if FLAGS.debug:
         os.environ['TF_CPP_VMODULE'] = \
             'trt_engine_op=2,convert_nodes=2,convert_graph=2,segment=2,trt_shape_optimization_profiles=2,trt_engine_resource_ops=2'  # noqa: E501
@@ -110,7 +112,7 @@ def main(_):
     else:
         raise AssertionError('No GPU\'s found, cannot proceed')
 
-    logging.info('Using `saved_model` from: {}'.format(FLAGS.saved_model_path))
+    logging.info('Setting precision to {}'.format(FLAGS.precision))
 
     conversion_params = tf.experimental.tensorrt.ConversionParams(
         minimum_segment_size=FLAGS.minimum_segment_size,
@@ -137,10 +139,15 @@ def main(_):
         steps=10)
 
     converter.convert(calibration_input_fn=calibration_input_fn)
-    converter.build(input_fn=input_fn)
+    logging.info('Done converting `saved_model`')
 
-    logging.info('Saving converted saved_model to: {}'.format(
-        export_dir))
+    converter.build(input_fn=input_fn)
+    logging.info('Done building TensorRT engines')
+
+    logging.info(
+        'Saving {} converted saved_model and TensorRT engines to: {}'.format(
+            FLAGS.precision,
+            export_dir))
 
     converter.save(export_dir)
 
