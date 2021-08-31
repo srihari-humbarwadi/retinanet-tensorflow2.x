@@ -11,7 +11,7 @@ from retinanet.optimizers.cosine_decay_with_warmup import \
     CosineDecayWithLinearWarmup
 
 
-def get_learning_rate_schedule(params):
+def get_learning_rate_schedule(total_steps, params):
     _params = deepcopy(params)
     schedule_type = _params.pop('schedule_type', None)
 
@@ -19,12 +19,13 @@ def get_learning_rate_schedule(params):
         return PiecewiseConstantDecayWithLinearWarmup(**_params)
 
     if schedule_type == 'cosine_decay':
+        _params['total_steps'] = total_steps
         return CosineDecayWithLinearWarmup(**_params)
 
     raise ValueError('Invalid learning rate schedule requested')
 
 
-def build_optimizer(params, precision):
+def build_optimizer(params, train_steps, precision):
     # workaround for bug in easydict `pop` method
     _params = dict(deepcopy(params))
 
@@ -35,7 +36,7 @@ def build_optimizer(params, precision):
     _ = _params.pop('global_clipnorm', None)
     _ = _params.pop('clipnorm', None)
 
-    _params['learning_rate'] = get_learning_rate_schedule(lr_params)
+    _params['learning_rate'] = get_learning_rate_schedule(train_steps, lr_params)
 
     config = {
         'class_name': _params['name'],

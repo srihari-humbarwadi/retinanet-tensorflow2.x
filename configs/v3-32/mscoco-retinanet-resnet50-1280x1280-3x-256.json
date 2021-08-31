@@ -108,8 +108,7 @@
         "initial_learning_rate": 0.32,
         "warmup_learning_rate": 0.008,
         "alpha": 0.0001,
-        "warmup_steps": 500,
-        "total_steps": 16875
+        "warmup_steps": 500
       }
     }
   },

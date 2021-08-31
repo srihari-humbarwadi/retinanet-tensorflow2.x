@@ -92,6 +92,7 @@ class ModelBuilder:
 
         optimizer = build_optimizer(
             params.training.optimizer,
+            params.training.train_steps,
             precision=params.floatx.precision)
 
         _loss_fn = RetinaNetLoss(
