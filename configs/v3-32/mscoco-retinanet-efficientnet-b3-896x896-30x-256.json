@@ -25,6 +25,9 @@
       "momentum": 0.99,
       "epsilon": 0.001
     },
+    "activation": {
+      "type": "relu"
+    },
     "backbone": {
       "type": "efficientnet-b3",
       "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-b3"

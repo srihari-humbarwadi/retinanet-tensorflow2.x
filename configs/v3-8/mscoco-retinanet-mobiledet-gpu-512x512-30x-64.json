@@ -25,6 +25,9 @@
       "momentum": 0.99,
       "epsilon": 0.001
     },
+    "activation": {
+      "type": "relu"
+    },
     "backbone": {
       "type": "mobiledet_gpu",
       "checkpoint": ""
