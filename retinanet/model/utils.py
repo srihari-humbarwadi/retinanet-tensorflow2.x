@@ -22,6 +22,14 @@ def get_normalization_op(**params):
     return normalization_op
 
 
+class Identity(tf.keras.layers.Layer):
+    def __init__(self, **kwargs):
+        super(Identity, self).__init__(**kwargs)
+
+    def call(self, tensor):
+        return tf.identity(tensor, name=self.name)
+
+
 class GenericActivation(tf.keras.layers.Layer):
     def __init__(self, forward_fn, activation_type, name, **kwargs):
         super(GenericActivation, self).__init__(
