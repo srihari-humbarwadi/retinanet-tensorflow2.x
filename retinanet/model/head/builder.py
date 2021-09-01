@@ -9,7 +9,11 @@ def build_detection_heads(
         min_level,
         max_level,
         conv_2d_op_params=None,
-        normalization_op_params=None):
+        normalization_op_params=None,
+        activation_fn=None):
+
+    if activation_fn is None:
+        raise ValueError('`activation_fn` cannot be None')
 
     box_head = DetectionHead(
         num_convs=params.num_convs,
@@ -20,6 +24,7 @@ def build_detection_heads(
         prediction_bias_initializer='zeros',
         conv_2d_op_params=conv_2d_op_params,
         normalization_op_params=normalization_op_params,
+        activation_fn=activation_fn,
         name='box-head')
 
     prior_prob_init = tf.constant_initializer(-np.log((1 - 0.01) / 0.01))
@@ -32,6 +37,7 @@ def build_detection_heads(
         prediction_bias_initializer=prior_prob_init,
         conv_2d_op_params=conv_2d_op_params,
         normalization_op_params=normalization_op_params,
+        activation_fn=activation_fn,
         name='class-head')
 
     return box_head, class_head
@@ -44,7 +50,12 @@ def build_auxillary_head(
         min_level,
         max_level,
         conv_2d_op_params=None,
-        normalization_op_params=None):
+        normalization_op_params=None,
+        activation_fn=None):
+
+    if activation_fn is None:
+        raise ValueError('`activation_fn` cannot be None')
+
     prior_prob_init = tf.constant_initializer(-np.log((1 - 0.5) / 0.5))
     auxillary_head = DetectionHead(
         num_convs=num_convs,
@@ -55,6 +66,7 @@ def build_auxillary_head(
         prediction_bias_initializer=prior_prob_init,
         conv_2d_op_params=conv_2d_op_params,
         normalization_op_params=normalization_op_params,
+        activation_fn=activation_fn,
         name='auxillary-head')
 
     return auxillary_head

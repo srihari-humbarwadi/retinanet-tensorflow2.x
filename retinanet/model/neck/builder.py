@@ -5,7 +5,15 @@ from retinanet.model.neck.stacked_multi_level_attention_fusion import \
     StackedMultiLevelAttentionFusion
 
 
-def build_neck(params, conv_2d_op_params=None, normalization_op_params=None):
+def build_neck(
+        params,
+        conv_2d_op_params=None,
+        normalization_op_params=None,
+        activation_fn=None):
+
+    if activation_fn is None:
+        raise ValueError('`activation_fn` cannot be None')
+
     if params.type == 'fpn':
         neck = FPN(
             filters=params.filters,
@@ -15,6 +23,7 @@ def build_neck(params, conv_2d_op_params=None, normalization_op_params=None):
             fusion_mode=params.fusion_mode,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
+            activation_fn=activation_fn,
             name='fpn')
 
     elif params.type == 'multi_level_attention':
