@@ -14,7 +14,15 @@ class DetectionHead(tf.keras.layers.Layer):
                  prediction_bias_initializer='zeros',
                  conv_2d_op_params=None,
                  normalization_op_params=None,
+                 activation_fn=None,
                  **kwargs):
+
+        if normalization_op_params is None:
+            raise ValueError('`normalization_op_params` cannot be None')
+
+        if activation_fn is None:
+            raise ValueError('`activation_fn` cannot be None')
+
         super(DetectionHead, self).__init__(**kwargs)
 
         self.num_head_convs = num_convs
@@ -43,7 +51,7 @@ class DetectionHead(tf.keras.layers.Layer):
 
         self.head_convs = []
         self.head_norms = []
-        self.relu_ops = []
+        self.activation_ops = []
 
         for i in range(num_convs):
             self.head_convs += [
@@ -64,9 +72,9 @@ class DetectionHead(tf.keras.layers.Layer):
                     name='{}-{}-p{}-batch_normalization'.format(self.name, i, level))
 
             self.head_norms += [norms]
-            self.relu_ops += [
-                tf.keras.layers.ReLU(
-                    name='{}-class-{}-relu'.format(self.name, i))
+            self.activation_ops += [
+                activation_fn(
+                    name='{}-{}'.format(self.name, i))
             ]
 
         self.prediction_conv = conv_2d_op(
@@ -89,7 +97,7 @@ class DetectionHead(tf.keras.layers.Layer):
             for i in range(self.num_head_convs):
                 x = self.head_convs[i](x)
                 x = self.head_norms[i][level](x, training=training)
-                x = self.relu_ops[i](x)
+                x = self.activation_ops[i](x)
 
             outputs[level] = self.prediction_conv(x)
 

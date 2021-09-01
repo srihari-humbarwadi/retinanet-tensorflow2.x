@@ -17,7 +17,12 @@ class FPN(tf.keras.layers.Layer):
                  fusion_mode=None,
                  conv_2d_op_params=None,
                  normalization_op_params=None,
+                 activation_fn=None,
                  **kwargs):
+
+        if activation_fn is None:
+            raise ValueError('`activation_fn` cannot be None')
+
         super(FPN, self).__init__(**kwargs)
 
         self.filters = filters
@@ -33,7 +38,7 @@ class FPN(tf.keras.layers.Layer):
         self.output_convs = {}
         self.output_norms = {}
         self.fusion_ops = {}
-        self.relu_ops = {}
+        self.activation_ops = {}
 
         if not conv_2d_op_params.use_seperable_conv:
             conv_2d_op = tf.keras.layers.Conv2D
@@ -80,8 +85,7 @@ class FPN(tf.keras.layers.Layer):
 
         for level in range(backbone_max_level + 1, max_level):
             level = str(level)
-            name = 'p{}-relu'.format(level)
-            self.relu_ops[level] = tf.keras.layers.ReLU(name=name)
+            self.activation_ops[level] = activation_fn(name='p{}'.format(level))
 
     def call(self, features, training=None):
         outputs = {}
@@ -109,7 +113,8 @@ class FPN(tf.keras.layers.Layer):
 
             else:
                 prev_level_output = \
-                    self.relu_ops[str(int(level) - 1)](outputs[str(int(level) - 1)])
+                    self.activation_ops[str(int(level) - 1)
+                                        ](outputs[str(int(level) - 1)])
 
                 outputs[level] = self.output_convs[level](prev_level_output)
 

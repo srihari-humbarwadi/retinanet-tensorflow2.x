@@ -11,6 +11,7 @@ from retinanet.model.layers import (BalanceFeatures, FilterTopKDetections,
                                     FuseDetections, GenerateDetections,
                                     TransformBoxesAndScores)
 from retinanet.optimizers import build_optimizer
+from retinanet.model.utils import get_activation_op
 
 
 class ModelBuilder:
@@ -35,6 +36,7 @@ class ModelBuilder:
         params = self.params
         input_shape = params.input.input_shape + [params.input.channels]
         images = tf.keras.Input(shape=input_shape, name="images")
+        activation_fn = get_activation_op(params.architecture.activation.type)
 
         backbone = build_backbone(
             input_shape=input_shape,
@@ -44,14 +46,16 @@ class ModelBuilder:
         neck = build_neck(
             params=params.architecture.feature_fusion,
             conv_2d_op_params=params.architecture.conv_2d,
-            normalization_op_params=params.architecture.batch_norm)
+            normalization_op_params=params.architecture.batch_norm,
+            activation_fn=activation_fn)
 
         box_head, class_head = build_detection_heads(
             params=params.architecture.head,
             min_level=params.architecture.feature_fusion.min_level,
             max_level=params.architecture.feature_fusion.max_level,
             conv_2d_op_params=params.architecture.conv_2d,
-            normalization_op_params=params.architecture.batch_norm)
+            normalization_op_params=params.architecture.batch_norm,
+            activation_fn=activation_fn)
 
         auxillary_head = None
         if params.architecture.auxillary_head.use_auxillary_head:
@@ -62,7 +66,8 @@ class ModelBuilder:
                 min_level=params.architecture.feature_fusion.min_level,
                 max_level=params.architecture.feature_fusion.max_level,
                 conv_2d_op_params=params.architecture.conv_2d,
-                normalization_op_params=params.architecture.batch_norm)
+                normalization_op_params=params.architecture.batch_norm,
+                activation_fn=activation_fn)
 
         features = backbone(images)
         features = neck(features)
