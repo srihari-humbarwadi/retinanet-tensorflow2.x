@@ -42,12 +42,15 @@ class FeatureFusion(tf.keras.layers.Layer):
         lower_level_feature, upper_level_feature = x
 
         if not self.mode == 'sum':
-            weights_sum = self.lower_level_weight + self.upper_level_weight + 1e-4
+            lower_level_weight = tf.nn.relu(self.lower_level_weight)
+            upper_level_weight = tf.nn.relu(self.upper_level_weight)
+
+            weights_sum = lower_level_weight + upper_level_weight + 1e-4
 
             lower_level_feature = \
-                lower_level_feature * self.lower_level_weight / weights_sum
+                lower_level_feature * lower_level_weight / weights_sum
 
             upper_level_feature = \
-                upper_level_feature * self.upper_level_weight / weights_sum
+                upper_level_feature * upper_level_weight / weights_sum
 
         return self.add_op([lower_level_feature, upper_level_feature])
