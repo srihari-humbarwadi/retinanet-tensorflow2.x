@@ -1,13 +1,12 @@
 import functools
 
-import tensorflow as tf
-
 from retinanet.model.layers.feature_fusion import FeatureFusion
 from retinanet.model.layers.nearest_upsampling import NearestUpsampling2D
-from retinanet.model.utils import get_normalization_op
+from retinanet.model.neck.fpn_base import FPNBase
+from retinanet.model.utils import Identity
 
 
-class FPN(tf.keras.layers.Layer):
+class FPN(FPNBase):
 
     def __init__(self,
                  filters=256,
@@ -23,104 +22,88 @@ class FPN(tf.keras.layers.Layer):
         if activation_fn is None:
             raise ValueError('`activation_fn` cannot be None')
 
-        super(FPN, self).__init__(**kwargs)
+        super(FPN, self).__init__(
+            filters=filters,
+            min_level=min_level,
+            max_level=max_level,
+            backbone_max_level=backbone_max_level,
+            conv_2d_op_params=conv_2d_op_params,
+            normalization_op_params=normalization_op_params,
+            name='FPN',
+            **kwargs)
 
-        self.filters = filters
-        self.min_level = min_level
-        self.max_level = max_level
         self.fusion_mode = fusion_mode
-        self.backbone_max_level = backbone_max_level
-
-        normalization_op = get_normalization_op(**normalization_op_params)
-
         self.upsample_op = functools.partial(NearestUpsampling2D, scale=2)
-        self.lateral_convs = {}
+
+        self.channel_normalize_convs = {}
+        self.channel_normalize_norms = {}
         self.output_convs = {}
         self.output_norms = {}
+        self.output_activations = {}
         self.fusion_ops = {}
-        self.activation_ops = {}
-
-        if not conv_2d_op_params.use_seperable_conv:
-            conv_2d_op = tf.keras.layers.Conv2D
-            kernel_initializer_config = {
-                'kernel_initializer': tf.initializers.VarianceScaling()
-            }
-
-        else:
-            conv_2d_op = tf.keras.layers.SeparableConv2D
-            kernel_initializer_config = {
-                'depthwise_initializer': tf.initializers.VarianceScaling(),
-                'pointwise_initializer': tf.initializers.VarianceScaling()
-            }
+        self.fusion_activation_ops = {}
 
         for level in range(min_level, backbone_max_level + 1):
             level = str(level)
-            self.lateral_convs[level] = conv_2d_op(
+            self.channel_normalize_convs[level] = self._conv_2d_op(
                 filters=self.filters,
                 kernel_size=1,
                 strides=1,
                 padding='same',
-                name='l' + str(level) + '-conv2d',
-                **kernel_initializer_config)
+                name='p{}-in-channel-normalize-conv-1x1'.format(level),
+                **self._kernel_initializer_config)
+            self.channel_normalize_norms[level] = self._normalization_op(
+                name='p{}-in-channel-normalize-batch_normalization'.format(level))
+
+        for level in range(min_level, max_level + 1):
+            level = str(level)
+
+            self.output_convs[level] = self._conv_2d_op(
+                filters=self.filters,
+                kernel_size=3,
+                padding='same',
+                strides=1,
+                use_bias=conv_2d_op_params.use_bias_before_bn,
+                name='p{}-out-conv-3x3'.format(level),
+                **self._kernel_initializer_config)
+
+            self.output_norms[level] = self._normalization_op(
+                name='p{}-out-batch_normalization'.format(level))
 
             if int(level) != min_level:
                 self.fusion_ops[level] = FeatureFusion(
                     mode=fusion_mode,
                     filters=filters,
-                    name='fusion-l' + str(int(level) - 1) + '-m' + level)
-
-        for level in range(min_level, max_level + 1):
-            level = str(level)
-            self.output_norms[level] = normalization_op(
-                name='p' + str(level) + '-batch_normalization')
-
-            self.output_convs[level] = conv_2d_op(
-                filters=self.filters,
-                kernel_size=3,
-                padding='same',
-                strides=2 if int(level) > backbone_max_level else 1,
-                use_bias=conv_2d_op_params.use_bias_before_bn,
-                name='p' + str(level) + '-conv2d',
-                **kernel_initializer_config)
-
-        for level in range(backbone_max_level + 1, max_level):
-            level = str(level)
-            self.activation_ops[level] = activation_fn(name='p{}'.format(level))
+                    name='p{}-in-fusion-with-p{}-in-upsampled'.format(
+                        str(int(level) - 1), level))
+                self.fusion_activation_ops[level] = activation_fn(
+                    name='p{}-in-fusion-with-p{}-in-upsampled'.format(
+                        str(int(level) - 1), level))
 
     def call(self, features, training=None):
-        outputs = {}
+        outputs = super(FPN, self).call(features, training=training)
 
+        # normalize channel counts for backbone feature maps
         for level in range(self.min_level, self.backbone_max_level + 1):
             level = str(level)
-            conv_layer = self.lateral_convs[level]
-            outputs[level] = conv_layer(features[level])
+            conv_layer = self.channel_normalize_convs[level]
+            norm_layer = self.channel_normalize_norms[level]
+            x = conv_layer(outputs[level])
+            outputs[level] = norm_layer(x, training=training)
 
-        for level in range(self.backbone_max_level, self.min_level, -1):
+        # add top down pathway
+        for level in range(self.max_level, self.min_level, -1):
             level = str(level)
-            name = 'm{}-upsample'.format(level)
-            outputs[str(int(level) - 1)] = \
-                self.fusion_ops[level]([outputs[str(int(level) - 1)],
+            name = 'p{}-in-upsampled'.format(level)
+            x = self.fusion_ops[level]([outputs[str(int(level) - 1)],
                                         self.upsample_op(name=name)(outputs[level])])
+            outputs[str(int(level) - 1)] = self.fusion_activation_ops[level](x)
 
+        # add output convs
         for level in range(self.min_level, self.max_level + 1):
             level = str(level)
-            if int(level) <= self.backbone_max_level:
-                outputs[level] = self.output_convs[level](outputs[level])
-
-            elif int(level) == self.backbone_max_level + 1:
-                outputs[level] = self.output_convs[level](
-                    outputs[str(int(level) - 1)])
-
-            else:
-                prev_level_output = \
-                    self.activation_ops[str(int(level) - 1)
-                                        ](outputs[str(int(level) - 1)])
-
-                outputs[level] = self.output_convs[level](prev_level_output)
-
-        for level in range(self.min_level, self.max_level + 1):
-            level = str(level)
-            outputs[level] = self.output_norms[level](
-                outputs[level], training=training)
+            x = self.output_convs[level](outputs[level])
+            x = self.output_norms[level](x, training=training)
+            outputs[level] = Identity(name='p{}-out'.format(level))(x)
 
         return outputs
