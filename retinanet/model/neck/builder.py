@@ -1,4 +1,4 @@
-from retinanet.model.neck.generic_fpn import GenericFPN
+from retinanet.model.neck.fpn import FPN
 from retinanet.model.neck.multi_level_attention_fusion import \
     MultiLevelAttentionFusion
 from retinanet.model.neck.stacked_multi_level_attention_fusion import \
@@ -15,7 +15,7 @@ def build_neck(
         raise ValueError('`activation_fn` cannot be None')
 
     if params.type == 'fpn':
-        neck = GenericFPN(
+        neck = FPN(
             filters=params.filters,
             min_level=params.min_level,
             max_level=params.max_level,
