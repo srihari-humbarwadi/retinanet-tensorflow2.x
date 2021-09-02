@@ -29,7 +29,6 @@ class FPN(FPNBase):
             backbone_max_level=backbone_max_level,
             conv_2d_op_params=conv_2d_op_params,
             normalization_op_params=normalization_op_params,
-            name='FPN',
             **kwargs)
 
         self.fusion_mode = fusion_mode
