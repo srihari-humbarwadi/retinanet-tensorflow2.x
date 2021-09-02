@@ -262,8 +262,9 @@ class Executor:
     def _setup(self):
         if not tf.io.gfile.exists(self.model_dir):
             tf.io.gfile.makedirs(self.model_dir)
-        config_path = os.path.join(self.model_dir, '{}.json'.format(self.name))
-        self.dump_config(config_path)
+
+        if self.run_mode == 'train':
+            self.dump_config()
 
         with self.distribute_strategy.scope():
             self._setup_model()
@@ -272,10 +273,11 @@ class Executor:
             if self.restore_checkpoint:
                 self._restore_checkpoint()
 
-    def dump_config(self, config_path):
+    def dump_config(self):
+        config_path = os.path.join(self.model_dir, '{}.json'.format(self.name))
         with tf.io.gfile.GFile(config_path, 'w') as f:
-            logging.info('Dumping config to {}'.format(config_path))
             f.write(json.dumps(self.params, indent=4))
+        logging.info('Dumping config to {}'.format(config_path))
 
     @staticmethod
     def _maybe_flatten_layers(layer):
