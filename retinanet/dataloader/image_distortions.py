@@ -12,8 +12,7 @@ class ImageDistortion:
     def __init__(self, ops_list=None, num_layers=1, delta=5.0, apply_prob=0.5):
         if ops_list is None:
             ops_list = ImageDistortion._SUPPORTED_OPS
-            logging.warn('`ops_list` not defined, using all available ops: {}'
-                         .format(ImageDistortion._SUPPORTED_OPS))
+            logging.warn('`ops_list` not defined, using all available ops')
         else:
             for op in ops_list:
                 if op not in ImageDistortion._SUPPORTED_OPS:
@@ -21,6 +20,8 @@ class ImageDistortion:
                                          'Supported operations: {}'.format(
                                              op,
                                              ImageDistortion._SUPPORTED_OPS))
+        logging.info('Using {} for image distortions'
+                     .format(ImageDistortion._SUPPORTED_OPS))
 
         self._op_list = ops_list
         self._num_layers = num_layers

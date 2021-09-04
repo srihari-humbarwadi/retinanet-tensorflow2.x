@@ -169,8 +169,8 @@
               "grayscale_blend"
             ],
           "num_layers": 1,
-          "delta": 5.0,
-          "apply_prob": 0.75
+          "delta": 7.5,
+          "apply_prob": 0.80
       }
     },
     "preprocessing": {
