@@ -26,7 +26,8 @@
 ## Results
 | config | schedule | coco2017 mAP IoU=0.50:0.95 | GPU |TF FP32 | TF-TensorRT FP32 | TF-TensorRT FP16| TF-TensorRT INT8 |
 |:----:|:----:|:----:|:----:|:----:|:----:|:----:|:----:|
-| [resnet50-640x640](configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json) | 30x | 0.403 | Tesla V100-SXM2-16GB | 25.0 ms (40.5 FPS) | 19.0 ms (52.6 FPS) | 11.0 ms (90.1 FPS) | 10.7 ms (93.4 FPS) |
+| [resnet50-640x640](configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json) | 30x | 0.403 | Tesla V100 SXM2 16GB | 25.0 ms (40.5 FPS) | 19.0 ms (52.6 FPS) | 11.0 ms (90.1 FPS) | 10.7 ms (93.4 FPS) |
+| [resnet50-640x640](configs/v3-32/mscoco-retinanet-resnet50-640x640-30x-256.json) | 30x | 0.403 | Tesla T4 16GB | 59.0 ms (16.9 FPS) | 46.0 ms (21.7 FPS) | 19.5 ms (51.2 FPS) | ... |
 
 **Note**: *Tesla V100 has no native support for INT8 acceleration with tensor cores, which explains the significantly low speed-up for INT8 when compared to FP32*
 
