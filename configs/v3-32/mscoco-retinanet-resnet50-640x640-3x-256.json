@@ -160,6 +160,17 @@
       "scale_jitter": {
         "min_scale": 0.1,
         "max_scale": 2.0
+      },
+      "image_distortions": {
+          "ops_list": [
+              "brightness",
+              "contrast",
+              "grayscale",
+              "grayscale_blend"
+            ],
+          "num_layers": 1,
+          "delta": 5.0,
+          "apply_prob": 0.75
       }
     },
     "preprocessing": {

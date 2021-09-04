@@ -2,6 +2,7 @@ import tensorflow as tf
 
 from retinanet.dataloader.utils import (convert_to_xywh, normalize_image,
                                         random_flip_horizontal)
+from retinanet.dataloader.image_distortions import ImageDistortion
 
 
 class PreprocessingPipeline:
@@ -9,6 +10,9 @@ class PreprocessingPipeline:
         self.input_shape = input_shape
         self.preprocessing_params = params.preprocessing
         self.augmentation_params = params.augmentations
+
+        self._image_distortion_pipeline = ImageDistortion(
+            **params.augmentations.image_distortions)
 
     def _prepare_image(self, image, jitter=[None, None], seed=0):
         target_shape = self.input_shape
@@ -66,8 +70,10 @@ class PreprocessingPipeline:
         return tf.gather(boxes, idx), tf.gather(class_ids, idx)
 
     def __call__(self, sample):
+        image = self._image_distortion_pipeline.distort(sample["image"])
+
         image = normalize_image(
-            sample["image"],
+            image,
             offset=self.preprocessing_params.offset,
             scale=self.preprocessing_params.scale)
         bbox = sample["objects"]["bbox"]
