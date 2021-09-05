@@ -107,7 +107,7 @@
       "lr_params": {
         "schedule_type": "piecewise_constant_decay",
         "warmup_learning_rate": 0.0067,
-        "warmup_steps": 5000,
+        "warmup_steps": 2000,
         "values": [
           0.32,
           0.032,
@@ -168,16 +168,17 @@
       }
     },
     "preprocessing": {
-      "offset": [
-        0.5,
-        0.5,
-        0.5
+      "mean": [
+        127.0,
+        127.0,
+        127.0
       ],
-      "scale": [
-        0.5,
-        0.5,
-        0.5
-      ]
+      "stddev": [
+        128.0,
+        128.0,
+        128.0
+      ],
+      "pixel_scale": 1.0
     },
     "shuffle_buffer_size": 1024
   },
