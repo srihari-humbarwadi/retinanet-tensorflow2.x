@@ -88,7 +88,7 @@ def main(_):
 
     if FLAGS.debug:
         os.environ['TF_CPP_VMODULE'] = \
-            'trt_engine_op=2,convert_nodes=2,convert_graph=2,segment=2,trt_shape_optimization_profiles=2,trt_engine_resource_ops=2'  # noqa: E501
+            'trt_logger=2,trt_engine_op=2,convert_nodes=2,convert_graph=2,segment=2,trt_shape_optimization_profiles=2,trt_engine_resource_ops=2'  # noqa: E501
 
     gpus = tf.config.list_physical_devices('GPU')
 
