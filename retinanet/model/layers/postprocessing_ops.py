@@ -2,7 +2,6 @@ import logging
 import tensorflow as tf
 
 from retinanet.dataloader.anchor_generator import AnchorBoxGenerator
-from retinanet.dataloader.utils import convert_to_corners
 
 
 class FuseDetections(tf.keras.layers.Layer):
@@ -69,11 +68,15 @@ class TransformBoxesAndScores(tf.keras.layers.Layer):
                 dtype=tf.float32), axis=0),
             multiples=[1, 2])
 
-        self._anchors = AnchorBoxGenerator(
+        _anchors_boxes = AnchorBoxGenerator(
             *params.input.input_shape,
             params.architecture.feature_fusion.min_level,
             params.architecture.feature_fusion.max_level,
-            params.anchor_params)
+            params.anchor_params).boxes
+
+        _anchors_boxes = tf.expand_dims(_anchors_boxes, axis=0)
+        self._anchors_boxes_xy = _anchors_boxes[:, :, :2]
+        self._anchors_boxes_wh = _anchors_boxes[:, :, 2:]
 
         self._box_variance = tf.convert_to_tensor(
             params.encoder_params.box_variance, dtype=tf.float32)
@@ -83,20 +86,21 @@ class TransformBoxesAndScores(tf.keras.layers.Layer):
 
     def _transform_box_predictions(self, box_predictions):
         boxes = box_predictions
-        anchor_boxes = tf.expand_dims(self._anchors.boxes, axis=0)
 
         if self._scale_box_predictions:
             boxes = boxes * self._box_variance
 
-        boxes = tf.concat(
-            [
-                boxes[:, :, :2] * anchor_boxes[:, :, 2:] +
-                anchor_boxes[:, :, :2],
-                tf.math.exp(boxes[:, :, 2:]) * anchor_boxes[:, :, 2:],
-            ],
-            axis=-1,
-        )
-        boxes_transformed = convert_to_corners(boxes)
+        boxes_xy = boxes[:, :, :2]
+        boxes_wh = boxes[:, :, 2:]
+
+        decoded_xy = boxes_xy * self._anchors_boxes_wh + self._anchors_boxes_xy
+        decoded_wh = tf.math.exp(boxes_wh) * self._anchors_boxes_wh
+        boxes_wh_half = decoded_wh / 2.0
+
+        boxes_transformed = tf.concat([
+            decoded_xy - boxes_wh_half,
+            decoded_xy + boxes_wh_half], axis=-1)
+
         boxes_transformed = boxes_transformed / self._input_shape
         return tf.clip_by_value(boxes_transformed, 0.0, 1.0)
 
