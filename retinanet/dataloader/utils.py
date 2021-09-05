@@ -55,14 +55,12 @@ def random_flip_horizontal(image, boxes, seed=0):
     return image, boxes
 
 
-def normalize_image(image, offset, scale):
-    offset = tf.constant(offset)
-    scale = tf.constant(scale)
-    offset = tf.reshape(offset, shape=[1, 1, 3])
-    scale = tf.reshape(scale, shape=[1, 1, 3])
+def normalize_image(image, mean, stddev, pixel_scale):
+    pixel_scale = tf.constant(pixel_scale)
+    mean = tf.reshape(tf.constant(mean), shape=[1, 1, 3])
+    stddev = tf.reshape(tf.constant(stddev), shape=[1, 1, 3])
 
-    image /= 255.
-    image -= offset
-    image /= scale
+    image = image / pixel_scale
+    image = (image - mean) / stddev
 
     return image
