@@ -108,17 +108,42 @@ class ModelBuilder:
 
         return model
 
-    def prepare_model_for_export(self, model, skip_nms=False):
+    def prepare_model_for_export(self, model, mode='tf'):
         model.optimizer = None
         model.compiled_loss = None
         model.compiled_metrics = None
         model._metrics = []
 
+        skip_decoding = False
+        skip_nms = False
+
+        if mode == 'tf':
+            pass
+
+        elif mode == 'tf_tensorrt' or mode == 'onnx':
+            if self.params.inference.pre_nms_top_k > 0:
+                logging.warning('Inference is faster with top-k filtering disabled '
+                                'when running on Tensorrt/ONNX. Forcefully '
+                                'disabling top-k filtering !!!')
+                self.params.inference.pre_nms_top_k = -1
+
+        elif mode == 'onnx_tensorrt':
+            skip_nms = True
+
+        elif mode == 'onnx_tensorrt_fused_decoding':
+            skip_decoding = True
+            skip_nms = True
+
+        else:
+            raise ValueError('Invalid export model requested!')
+
         inference_model = self.add_post_processing_stage(
-            model=model, skip_nms=skip_nms)
+            model=model,
+            skip_decoding=skip_decoding,
+            skip_nms=skip_nms)
         return inference_model
 
-    def add_post_processing_stage(self, model, skip_nms=False):
+    def add_post_processing_stage(self, model, skip_decoding=False, skip_nms=False):
         params = self.params
         logging.info('Postprocessing stage config:\n{}'
                      .format(json.dumps(params.inference, indent=4)))
@@ -127,14 +152,17 @@ class ModelBuilder:
             min_level=params.architecture.feature_fusion.min_level,
             max_level=params.architecture.feature_fusion.max_level)(model.output)
 
-        x = TransformBoxesAndScores(params=params)(x)
+        if not skip_decoding:
+            x = TransformBoxesAndScores(params=params)(x)
+        else:
+            logging.warning('Skipping decoding of predictions !!!')
 
         if params.inference.pre_nms_top_k > 0 and not skip_nms:
             x = FilterTopKDetections(
                 top_k=params.inference.pre_nms_top_k,
                 filter_per_class=params.inference.filter_per_class)(x)
         else:
-            logging.warning('Skipping top-k filtering !!!')
+            logging.warning('Skipping top-k anchors filtering !!!')
 
         if not skip_nms:
             x = GenerateDetections(

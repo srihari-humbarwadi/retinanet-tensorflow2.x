@@ -17,7 +17,17 @@ tf.config.optimizer.set_jit(True)
 flags.DEFINE_string(
     name='config_path',
     default=None,
+    required=True,
     help='Path to the config file')
+
+flags.DEFINE_enum(
+    name='mode',
+    default=None,
+    required=True,
+    enum_values=[
+        'tf', 'tf_tensorrt', 'onnx', 'onnx_tensorrt',
+        'onnx_tensorrt_fused_decoding'],
+    help='Export mode for `saved_models`. Controls skipping decoding/NMS stages')
 
 flags.DEFINE_string(
     name='export_dir',
@@ -60,16 +70,6 @@ flags.DEFINE_boolean(
     help='Skip exporting `prepare_image` signature')
 
 flags.DEFINE_boolean(
-    name='disable_pre_nms_top_k',
-    default=False,
-    help='Skip top k filtering before applying nms')
-
-flags.DEFINE_boolean(
-    name='skip_nms',
-    default=False,
-    help='Skip applying nms')
-
-flags.DEFINE_boolean(
     name='debug',
     default=False,
     help='Print debugging info')
@@ -92,10 +92,6 @@ def main(_):
         params.experiment.model_dir = FLAGS.model_dir
         logging.warning('Using local path {} as `model_dir`'.format(
             params.experiment.model_dir))
-
-    if FLAGS.disable_pre_nms_top_k:
-        params.inference.pre_nms_top_k = -1
-        logging.warning('Disabled pre nms top k filtering')
 
     if FLAGS.checkpoint_name == 'latest':
         checkpoint_name = None
@@ -122,6 +118,7 @@ def main(_):
         resume_from=checkpoint_name
     )
     export_dir = os.path.join(FLAGS.export_dir, params.experiment.name)
+    saved_model_export_dir = os.path.join(export_dir, FLAGS.mode)
 
     if not tf.io.gfile.exists(export_dir):
         tf.io.gfile.makedirs(export_dir)
@@ -176,7 +173,7 @@ def main(_):
             params.dataloader_params)
 
         inference_model = model_builder.prepare_model_for_export(
-            executor.model, skip_nms=FLAGS.skip_nms)
+            executor.model, mode=FLAGS.mode)
 
         @tf.function
         def prepare_image(sample):
@@ -188,14 +185,7 @@ def main(_):
 
         @tf.function
         def serving_fn(sample):
-            detections = inference_model.call(sample['image'], training=False)
-            if FLAGS.skip_nms:
-                #  Since we are not applying NMS operation inside tensorflow
-                #  graph, both onnx NMS and tensorrt `BatchedNMS_TRT` plugin
-                #  requires  boxes to be of shape
-                #  (batch_size, num_anchors, 1, 4)
-                detections['boxes'] = tf.expand_dims(detections['boxes'], axis=2)
-            return detections
+            return inference_model.call(sample['image'], training=False)
 
         frozen_serving_fn, _ = convert_variables_to_constants_v2_as_graph(
             serving_fn.get_concrete_function(serving_fn_input_signature),
@@ -223,16 +213,17 @@ def main(_):
                         'scores': raw_outputs[1]})
                 return outputs
 
+        # NMS is skipped in all onnx_tensorrt modes
         inference_module = InferenceModule(
             inference_function=frozen_serving_fn,
-            skip_nms=FLAGS.skip_nms)
+            skip_nms='onnx_tensorrt' in FLAGS.mode)
 
         signatures = {
             'serving_default': inference_module.run_inference.get_concrete_function(
                 serving_fn_input_signature)
         }
 
-        if not FLAGS.skip_prepare_image_fn:
+        if not FLAGS.skip_prepare_image_fn and 'tf' in FLAGS.mode:
             signatures['prepare_image'] = prepare_image.get_concrete_function(
                 preprocessing_fn_input_signature)
         else:
@@ -252,7 +243,7 @@ def main(_):
 
         tf.saved_model.save(
             obj=inference_module,
-            export_dir=export_dir,
+            export_dir=saved_model_export_dir,
             signatures=signatures,
             options=tf.saved_model.SaveOptions(
                 experimental_custom_gradients=False))
