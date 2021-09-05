@@ -68,8 +68,10 @@ class PreprocessingPipeline:
     def __call__(self, sample):
         image = normalize_image(
             sample["image"],
-            offset=self.preprocessing_params.offset,
-            scale=self.preprocessing_params.scale)
+            mean=self.preprocessing_params.mean,
+            stddev=self.preprocessing_params.stddev,
+            pixel_scale=self.preprocessing_params.pixel_scale)
+
         bbox = sample["objects"]["bbox"]
         class_ids = tf.cast(sample["objects"]["label"], dtype=tf.int32)
 
@@ -109,8 +111,9 @@ class PreprocessingPipeline:
     def normalize_and_resize_with_pad(self, image):
         image = normalize_image(
             image,
-            offset=self.preprocessing_params.offset,
-            scale=self.preprocessing_params.scale)
+            mean=self.preprocessing_params.mean,
+            stddev=self.preprocessing_params.stddev,
+            pixel_scale=self.preprocessing_params.pixel_scale)
         image, scale = self._resize_with_pad(image)
         return {
             'image': image,
