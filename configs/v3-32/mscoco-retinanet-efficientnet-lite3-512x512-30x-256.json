@@ -29,7 +29,7 @@
             "type": "relu"
         },
         "backbone": {
-            "type": "mobiledet_gpu",
+            "type": "efficientnet-lite3",
             "checkpoint": "gs://tfrc_datasets/pretrained_weights/efficientnet-lite3"
         },
         "feature_fusion": {
