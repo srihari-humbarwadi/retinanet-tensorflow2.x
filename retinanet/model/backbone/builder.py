@@ -26,6 +26,7 @@ def build_backbone(input_shape, params, normalization_op_params=None):
         return MobileDet(
             input_shape=input_shape,
             model_name=params.type,
+            checkpoint=params.checkpoint,
             normalization_op_params=normalization_op_params)
 
     raise ValueError('{} backbone not implemented'.format(
