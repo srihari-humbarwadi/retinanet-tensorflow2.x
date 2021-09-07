@@ -26,7 +26,7 @@
             "epsilon": 0.001
         },
         "activation": {
-            "type": "relu"
+            "type": "relu6"
         },
         "backbone": {
             "type": "mobiledet_gpu",
