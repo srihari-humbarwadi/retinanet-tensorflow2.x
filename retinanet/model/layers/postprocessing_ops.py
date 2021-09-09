@@ -102,7 +102,7 @@ class TransformBoxesAndScores(tf.keras.layers.Layer):
             decoded_xy + boxes_wh_half], axis=-1)
 
         boxes_transformed = boxes_transformed / self._input_shape
-        return tf.clip_by_value(boxes_transformed, 0.0, 1.0)
+        return boxes_transformed
 
     def call(self, predictions):
         class_logits = predictions['class_logits']
@@ -231,7 +231,7 @@ class GenerateDetections(tf.keras.layers.Layer):
             max_total_size=self.max_detections,
             iou_threshold=self.iou_threshold,
             score_threshold=self.score_threshold,
-            clip_boxes=False,
+            clip_boxes=True,
             name='combined_nms')
 
         return {
@@ -272,6 +272,7 @@ class GenerateDetections(tf.keras.layers.Layer):
 
         scores = predictions['scores']
         boxes = predictions['boxes']
+        boxes = tf.clip_by_value(boxes, 0.0, 1.0)
 
         detections = tf.vectorized_map(
             fn=lambda x: _global_nms_single_image(x[0], x[1]),
@@ -287,6 +288,7 @@ class GenerateDetections(tf.keras.layers.Layer):
     def _tpu_per_class_hard_nms(self, predictions):
         scores = predictions['scores']
         boxes = predictions['boxes']
+        boxes = tf.clip_by_value(boxes, 0.0, 1.0)
 
         boxes_shape = boxes.get_shape().as_list()
         batch_size = boxes_shape[0]
@@ -380,6 +382,7 @@ class GenerateDetections(tf.keras.layers.Layer):
         scores = tf.reduce_max(predictions['scores'], axis=-1)
         classes = tf.argmax(predictions['scores'], axis=-1)
         boxes = predictions['boxes']
+        boxes = tf.clip_by_value(boxes, 0.0, 1.0)
 
         batch_size, num_anchors, _ = boxes.get_shape().as_list()
 
@@ -495,6 +498,7 @@ class GenerateDetections(tf.keras.layers.Layer):
 
         scores = predictions['scores']
         boxes = predictions['boxes']
+        boxes = tf.clip_by_value(boxes, 0.0, 1.0)
 
         boxes_shape = boxes.get_shape().as_list()
         batch_size = boxes_shape[0] or 1
