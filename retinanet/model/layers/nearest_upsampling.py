@@ -14,7 +14,7 @@ class NearestUpsampling2D(tf.keras.layers.Layer):
             self._native_upscaling_op = tf.keras.layers.UpSampling2D(
                 size=scale, interpolation='nearest', name=self.name)
             logging.debug(
-                'Using navtive implementation of nearest neighbor resizing')
+                'Using native implementation of nearest neighbor resizing')
 
     def call(self, images):
         if self._use_native_impl:
