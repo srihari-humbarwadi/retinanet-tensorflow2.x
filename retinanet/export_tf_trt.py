@@ -156,7 +156,7 @@ def main(_):
     input_fn = get_input_fn(
         config_params=params,
         image_dir=FLAGS.calibration_images,
-        batch_size=FLAGS.calibration_batch_size,
+        batch_size=FLAGS.inference_batch_size,
         steps=10)
 
     converter.convert(calibration_input_fn=calibration_input_fn)
