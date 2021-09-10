@@ -34,7 +34,7 @@
         },
         "feature_fusion": {
             "type": "fpn",
-            "use_balanced_features": true,
+            "use_balanced_features": false,
             "fusion_mode": "sum",
             "filters": 112,
             "min_level": 3,
@@ -113,7 +113,7 @@
                     0.0032
                 ],
                 "boundaries": [
-                    135000,
+                    143438,
                     160312
                 ]
             }
