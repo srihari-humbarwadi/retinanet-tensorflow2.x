@@ -41,6 +41,16 @@ flags.DEFINE_integer(
     default=100,
     help='Number of calibration steps')
 
+flags.DEFINE_integer(
+    name='inference_batch_size',
+    default=1,
+    help='Inference batch size')
+
+flags.DEFINE_integer(
+    name='calibration_batch_size',
+    default=1,
+    help='Batch size for calibration')
+
 flags.DEFINE_string(
     name='export_dir',
     default='model_files/tensorrt',
@@ -60,23 +70,32 @@ flags.DEFINE_boolean(
 FLAGS = flags.FLAGS
 
 
-def get_input_fn(config_params, image_dir, steps=None):
+def get_input_fn(config_params, image_dir, batch_size=None, steps=None):
+    if batch_size is None:
+        raise ValueError('`batch_size` cannot be None')
+
+    image_paths = glob(os.path.join(image_dir, '*'))
     preprocessing_pipeling = PreprocessingPipeline(
         config_params.input.input_shape,
         config_params.dataloader_params)
+    _resize_fn = preprocessing_pipeling.normalize_and_resize_with_pad
+
+    if steps is None:
+        steps = (len(image_paths) // batch_size)
+
+    logging.info('Using {} out of {} images'.format(
+        steps * batch_size, len(image_paths)))
+
+    dataset = tf.data.Dataset.from_tensor_slices((image_paths,))
+    dataset = dataset.map(
+        map_func=lambda image_path: _resize_fn(read_image(image_path)),
+        num_parallel_calls=tf.data.AUTOTUNE)
+    dataset = dataset.batch(batch_size, drop_remainder=True)
+    dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     def _input_fn():
-        image_paths = glob(os.path.join(image_dir, '*'))
-        num_iterations = steps or len(image_paths)
-        logging.info('Using {} out of {} images'.format(
-            num_iterations, len(image_paths)))
-
-        for idx in tqdm(range(num_iterations)):
-            image = read_image(image_paths[idx])
-            image_dict = preprocessing_pipeling.normalize_and_resize_with_pad(
-                image=image)
-            image = tf.expand_dims(image_dict['image'], axis=0)
-            yield (image,)
+        for batch in tqdm(dataset, total=steps):
+            yield (batch,)
     return _input_fn
 
 
@@ -128,6 +147,7 @@ def main(_):
         calibration_input_fn = get_input_fn(
             config_params=params,
             image_dir=FLAGS.calibration_images,
+            batch_size=FLAGS.calibration_batch_size,
             steps=FLAGS.calibration_steps)
     else:
         calibration_input_fn = None
@@ -136,6 +156,7 @@ def main(_):
     input_fn = get_input_fn(
         config_params=params,
         image_dir=FLAGS.calibration_images,
+        batch_size=FLAGS.calibration_batch_size,
         steps=10)
 
     converter.convert(calibration_input_fn=calibration_input_fn)
