@@ -91,7 +91,7 @@ def get_input_fn(config_params, image_dir, batch_size=None, steps=None):
         map_func=lambda image_path: _resize_fn(read_image(image_path)),
         num_parallel_calls=tf.data.AUTOTUNE)
     dataset = dataset.batch(batch_size, drop_remainder=True)
-    dataset = dataset.prefetch(tf.data.AUTOTUNE)
+    dataset = dataset.take(steps).prefetch(tf.data.AUTOTUNE)
 
     def _input_fn():
         for sample in tqdm(dataset, total=steps):
