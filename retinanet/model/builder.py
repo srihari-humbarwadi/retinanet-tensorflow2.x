@@ -29,13 +29,23 @@ class ModelBuilder:
             r'^(?!((fpn)|((stacked_)?mlaf)|(box-head)|(class-head))).*(conv2d(_fixed_padding)?(|_([1-9]|10))|(sync_)?batch_normalization(|_([1-9]|10)))\/')  # noqa: E501
     }
 
-    def __init__(self, params):
+    def __init__(self, params, run_mode):
         self.params = params
+        self._run_mode = run_mode
 
     def __call__(self):
         params = self.params
+        batch_size = None
+
+        if 'export' in self._run_mode:
+            batch_size = self.params.inference.batch_size
+            logging.warning('Setting inference `batch_size={}`'.format(batch_size))
+
         input_shape = params.input.input_shape + [params.input.channels]
-        images = tf.keras.Input(shape=input_shape, name="images")
+        images = tf.keras.Input(
+            shape=input_shape,
+            batch_size=batch_size,
+            name="images")
         activation_fn = get_activation_op(params.architecture.activation.type)
 
         backbone = build_backbone(

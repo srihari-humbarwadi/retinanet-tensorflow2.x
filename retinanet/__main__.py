@@ -150,7 +150,7 @@ def main(_):
             is_multi_host=FLAGS.is_multi_host,
             num_replicas=strategy.num_replicas_in_sync)
 
-    model_builder = ModelBuilder(params)
+    model_builder = ModelBuilder(params, run_mode=run_mode)
 
     executor = Executor(
         params=params,

@@ -106,7 +106,7 @@ def main(_):
 
     train_input_fn = None
     val_input_fn = None
-    model_builder = ModelBuilder(params)
+    model_builder = ModelBuilder(params, run_mode=run_mode)
 
     executor = Executor(
         params=params,
@@ -158,7 +158,10 @@ def main(_):
         serving_fn_input_signature = {
             'image':
                 tf.TensorSpec(
-                    shape=[None] + params.input.input_shape + [params.input.channels],  # noqa: E501
+                    shape=[
+                        params.inference.batch_size,
+                        *params.input.input_shape,
+                        params.input.channels],
                     name='image',
                     dtype=tf.float32)
             }
