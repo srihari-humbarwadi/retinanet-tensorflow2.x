@@ -94,8 +94,8 @@ def get_input_fn(config_params, image_dir, batch_size=None, steps=None):
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
 
     def _input_fn():
-        for batch in tqdm(dataset, total=steps):
-            yield (batch,)
+        for sample in tqdm(dataset, total=steps):
+            yield (sample['image'],)
     return _input_fn
 
 
