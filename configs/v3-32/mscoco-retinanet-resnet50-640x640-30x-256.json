@@ -183,6 +183,7 @@
         "shuffle_buffer_size": 1024
     },
     "inference": {
+        "batch_size": 1,
         "mode": "PerClassHardNMS",
         "iou_threshold": 0.5,
         "score_threshold": 0.05,
