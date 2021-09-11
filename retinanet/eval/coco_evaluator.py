@@ -7,6 +7,18 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 
 
+def _may_convert_to_numpy(tensor):
+    if not isinstance(tensor, np.ndarray):
+        return tensor.numpy()
+    return tensor
+
+
+def _may_convert_dict_to_numpy(tensor_dict):
+    for k, v in tensor_dict.items():
+        tensor_dict[k] = _may_convert_to_numpy(v)
+    return tensor_dict
+
+
 class COCOEvaluator:
     def __init__(
             self,
@@ -67,12 +79,14 @@ class COCOEvaluator:
             'score': None
         }
 
+        detections = _may_convert_dict_to_numpy(detections)
+
         for i in range(batch_size):
 
-            valid_detections = detections['valid_detections'][i].numpy()
-            boxes = detections['boxes'][i][:valid_detections].numpy()
-            classes = detections['classes'][i][:valid_detections].numpy()
-            scores = detections['scores'][i][:valid_detections].numpy()
+            valid_detections = detections['valid_detections'][i]
+            boxes = detections['boxes'][i][:valid_detections]
+            classes = detections['classes'][i][:valid_detections]
+            scores = detections['scores'][i][:valid_detections]
 
             if rescale_detections:
                 resize_scale = resize_scales[i] / self._input_shape
