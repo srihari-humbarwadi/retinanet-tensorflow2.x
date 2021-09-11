@@ -115,7 +115,7 @@ def main(_):
             # Attempt to load tensorrt, only used if the saved_model contains
             # TensorRT engines.
             import tensorrt as trt
-            trt.init_libnvinfer_plugins(None, '')
+            trt.init_libnvinfer_plugins(trt.Logger(trt.Logger.WARNING), '')
 
             # Starting from tensorflow==2.5.0, TensorRT ignores the conversion
             # of combined_nms op if number of anchors is more than 4096.
@@ -124,7 +124,8 @@ def main(_):
             # refer https://github.com/tensorflow/tensorflow/issues/46453
             # and https://github.com/tensorflow/tensorflow/pull/47698
             os.environ['TF_TRT_ALLOW_NMS_TOPK_OVERRIDE'] = '1'
-            logging.info('Successfully loaded TensorRT!!!')
+            logging.info(
+                'Successfully loaded TensorRT {}'.format(trt.__version__))
 
         except ImportError:
             logging.warning('TensorRT not installed')
