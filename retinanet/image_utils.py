@@ -15,6 +15,56 @@ def read_image(path):
     return tf.cast(image, dtype=tf.float32)
 
 
+def read_image_cv2(path):
+    image = cv2.imread(path, cv2.IMREAD_UNCHANGED)
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
+    return image
+
+
+def resize_with_pad_cv2(image, target_shape):
+    target_shape = np.array(target_shape, dtype=np.float32)
+    image_shape = np.array(image.shape[:2], dtype=np.float32)
+    scaled_shape = np.round(
+        image_shape * np.minimum(
+            target_shape[0] / image_shape[0],
+            target_shape[1] / image_shape[1]))
+
+    scaled_shape = np.int32(scaled_shape)
+    scaled_h, scaled_w = scaled_shape
+
+    padded_image = np.zeros(
+        shape=(int(target_shape[0]), int(target_shape[1]), 3),
+        dtype=image.dtype)
+
+    resized_image = cv2.resize(image, (scaled_w, scaled_h))
+    padded_image[:scaled_h, :scaled_w, :] = resized_image
+    return padded_image
+
+
+def normalize_image_cv2(image, mean, stddev, pixel_scale):
+    mean = np.reshape(mean, [1, 1, 3])
+    stddev = np.reshape(stddev, [1, 1, 3])
+
+    image = image / pixel_scale
+    image = (image - mean) / stddev
+    return image
+
+
+def prepare_image_cv2(image, target_shape, mean, stddev, pixel_scale):
+    input_image = image.copy()
+    input_image = normalize_image_cv2(input_image, mean, stddev, pixel_scale)
+    input_image = resize_with_pad_cv2(input_image, target_shape)
+    input_image = np.expand_dims(input_image, axis=0)
+    input_image = np.float32(input_image)
+
+    image_height, image_width, _ = image.shape
+    scale = np.maximum(image_height, image_width) / np.array(target_shape)
+    scale = np.expand_dims(scale, axis=0)
+    scale = np.tile(scale, [1, 2])
+
+    return input_image, scale
+
+
 def imshow(image, figsize=(16, 9), title=None):
     plt.figure(figsize=figsize)
     plt.axis('off')
