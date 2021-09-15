@@ -62,7 +62,6 @@ class FPN(FPNBase):
                 kernel_size=3,
                 padding='same',
                 strides=1,
-                use_bias=conv_2d_op_params.use_bias_before_bn,
                 name='p{}-out-conv-3x3'.format(level),
                 **self._kernel_initializer_config)
 
