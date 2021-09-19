@@ -138,9 +138,6 @@ class ModelBuilder:
                 self.params.inference.pre_nms_top_k = -1
 
         elif mode == 'onnx_tensorrt':
-            skip_nms = True
-
-        elif mode == 'onnx_tensorrt_fused_decoding':
             skip_decoding = True
             skip_nms = True
 
