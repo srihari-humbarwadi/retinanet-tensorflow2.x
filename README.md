@@ -18,10 +18,12 @@
  - [ ] Anchor optimization for custom datasets
  - [x] Logging to Discord server
  - [x] Export TF-TensorRT model
- - [ ] 8bit Quantization Aware Training [WIP]
- - [ ] Export Onnx model
+ - [x] Export as ONNX model
+ - [x] Build and export `TensorRT` engine
+ - [x] Post training INT8 quantization with `TensorRT`
+ - [ ] 8bit Quantization Aware Training with `Q/DQ` layers [WIP]
+ - [ ] TF-lite NMS op
  - [ ] Export TF-lite model
-
 
 ## Results
 | config | schedule | coco2017 mAP IoU=0.50:0.95 | GPU |TF FP32 | TF-TensorRT FP32 | TF-TensorRT FP16| TF-TensorRT INT8 |
