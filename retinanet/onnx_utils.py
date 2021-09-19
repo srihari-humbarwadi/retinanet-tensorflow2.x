@@ -102,7 +102,7 @@ def save_concrete_function(
         raise ValueError('model_params are required to add NMS plugin')
 
     tf2onnx.logging.basicConfig(
-        level=tf2onnx.logging.get_verbosity_level(2 if debug else 1))
+        level=tf2onnx.logging.get_verbosity_level(1 if debug else 0))
 
     onnx_model, _ = tf2onnx.convert.from_function(
         function=function,

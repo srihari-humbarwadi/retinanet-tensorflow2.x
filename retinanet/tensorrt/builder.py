@@ -43,7 +43,7 @@ class TensorRTBuilder:
 
     def build_engine(self):
         if self._precision in {'fp16', 'int8'}:
-            if self.builder.platform_has_fast_fp16:
+            if self._builder.platform_has_fast_fp16:
                 self._logger.log(
                     trt.Logger.INFO,
                     'Platform has native support for FP16')
@@ -52,10 +52,10 @@ class TensorRTBuilder:
                     trt.Logger.WARNING,
                     'Platform has no native support for FP16, this will impact '
                     'performace adversely')
-            self._builder.set_flag(trt.BuilderFlag.FP16)
+            self._config.set_flag(trt.BuilderFlag.FP16)
 
             if self._precision == 'int8':
-                if self.builder.platform_has_fast_int8:
+                if self._builder.platform_has_fast_int8:
                     self._logger.log(
                         trt.Logger.INFO,
                         'Platform has native support for INT8')
@@ -64,6 +64,7 @@ class TensorRTBuilder:
                         trt.Logger.WARNING,
                         'Platform has no native support for INT8, this will impact '
                         'performace adversely')
+                self._config.set_flag(trt.BuilderFlag.INT8)
                 self._config.int8_calibrator = self._calibrator
 
         serialized_engine = self._builder.build_serialized_network(

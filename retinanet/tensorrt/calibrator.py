@@ -15,7 +15,8 @@ class CalibratorBase:
         self._cache_file_path = cache_file_path
 
         input_spec = image_generator.get_input_spec()
-        allocation_size = int(np.float32.itemsize * np.prod(input_spec))
+        allocation_size = int(
+            np.dtype(np.float32).itemsize * np.prod(input_spec))
         self._allocation = cuda.mem_alloc(allocation_size)
 
         self._batch_iterator = image_generator.get_batches()
