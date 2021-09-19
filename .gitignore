@@ -147,6 +147,11 @@ trt/
 *.h5
 *.onnx
 *.tflite
+*.trt
+*weights*
+*variables*
+*.npy
+*.engine
 
 # logs
 *logs
@@ -172,6 +177,4 @@ annotations
 # debug files/configs
 *debug*
 *test*
-
-# lib files
 TensorRT*

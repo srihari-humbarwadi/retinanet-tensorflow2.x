@@ -303,7 +303,7 @@ def main(_):
                 debug=FLAGS.debug)
 
             if 'tensorrt' in FLAGS.mode:
-                if FLAGS.precicion == 'int8':
+                if FLAGS.precision == 'int8':
                     image_params = params.dataloader_params.preprocessing
                     calibration_image_paths = []
                     for ext in ['.png', '.jpg', '.jpeg']:
