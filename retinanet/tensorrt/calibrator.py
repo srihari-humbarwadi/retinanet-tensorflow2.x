@@ -29,47 +29,49 @@ class CalibratorBase:
                 self.__class__.__name__))
 
     def get_batch_size(self):
-        return self.image_generator._batch_size
+        return self._image_generator._batch_size
 
-    def get_batch(self):
+    def get_batch(self, *args, **kwargs):
         try:
             batch = next(self._batch_iterator)
             cuda.memcpy_htod(self._allocation, np.ascontiguousarray(batch))
-            self._num_images_seen += self.image_generator._batch_size
+            self._num_images_seen += self._image_generator._batch_size
             self._logger.log(
                 trt.Logger.INFO,
                 'On image {}/{}'.format(
                     self._num_images_seen,
-                    self.image_generator.num_images))
+                    self._image_generator.num_images))
             return [int(self._allocation)]
         except StopIteration:
             return None
 
     def read_calibration_cache(self):
-        if os.path.exists(self.cache_file_path):
+        if os.path.exists(self._cache_file_path):
             self._logger.log(
                 trt.Logger.INFO,
                 'Using existing calibration cache from file: {}'.format(
-                    self.cache_file_path))
-            with open(self.cache_file_path, 'rb') as f:
+                    self._cache_file_path))
+            with open(self._cache_file_path, 'rb') as f:
                 return f.read()
 
     def write_calibration_cache(self, cache):
         self._logger.log(
             trt.Logger.INFO,
             'Writing calibration cache file: {}'.format(self._cache_file_path))
-        with open(self.cache_file_path, 'wb') as f:
+        with open(self._cache_file_path, 'wb') as f:
             f.write(cache)
 
 
 class IInt8EntropyCalibrator2(CalibratorBase, trt.IInt8EntropyCalibrator2):
     def __init__(self, *args, **kwargs):
-        super(IInt8EntropyCalibrator2, self).__init__(*args, **kwargs)
+        CalibratorBase.__init__(self, *args, **kwargs)
+        trt.IInt8EntropyCalibrator2.__init__(self)
 
 
 class IInt8MinMaxCalibrator(CalibratorBase, trt.IInt8MinMaxCalibrator):
     def __init__(self, *args, **kwargs):
-        super(IInt8MinMaxCalibrator, self).__init__(*args, **kwargs)
+        CalibratorBase.__init__(self, *args, **kwargs)
+        trt.IInt8MinMaxCalibrator.__init__(self)
 
 
 def get_calibrator(method, **kwargs):
