@@ -306,14 +306,14 @@ def main(_):
                 if FLAGS.precision == 'int8':
                     image_params = params.dataloader_params.preprocessing
                     calibration_image_paths = []
-                    for ext in ['.png', '.jpg', '.jpeg']:
+                    for ext in ['*.png', '*.jpg', '*.jpeg']:
                         calibration_image_paths.extend(
                             glob(os.path.join(
-                                FLAGS.calibration_images_dir, '*', ext)))
+                                FLAGS.calibration_images_dir, ext)))
 
                     image_generator = ImageGenerator(
                         image_paths=calibration_image_paths,
-                        max_images=FLAGS.calibration,
+                        max_images=FLAGS.num_calibration_images,
                         batch_size=FLAGS.calibration_batch_size,
                         target_shape=params.input.input_shape,
                         channel_mean=image_params.mean,
