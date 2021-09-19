@@ -1,3 +1,4 @@
+from glob import glob
 import os
 
 import tensorflow as tf
@@ -5,10 +6,13 @@ from absl import app, flags, logging
 from tensorflow.python.framework.convert_to_constants import \
     convert_variables_to_constants_v2_as_graph
 
-from retinanet import Executor
+from retinanet import Executor, onnx_utils
 from retinanet.cfg import Config
 from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
+from retinanet.image_utils import ImageGenerator
 from retinanet.model import ModelBuilder
+from retinanet.tensorrt.builder import TensorRTBuilder
+from retinanet.tensorrt.calibrator import get_calibrator
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -25,8 +29,7 @@ flags.DEFINE_enum(
     default=None,
     required=True,
     enum_values=[
-        'tf', 'tf_tensorrt', 'onnx', 'onnx_tensorrt',
-        'onnx_tensorrt_fused_decoding'],
+        'tf', 'tf_tensorrt', 'onnx', 'onnx_tensorrt'],
     help='Export mode for `saved_models`. Controls skipping decoding/NMS stages')
 
 flags.DEFINE_string(
@@ -74,11 +77,42 @@ flags.DEFINE_boolean(
     default=False,
     help='Print debugging info')
 
+flags.DEFINE_string(
+    name='calibration_images_dir',
+    default='coco/val2017',
+    help='Calibration images dir')
+
+flags.DEFINE_enum(
+    name='calibration_method',
+    default='entropy',
+    enum_values=['entropy', 'minmax'],
+    help='INT8 Calibration method')
+
+flags.DEFINE_integer(
+    name='calibration_batch_size',
+    default=8,
+    help='Batch size for calibration')
+
+flags.DEFINE_integer(
+    name='num_calibration_images',
+    default=5000,
+    help='Number of images used in calibration')
+
+flags.DEFINE_string(
+    name='precision',
+    default='fp32',
+    help='Execution precision for TensorRT Engines')
+
 FLAGS = flags.FLAGS
 
 
 def main(_):
     logging.set_verbosity(logging.DEBUG if FLAGS.debug else logging.INFO)
+    gpus = tf.config.list_physical_devices('GPU')
+
+    if gpus:
+        logging.info('Found {} GPU(s)'.format(len(gpus)))
+        [tf.config.experimental.set_memory_growth(device, True) for device in gpus]
 
     params = Config(FLAGS.config_path).params
 
@@ -122,6 +156,10 @@ def main(_):
 
     if not tf.io.gfile.exists(export_dir):
         tf.io.gfile.makedirs(export_dir)
+
+    if tf.io.gfile.exists(saved_model_export_dir):
+        logging.warning('Found existing artefacts in {}, clearing old files')
+        tf.io.gfile.rmtree(saved_model_export_dir)
 
     executor.dump_config(
         os.path.normpath(os.path.join(export_dir, 'config.json')))
@@ -216,10 +254,11 @@ def main(_):
                         'scores': raw_outputs[1]})
                 return outputs
 
-        # NMS is skipped in all onnx_tensorrt modes
+        # NMS is skipped for onnx_tensorrt mode,
+        # since we run NMS withe TensorRT Plugin
         inference_module = InferenceModule(
             inference_function=frozen_serving_fn,
-            skip_nms='onnx_tensorrt' in FLAGS.mode)
+            skip_nms=FLAGS.mode == 'onnx_tensorrt')
 
         signatures = {
             'serving_default': inference_module.run_inference.get_concrete_function(
@@ -244,12 +283,60 @@ def main(_):
                     input_shapes,
                     output_shapes))
 
-        tf.saved_model.save(
-            obj=inference_module,
-            export_dir=saved_model_export_dir,
-            signatures=signatures,
-            options=tf.saved_model.SaveOptions(
-                experimental_custom_gradients=False))
+        if 'tf' in FLAGS.mode:
+            tf.saved_model.save(
+                obj=inference_module,
+                export_dir=saved_model_export_dir,
+                signatures=signatures,
+                options=tf.saved_model.SaveOptions(
+                    experimental_custom_gradients=False))
+
+        if 'onnx' in FLAGS.mode:
+            onnx_utils.save_concrete_function(
+                function=inference_module.run_inference,
+                input_signature=[serving_fn_input_signature],
+                add_nms_plugin=FLAGS.mode == 'onnx_tensorrt',
+                model_params=params,
+                output_dir=saved_model_export_dir,
+                opset=13,
+                simplify=True,
+                debug=FLAGS.debug)
+
+            if 'tensorrt' in FLAGS.mode:
+                if FLAGS.precicion == 'int8':
+                    image_params = params.dataloader_params.preprocessing
+                    calibration_image_paths = []
+                    for ext in ['.png', '.jpg', '.jpeg']:
+                        calibration_image_paths.extend(
+                            glob(os.path.join(
+                                FLAGS.calibration_images_dir, '*', ext)))
+
+                    image_generator = ImageGenerator(
+                        image_paths=calibration_image_paths,
+                        max_images=FLAGS.calibration,
+                        batch_size=FLAGS.calibration_batch_size,
+                        target_shape=params.input.input_shape,
+                        channel_mean=image_params.mean,
+                        channel_stddev=image_params.stddev,
+                        pixel_scale=image_params.pixel_scale)
+                    calibrator = get_calibrator(
+                        method=FLAGS.calibration_method,
+                        image_generator=image_generator,
+                        cache_file_path=os.path.join(
+                            saved_model_export_dir, 'trt.cache'))
+                else:
+                    calibrator = None
+
+                trt_builder = TensorRTBuilder(
+                    onnx_path=os.path.join(
+                        saved_model_export_dir, 'model.onnx'),
+                    engine_path=os.path.join(
+                        saved_model_export_dir, 'model.trt'),
+                    workspace=4,
+                    precision=FLAGS.precision,
+                    calibrator=calibrator,
+                    debug=FLAGS.debug)
+                trt_builder.build_engine()
 
 
 if __name__ == '__main__':
