@@ -2,6 +2,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from absl import logging
 
 
 def read_image(path):
@@ -161,3 +162,54 @@ def visualize_detections_cv2(image, boxes, classes, scores, score_threshold,
         if save:
             cv2.imwrite(filename, image[:, :, ::-1])
     return image
+
+
+class ImageGenerator:
+    def __init__(
+            self,
+            image_paths,
+            max_images,
+            batch_size,
+            target_shape,
+            channel_mean,
+            channel_stddev,
+            pixel_scale):
+
+        self._image_paths = sorted(image_paths)
+        logging.info('Found {} image paths'.format(len(image_paths)))
+
+        self._max_images = max_images
+        self._batch_size = batch_size
+        self._target_shape = target_shape
+        self._channel_mean = channel_mean
+        self._channel_stddev = channel_stddev
+        self._pixel_scale = pixel_scale
+
+        self._num_batches = min(len(image_paths), max_images) // batch_size
+        self.num_images = self._num_batches * batch_size
+
+        logging.info('Using {}/{} images'.format(self.num_images, len(image_paths)))
+
+    def get_input_spec(self):
+        return [self._batch_size, *self._target_shape, 3]
+
+    def get_batches(self):
+        for idx in range(self._num_batches):
+            batch = np.zeros(
+                shape=self.get_input_spec(),
+                dtype=np.float32)
+
+            start_idx = idx * self._batch_size
+            end_idx = (idx + 1) * self._batch_size
+            image_paths = self._image_paths[start_idx:end_idx]
+
+            for i, path in enumerate(image_paths):
+                image = read_image_cv2(path)
+                input_image, _ = prepare_image_cv2(
+                    image,
+                    self._target_shape,
+                    self._channel_mean,
+                    self._channel_stddev,
+                    self._pixel_scale)
+                batch[i] = input_image
+            yield batch
