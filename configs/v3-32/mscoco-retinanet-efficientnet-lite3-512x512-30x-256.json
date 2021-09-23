@@ -42,7 +42,7 @@
             "backbone_max_level": 5
         },
         "head": {
-            "num_convs": 2,
+            "num_convs": 4,
             "filters": 160,
             "num_classes": 80,
             "num_anchors": 9
