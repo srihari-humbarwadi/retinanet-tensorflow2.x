@@ -1,3 +1,4 @@
+import contextlib
 import json
 import os
 from time import sleep, time
@@ -543,6 +544,19 @@ class Executor:
 
         return scores
 
+    def _should_start_profiler(self, current_step):
+        return current_step == self.steps_per_execution * self._profile_start_step
+
+    def _should_stop_profiler(self, current_step):
+        return current_step == self.steps_per_execution * self._profile_end_step
+
+    def _should_profiler_trace(self, current_step):
+        should_trace = (
+            current_step >= self.steps_per_execution * self._profile_start_step)
+        should_trace = should_trace and \
+            current_step < self.steps_per_execution * self._profile_end_step
+        return should_trace
+
     def _run_training_loop(self):
         if self.restore_checkpoint and self.restore_status is not None:
             self.restore_status.assert_consumed()
@@ -587,7 +601,7 @@ class Executor:
         profile_log_dir = os.path.join(self.summary_dir, self.name, 'profile')
 
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
-            if current_step == self.steps_per_execution * self._profile_start_step:
+            if self._should_start_profiler(current_step):
                 logging.info(
                     'Started profiler at step {}, recording data in {}'
                     .format(current_step, profile_log_dir))
@@ -595,14 +609,17 @@ class Executor:
                     logdir=profile_log_dir,
                     options=profiler_options)
 
-            start = time()
-            loss_dict = self.distributed_train_step(
-                dataset_iterator,
-                tf.convert_to_tensor(self.steps_per_execution))
-            current_step = int(self.optimizer.iterations.numpy())
-            end = time()
+            with tf.profiler.experimental.Trace('train', step_num=current_step) \
+                    if self._should_profiler_trace(current_step) \
+                    else contextlib.nullcontext():
+                start = time()
+                loss_dict = self.distributed_train_step(
+                    dataset_iterator,
+                    tf.convert_to_tensor(self.steps_per_execution))
+                current_step = int(self.optimizer.iterations.numpy())
+                end = time()
 
-            if current_step == self.steps_per_execution * self._profile_end_step:
+            if self._should_stop_profiler(current_step):
                 tf.profiler.experimental.stop()
                 logging.info(
                     'Stopped profiler at step {}, done recording data in {}'
