@@ -6,13 +6,12 @@ from absl import app, flags, logging
 from tensorflow.python.framework.convert_to_constants import \
     convert_variables_to_constants_v2_as_graph
 
-from retinanet import Executor, onnx_utils
+from retinanet import Executor
 from retinanet.cfg import Config
 from retinanet.dataloader.preprocessing_pipeline import PreprocessingPipeline
 from retinanet.image_utils import ImageGenerator
 from retinanet.model import ModelBuilder
-from retinanet.tensorrt.builder import TensorRTBuilder
-from retinanet.tensorrt.calibrator import get_calibrator
+
 
 tf.get_logger().propagate = False
 tf.config.set_soft_device_placement(True)
@@ -292,6 +291,8 @@ def main(_):
                     experimental_custom_gradients=False))
 
         if 'onnx' in FLAGS.mode:
+            from retinanet import onnx_utils
+
             onnx_utils.save_concrete_function(
                 function=inference_module.run_inference,
                 input_signature=[serving_fn_input_signature],
@@ -303,6 +304,9 @@ def main(_):
                 debug=FLAGS.debug)
 
             if 'tensorrt' in FLAGS.mode:
+                from retinanet.tensorrt.builder import TensorRTBuilder
+                from retinanet.tensorrt.calibrator import get_calibrator
+
                 if FLAGS.precision == 'int8':
                     image_params = params.dataloader_params.preprocessing
                     calibration_image_paths = []
