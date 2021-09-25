@@ -1,7 +1,7 @@
 easydict==1.9
-matplotlib==3.3.2
+matplotlib==3.4.3
+opencv-python==4.5.3.56
 pycocotools==2.0.2
-sotabencheval==0.0.38
-# tensorflow==2.5.0
-tensorflow_addons
-tqdm==4.51.0
+# tf-nightly==2.8.0-dev20210925
+tensorflow_addons==0.14.0
+tqdm==4.62.3
