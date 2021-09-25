@@ -65,6 +65,8 @@ class Executor:
         self._save_during_training = params.training.save_every > 0
         self._run_evaluation_at_end = params.training.validation_freq < 1
         self._summary_writers = {}
+        self._profile_start_step = 10
+        self._profile_end_step = 14
 
         self._current_trial = 1
         if params.training.recovery.use_inflection_detector:
@@ -128,7 +130,7 @@ class Executor:
                 .format(len(self._model.trainable_variables)))
 
         if isinstance(
-            self.optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
+                self.optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
             self.use_float16 = True
 
         if 'val' in self.run_mode:
@@ -585,7 +587,7 @@ class Executor:
         profile_log_dir = os.path.join(self.summary_dir, self.name, 'profile')
 
         for _ in range(start_step, self.train_steps, self.steps_per_execution):
-            if current_step == self.steps_per_execution * 5:
+            if current_step == self.steps_per_execution * self._profile_start_step:
                 logging.info(
                     'Started profiler at step {}, recording data in {}'
                     .format(current_step, profile_log_dir))
@@ -600,7 +602,7 @@ class Executor:
             current_step = int(self.optimizer.iterations.numpy())
             end = time()
 
-            if current_step == self.steps_per_execution * 6:
+            if current_step == self.steps_per_execution * self._profile_end_step:
                 tf.profiler.experimental.stop()
                 logging.info(
                     'Stopped profiler at step {}, done recording data in {}'
