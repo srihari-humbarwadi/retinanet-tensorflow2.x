@@ -66,7 +66,7 @@ class Executor:
         self._run_evaluation_at_end = params.training.validation_freq < 1
         self._summary_writers = {}
         self._profile_start_step = 10
-        self._profile_end_step = 14
+        self._profile_end_step = 12
 
         self._current_trial = 1
         if params.training.recovery.use_inflection_detector:
