@@ -128,8 +128,7 @@ class Executor:
                 .format(len(self._model.trainable_variables)))
 
         if isinstance(
-            self.optimizer,
-                tf.keras.mixed_precision.experimental.LossScaleOptimizer):
+            self.optimizer, tf.keras.mixed_precision.LossScaleOptimizer):
             self.use_float16 = True
 
         if 'val' in self.run_mode:
@@ -256,7 +255,12 @@ class Executor:
                 'Cannot assign moving average weights since `use_moving_average` flag is set to False')  # noqa: E501
         non_averaged_weights = self._model.get_weights()
         logging.info('Loading moving average weights into model')
-        self.optimizer.assign_average_vars(self._model.trainable_variables)
+
+        if self.use_float16:
+            self.optimizer.inner_optimizer.assign_average_vars(
+                self._model.trainable_variables)
+        else:
+            self.optimizer.assign_average_vars(self._model.trainable_variables)
         return non_averaged_weights
 
     def _setup(self):
@@ -573,15 +577,34 @@ class Executor:
         dataset_iterator = iter(self._train_dataset)
         steps_per_second_average_meter = AverageMeter(name='train_steps_per_second')
 
-        for _ in range(start_step, self.train_steps, self.steps_per_execution):
-            start = time()
+        profiler_options = tf.profiler.experimental.ProfilerOptions(
+            host_tracer_level=3,
+            python_tracer_level=0,
+            device_tracer_level=1,
+            delay_ms=None)
+        profile_log_dir = os.path.join(self.summary_dir, self.name, 'profile')
 
+        for _ in range(start_step, self.train_steps, self.steps_per_execution):
+            if current_step == self.steps_per_execution * 5:
+                logging.info(
+                    'Started profiler at step {}, recording data in {}'
+                    .format(current_step, profile_log_dir))
+                tf.profiler.experimental.start(
+                    logdir=profile_log_dir,
+                    options=profiler_options)
+
+            start = time()
             loss_dict = self.distributed_train_step(
                 dataset_iterator,
                 tf.convert_to_tensor(self.steps_per_execution))
-
             current_step = int(self.optimizer.iterations.numpy())
             end = time()
+
+            if current_step == self.steps_per_execution * 6:
+                tf.profiler.experimental.stop()
+                logging.info(
+                    'Stopped profiler at step {}, done recording data in {}'
+                    .format(current_step, profile_log_dir))
 
             if hasattr(self.optimizer, 'inner_optimizer'):
                 learning_rate = self.optimizer.inner_optimizer.learning_rate(
