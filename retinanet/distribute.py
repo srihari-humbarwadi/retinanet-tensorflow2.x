@@ -2,7 +2,6 @@ import os
 
 import tensorflow as tf
 from absl import logging
-from cloud_tpu_client import Client
 
 
 def get_strategy(params):
@@ -19,6 +18,8 @@ def get_strategy(params):
         return tf.distribute.MirroredStrategy()
 
     if params.type == 'tpu':
+        from cloud_tpu_client import Client
+
         logging.info('Creating TPU strategy')
 
         tpu_name = params.name
