@@ -555,6 +555,8 @@ class Executor:
             current_step >= self.steps_per_execution * self._profile_start_step)
         should_trace = should_trace and \
             current_step < self.steps_per_execution * self._profile_end_step
+        if should_trace:
+            logging.warning('Tracing step: {}'.format(current_step))
         return should_trace
 
     def _run_training_loop(self):
