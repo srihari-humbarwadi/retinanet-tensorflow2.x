@@ -609,7 +609,8 @@ class Executor:
                     logdir=profile_log_dir,
                     options=profiler_options)
 
-            with tf.profiler.experimental.Trace('train', step_num=current_step) \
+            with tf.profiler.experimental.Trace(
+                'train', step_num=current_step, _r=1) \
                     if self._should_profiler_trace(current_step) \
                     else contextlib.nullcontext():
                 start = time()
