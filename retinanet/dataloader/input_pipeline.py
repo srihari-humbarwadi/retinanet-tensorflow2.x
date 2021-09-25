@@ -59,7 +59,9 @@ class InputPipeline:
             dataset = dataset.repeat()
 
         dataset = dataset.interleave(
-            map_func=tf.data.TFRecordDataset,
+            map_func=lambda files: tf.data.TFRecordDataset(
+                filenames=files,
+                buffer_size=104857600),
             cycle_length=None,
             block_length=None,
             num_parallel_calls=autotune,
