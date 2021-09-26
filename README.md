@@ -99,11 +99,10 @@ serving_fn = model.signatures['serving_default']  # get concrete function for ru
 
 idx = 4348
 image = read_image(image_paths[idx])
-serving_input = prepare_image_fn(image=image,
-                                 image_id=tf.constant([idx], dtype=tf.int32))
+serving_input = prepare_image_fn(image=image)
 tik = time()
-detections = serving_fn(**serving_input)
-toc = time()
+detections = serving_fn(serving_input['image'])
+toc = time()()
 
 valid_detections = detections['valid_detections'][0].numpy()
 boxes = detections['boxes'][0][:valid_detections].numpy()
