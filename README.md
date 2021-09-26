@@ -102,7 +102,7 @@ image = read_image(image_paths[idx])
 serving_input = prepare_image_fn(image=image)
 tik = time()
 detections = serving_fn(serving_input['image'])
-toc = time()()
+toc = time()
 
 valid_detections = detections['valid_detections'][0].numpy()
 boxes = detections['boxes'][0][:valid_detections].numpy()
