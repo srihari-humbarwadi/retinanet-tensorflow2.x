@@ -1,4 +1,5 @@
 import json
+import os
 
 import numpy as np
 import tensorflow as tf
@@ -29,10 +30,11 @@ class COCOEvaluator:
 
         self._input_shape = input_shape
         self.annotation_file_path = annotation_file_path
-        self.prediction_file_path = prediction_file_path
+        self.prediction_file_path = os.path.normpath(prediction_file_path)
         self._remap_class_ids = remap_class_ids
 
-        self._coco_eval_obj = COCO(annotation_file_path)
+        self._maybe_dump_remote_annotation_json()
+        self._coco_eval_obj = COCO(os.path.basename(annotation_file_path))
 
         sorted_classes = sorted([
             category_info['name']
@@ -52,12 +54,37 @@ class COCOEvaluator:
         self._processed_detections = []
 
         logging.info('Initialized COCOEvaluator with {}'.format(
-            self.annotation_file_path))
+            os.path.basename(annotation_file_path)))
 
         if remap_class_ids:
             logging.warning('Evaluating with `remap_class_ids=True`')
         else:
             logging.warning('Evaluating with `remap_class_ids=False`')
+
+    def _maybe_dump_remote_annotation_json(self):
+        if not self.annotation_file_path.startswith('gs://'):
+            logging.info(
+                '{} is not a remote path, skipping download and '
+                'dump'.format(self.annotation_file_path))
+            return
+
+        local_path = os.path.normpath(
+            os.path.basename(self.annotation_file_path))
+        if tf.io.gfile.exists(local_path):
+            logging.info(
+                'Found existing annotations file {}, skipping download and '
+                'dump'.format(local_path))
+            return
+
+        with tf.io.gfile.GFile(self.annotation_file_path, 'r') as fp:
+            annotations = json.load(fp)
+
+        with tf.io.gfile.GFile(local_path, 'w') as fp:
+            json.dump(annotations, fp)
+            logging.info(
+                'Downloaded annotations file from: {} and dumped to local '
+                'path: {}'.format(self.annotation_file_path, local_path))
+        return
 
     def _maybe_remap_class_ids(self, class_id):
         if self._remap_class_ids:

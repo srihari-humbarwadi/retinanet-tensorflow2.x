@@ -2,6 +2,7 @@ import json
 
 from absl import logging
 from easydict import EasyDict
+import tensorflow as tf
 
 
 class Config:
@@ -11,7 +12,7 @@ class Config:
 
     def _load(self):
         logging.info('Loading config from {}'.format(self.path))
-        with open(self.path, 'r') as fp:
+        with tf.io.gfile.GFile(self.path, 'r') as fp:
             self._params = EasyDict(json.load(fp))
         logging.debug('\n' + json.dumps(self._params, indent=4))
 
