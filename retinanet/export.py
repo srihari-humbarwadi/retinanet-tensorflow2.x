@@ -304,8 +304,13 @@ def main(_):
                 debug=FLAGS.debug)
 
             if 'tensorrt' in FLAGS.mode:
-                from retinanet.tensorrt.builder import TensorRTBuilder
-                from retinanet.tensorrt.calibrator import get_calibrator
+                try:
+                    from retinanet.tensorrt.builder import TensorRTBuilder
+                    from retinanet.tensorrt.calibrator import get_calibrator
+                except ImportError:
+                    logging.warning(
+                        'Failed to import TensoRT, skipping engine building')
+                    return
 
                 if FLAGS.precision == 'int8':
                     image_params = params.dataloader_params.preprocessing
