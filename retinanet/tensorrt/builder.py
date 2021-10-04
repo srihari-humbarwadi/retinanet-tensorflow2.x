@@ -10,6 +10,7 @@ class TensorRTBuilder:
             workspace=1,
             precision='fp32',
             calibrator=None,
+            dla_core=None,
             debug=False):
 
         self._logger = trt.Logger(trt.Logger.INFO)
@@ -22,6 +23,7 @@ class TensorRTBuilder:
         self._engine_path = engine_path
         self._onnx_path = onnx_path
         self._calibrator = calibrator
+        self._dla_core = dla_core
 
         self._precision = precision
         self._workspace = int((1 << 30) * workspace)
@@ -66,6 +68,15 @@ class TensorRTBuilder:
                         'performace adversely')
                 self._config.set_flag(trt.BuilderFlag.INT8)
                 self._config.int8_calibrator = self._calibrator
+
+        if self._dla_core is not None:
+            self._config.set_flag(trt.BuilderFlag.GPU_FALLBACK)
+            self._config.default_device_type = trt.DeviceType.DLA
+            self._config.DLA_core = self._dla_core
+
+            self._logger.log(
+                trt.Logger.WARNING,
+                'Using DLA Core: {} for engine'.format(self._dla_core))
 
         serialized_engine = self._builder.build_serialized_network(
             network=self._network,
