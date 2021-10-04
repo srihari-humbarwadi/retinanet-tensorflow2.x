@@ -2,7 +2,6 @@ from copy import deepcopy
 import json
 
 import tensorflow as tf
-import tensorflow_addons as tfa
 from absl import logging
 
 from retinanet.optimizers.piecewise_constant_decay_with_warmup import \
@@ -46,10 +45,18 @@ def build_optimizer(params, train_steps, precision):
     optimizer = tf.optimizers.get(config)
 
     if use_moving_average:
-        optimizer = tfa.optimizers.MovingAverage(
-            optimizer=optimizer,
-            average_decay=moving_average_decay,
-            dynamic_decay=True)
+        try:
+            import tensorflow_addons as tfa
+
+            optimizer = tfa.optimizers.MovingAverage(
+                optimizer=optimizer,
+                average_decay=moving_average_decay,
+                dynamic_decay=True)
+
+        except ImportError:
+            logging.warning(
+                'Failed to import TensorFlow Addons, building optimizer with '
+                '`use_moving_average=False`')
 
     if precision == 'mixed_float16':
         logging.info(
