@@ -3,7 +3,6 @@ import json
 
 import onnx
 import onnx_graphsurgeon as gs
-import onnxsim
 import tf2onnx
 from absl import logging
 import numpy as np
@@ -122,10 +121,16 @@ def save_concrete_function(
     output_path = os.path.join(output_dir, 'model.onnx')
 
     if simplify:
-        logging.info('Running ONNX simplifier')
-        onnx_model, status = onnxsim.simplify(onnx_model, check_n=3)
-        if not status:
-            raise AssertionError('Failed to simplify ONNX model')
+        try:
+            import onnxsim
+
+            logging.info('Running ONNX simplifier')
+            onnx_model, status = onnxsim.simplify(onnx_model, check_n=3)
+            if not status:
+                raise AssertionError('Failed to simplify ONNX model')
+
+        except ImportError:
+            logging.warning('Failed to import onnxsim, skipping ONNX simplifier')
 
     if add_nms_plugin:
         logging.info('Adding `EfficientNMS_TRT` plugin')
