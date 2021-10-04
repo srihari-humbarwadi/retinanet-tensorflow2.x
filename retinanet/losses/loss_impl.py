@@ -1,14 +1,14 @@
 import tensorflow as tf
 
 
-class FocalLoss(tf.losses.Loss):
+class FocalLossV1(tf.losses.Loss):
 
     def __init__(self, alpha, gamma, label_smoothing):
         self._alpha = alpha
         self._gamma = gamma
         self._label_smoothing = label_smoothing
 
-        super(FocalLoss, self).__init__(
+        super(FocalLossV1, self).__init__(
             name='focal_loss',
             reduction='sum')
 
@@ -31,7 +31,7 @@ class FocalLoss(tf.losses.Loss):
 class ClassLoss:
 
     def __init__(self, num_classes, params):
-        self._focal_loss = FocalLoss(
+        self._focal_loss = FocalLossV1(
             params.alpha,
             params.gamma,
             params.label_smoothing)
