@@ -160,8 +160,7 @@ def main(_):
         logging.warning('Found existing artefacts in {}, clearing old files')
         tf.io.gfile.rmtree(saved_model_export_dir)
 
-    executor.dump_config(
-        os.path.normpath(os.path.join(export_dir, 'config.json')))
+    executor.dump_config(os.path.join(export_dir, 'config.json'))
 
     executor.restore_status.assert_consumed()
 
